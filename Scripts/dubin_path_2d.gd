@@ -1,0 +1,72 @@
+extends Node2D ## THIS SHOULD NOT BE A NODE. It's just a data countainer, so we should use resource? or refcounted mayBe?
+# We need to fix this so we're not drawing on the node
+class_name DubinPath2D
+
+var drawableFunctionsToCallLater: Array[Callable] = []
+var shortest_path: DubinPath
+var paths: Array[DubinPath] = []
+
+## Use images here point names and  thetas refererd to:
+## https://www.habrador.com/tutorials/unity-dubins-paths/2-basic-dubins-paths/
+
+## Maybe should store passed in variables?
+func calculate_and_draw_paths(start_pos, start_dir, end_pos, end_dir, min_turn_radius) -> bool:
+	# If the start and end are the same, we don't need to move at all. Short-circuit everything. The shortest
+	# path is standing still. If you really want to calculate this path, just draw a circle(in your perferred direction)
+	# ending at this point. The below code freaks out because of direction of rotation and floating point precision
+	# issues, so gives incosistent results depending on where you start and end. These issues arn't worth figuring out,
+	# because even if I did they'd give some arbitrary result that you probably wouldn't want anyways.
+	if start_pos == end_pos and start_dir == end_dir:
+		clear_drawables()
+		return false
+	self.paths = DubinsPathMath.compute_dubins_paths(start_pos, start_dir, end_pos, end_dir, min_turn_radius)
+	# Technically, we should never return a path size of 0. Dubins paths are always valid.
+	# The only time this really happens
+	# is if the starting point is also the ending point. Maybe the user wants to draw this
+	# a big circle, but they have other ways to do that(split it into 2 half circles). So in this case
+	# we're just going to return no path found. We might revisit this later.
+	if (paths.size() == 0):
+		print("NO PATHS FOUND")
+		return false
+	self.shortest_path = DubinsPathMath.get_shortest_dubin_path(paths)
+	draw_tangent_circles(start_pos, start_dir, end_pos, end_dir, min_turn_radius)
+	draw_dubin_paths()
+	draw_path(shortest_path, Color.WHITE)
+	# get_points()
+	queue_redraw()
+	return true;
+
+
+func draw_dubin_paths() -> void:
+	var path_colors = [Color.PURPLE, Color.AQUA, Color.BLACK, Color.YELLOW, Color.ORANGE, Color.GREEN]
+	var color_index: int = 0;
+	for path in paths:
+		draw_path(path, path_colors[color_index])
+		color_index += 1
+
+func clear_drawables():
+	drawableFunctionsToCallLater.clear()
+	queue_redraw()
+
+func draw_path(path: DubinPath, color: Color) -> void:
+	if (path.points.size() < 2):
+		print("WE HAVE TOO SHORT OF A PATH")
+	drawableFunctionsToCallLater.append(
+				func(): draw_polyline(PackedVector2Array(path.points), color, 3))
+
+# Function to draw two circles based on tangent, radius, and point
+func draw_tangent_circles(start_pos, start_dir, end_pos, end_dir, radius):
+
+	var circles_start = DubinsPathMath.get_perpendicular_circle_centers(start_pos, start_dir, radius)
+	var circles_end = DubinsPathMath.get_perpendicular_circle_centers(end_pos, end_dir, radius)
+
+	# Draw the circles
+	drawableFunctionsToCallLater.append(func(): draw_circle(circles_start.left.center, radius, Color.RED, false, 2))
+	drawableFunctionsToCallLater.append(func(): draw_circle(circles_start.right.center, radius, Color.BLUE, false, 2))
+	drawableFunctionsToCallLater.append(func(): draw_circle(circles_end.left.center, radius, Color.RED, false, 2))
+	drawableFunctionsToCallLater.append(func(): draw_circle(circles_end.right.center, radius, Color.BLUE, false, 2))
+
+func _draw():
+	for function in drawableFunctionsToCallLater:
+		function.call()
+	drawableFunctionsToCallLater.clear()

@@ -2,7 +2,7 @@
    
     "configurations": [
         {
-            "name": "Launch godot train",
+            "name": "Launch JIT",
             "editor_path": "C:\\Godot_v4.3-stable_mono_win64\\Godot_v4.3-stable_mono_win64.exe",
             "type": "godot",
             "request": "launch",

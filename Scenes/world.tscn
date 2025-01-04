@@ -1,0 +1,17 @@
+[gd_scene load_steps=4 format=3 uid="uid://o671incsty73"]
+
+[ext_resource type="Script" path="res://Scripts/fps.gd" id="1_brhbh"]
+[ext_resource type="Script" path="res://Scripts/mouse_tracker.gd" id="2_ocwby"]
+[ext_resource type="PackedScene" uid="uid://boyh6jyitkbyg" path="res://Scenes/world_map.tscn" id="3_5byin"]
+
+[node name="World" type="Node2D"]
+
+[node name="FPS" type="Label" parent="."]
+offset_right = 40.0
+offset_bottom = 23.0
+script = ExtResource("1_brhbh")
+
+[node name="WorldMap" parent="." instance=ExtResource("3_5byin")]
+
+[node name="MouseTracker" type="Node2D" parent="WorldMap"]
+script = ExtResource("2_ocwby")
