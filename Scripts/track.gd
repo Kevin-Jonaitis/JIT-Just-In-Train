@@ -2,10 +2,9 @@
 # A piece of track that Bogie nodes follow along
 class_name Track
 extends Node2D
-# extends Path2D
 
 
-signal points_changed
+# signal points_changed
 
 @onready var curve_points : PackedVector2Array = []
 static var counter = 0
@@ -13,6 +12,7 @@ static var counter = 0
 ## Used to keep track of last changes in the editor, and if changed, to re-render the points
 var baked_points_editor_checker : PackedVector2Array = []
 
+@onready var area2d: Area2D = $Area2D
 
 
 @export_category("Curve Builder")
@@ -106,6 +106,7 @@ func _ready() -> void:
 	# If the curve was pre-created in the editor, then we should show the goods
 	update_visual_with_bezier_points()
 
+
 func compute_track(trackStartingPosition, 
 	trackStartingControlPoint, 
 	trackEndingPosition, 
@@ -129,13 +130,14 @@ func compute_track(trackStartingPosition,
 			track_visual_component.make_track_invisible()
 			return validTrack
 
-		track_visual_component.update_track_points(dubins_path.shortest_path.points, 
+		track_visual_component.update_track_points(dubins_path.shortest_path.get_points(), 
 		dubins_path.shortest_path.length,
 		dubins_path.shortest_path.get_point_at_offset,
 		trackStartingControlPoint,
 		trackEndingControlPoint
 		)
-		# return true # the track is ALWAYS valid for dubins paths. That's why they're awesome.
+		area2d.compute_new_track(dubins_path.shortest_path.get_points(), track_visual_component.width)
+
 	else:
 		var curve_result = BezierCurveMath.find_best_curve(
 			trackStartingPosition,
@@ -153,7 +155,12 @@ func compute_track(trackStartingPosition,
 
 		validTrack = curve_result.validTrack
 		update_visual_with_bezier_points()
-	
 
+		area2d.compute_new_track(bezier_curve.curve.get_baked_points(), track_visual_component.width)
 
 	return validTrack
+
+
+func _on_area_2d_area_entered(area: Area2D) -> void:
+	print("WE ENTERED AN AREA OMG!")
+	pass # Replace with function body.

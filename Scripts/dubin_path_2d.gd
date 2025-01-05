@@ -49,10 +49,10 @@ func clear_drawables():
 	queue_redraw()
 
 func draw_path(path: DubinPath, color: Color) -> void:
-	if (path.points.size() < 2):
+	if (path.get_points().size() < 2):
 		print("WE HAVE TOO SHORT OF A PATH")
 	drawableFunctionsToCallLater.append(
-				func(): draw_polyline(PackedVector2Array(path.points), color, 3))
+				func(): draw_polyline(PackedVector2Array(path.get_points()), color, 3))
 
 # Function to draw two circles based on tangent, radius, and point
 func draw_tangent_circles(start_pos, start_dir, end_pos, end_dir, radius):

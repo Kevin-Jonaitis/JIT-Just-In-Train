@@ -1,5 +1,10 @@
 extends Resource
 
+#TODO:
+	
+# find the smallest viable path type
+# size it up until it gets to the next path type, or until it's 4x the distance between the points, whatever comes first?
+
 ## We store points for drawing, but we use formulas to determine the position along the curve
 ## Because of this, arcs will have many points, while the straight line segments will only have 2(start and end)
 class_name DubinPath
@@ -16,7 +21,8 @@ var segments: Array
 # Vector2.angle() uses (I believe) floats, while atan2() uses doubles percison
 # to account for this, don't be very percise when looking at total length for a segment
 const EPSILON = 1e-4
-var points: Array[Vector2] = []
+var calcualtedPoints = false
+var _points: Array = []
 
 # Variables copied from curve2D
 var bake_interval: float
@@ -26,23 +32,30 @@ func _init(name_: String, _segments: Array, bake_interval_: float = 5):
 	self.bake_interval = bake_interval_
 	self.segments = filter_segments(_segments)
 
+func get_points():
+	if (!calcualtedPoints):
+		calcualtedPoints = true
+		calculate_points()
+	return _points
+	
+
+func calculate_points():
 	for segment in segments:
-		length += segment.length
-		if segment is Line:
-			add_point_if_unique(segment.start)
-			add_point_if_unique(segment.end)
-		elif segment is Arc:
-			# Optimization: only calculate points on arc for shortest path(up to 6x faster)
-			var newPoints = segment.calculate_points_on_arc(bake_interval)
-			for point in newPoints:
-				add_point_if_unique(point)
-	pass
+			length += segment.length
+			if segment is Line:
+				add_point_if_unique(segment.start)
+				add_point_if_unique(segment.end)
+			elif segment is Arc:
+				# Optimization: only calculate points on arc for shortest path(up to 6x faster)
+				var newPoints = segment.calculate_points_on_arc(bake_interval)
+				for point in newPoints:
+					add_point_if_unique(point)
 
 ## Prevents two of the same point from being added to the 
 ## points array. This can happen on the boundary of two segments
 func add_point_if_unique(point: Vector2) -> void:
-	if points.is_empty() or not points[-1].is_equal_approx(point):
-		points.append(point)
+	if _points.is_empty() or not _points[-1].is_equal_approx(point):
+		_points.append(point)
 
 
 ## Filter out segments that don't have any length; this pretty much only
@@ -61,9 +74,9 @@ func filter_segments(_segments : Array) -> Array:
 # Given an offset(in pixels), return the coordinates on the path at that offset
 func get_point_at_offset(offset: float) -> Vector2:
 	if offset <= 0:
-		return points[0]
+		return _points[0]
 	if offset >= length:
-		return points[-1]
+		return _points[-1]
 		
 	var current_length = 0
 	for segment in segments:
@@ -75,17 +88,21 @@ func get_point_at_offset(offset: float) -> Vector2:
 				return segment.get_point_at_offset(segment_offset)
 		current_length += segment.length
 	
-	return points[-1]
+	return _points[-1]
 
 class Line:
 	var start: Vector2
 	var end: Vector2
 	var length: float
+	var points: PackedVector2Array = []
 
 	func _init(_start: Vector2, _end: Vector2):
 		self.start = _start
 		self.end = _end
 		self.length = (_end - _start).length()
+		points.append(start)
+		points.append(end)
+
 
 	func get_point_at_offset(offset: float) -> Vector2:
 		var t = offset / length
@@ -100,6 +117,7 @@ class Arc:
 	var end_theta: float
 	var radius: float
 	var length: float
+	var points: PackedVector2Array
 
 	func _init(_center: Vector2, _start_theta: float, _end_theta: float, _radius: float):
 		self.center = _center
@@ -108,10 +126,11 @@ class Arc:
 		self.radius = _radius
 		var thetaDifference = _end_theta - _start_theta
 		self.length = abs(_radius * thetaDifference)
+		# self.points = calculate_points_on_arc()
 		pass
 			
 	func calculate_points_on_arc(bake_interval: int = 5):
-		var temp_points: Array[Vector2] = []
+		var temp_points: PackedVector2Array
 		var num_of_points = max(2, ceil(length / bake_interval)) #always have at least 2 points on the arc
 		var total_theta = end_theta - start_theta
 		var theta_slice = total_theta / (num_of_points - 1) # Adjust to ensure the last point is included

@@ -18,6 +18,7 @@ func _input(event: InputEvent) -> void:
 			trackBuilder.intialize_and_set_start_point()
 		elif (trackBuilder.trackStartingPosition != null && trackBuilder.validTrack):
 				trackBuilder.solidifyTrack()
+				return; # We don't want to call build track again
 	elif (event.is_action_pressed("track_mode")):
 		trackBuilder.track_mode_flag = !trackBuilder.track_mode_flag
 	elif (event.is_action_pressed("curve_type")):

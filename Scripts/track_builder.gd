@@ -2,6 +2,8 @@ extends RefCounted
 class_name TrackBuilder
 
 
+static var track_counter = 0  # Initialize the counter
+
 # Properties for the TrackBuilder
 var wallToHighlight: Array = [Vector2(), Vector2()]
 var centerPointToHighlight: Vector2
@@ -71,7 +73,8 @@ func _init(tracks_: Node):
 func create_track_node_tree():
 	track = trackPreloaded.instantiate()
 	track.track_visual_component
-	track.name = "UserPlacedTrack"
+	track.name = "UserPlacedTrack-" + str(track_counter)
+	track_counter += 1
 	tracks.add_child(arrow_start)
 	tracks.add_child(arrow_end)
 	track.update_stored_curves(curve_type_flag) ## No better way to instantiate unforutenly
@@ -117,8 +120,14 @@ func set_start_info():
 
 #
 func solidifyTrack():
+	track.area2d.solidfy_collision_area()
+	track.area2d.set_collision_layer_value(1, true)
+	track.area2d.set_collision_mask_value(1, false) # Should be nothing
+	var test = track.area2d.get_collision_layer()
+
 	reset_track_builder()
 	create_track_node_tree()
+
 
 # We want to reset most things, but leave things like
 # arrow direction and track type intack for next track placement
@@ -218,7 +227,7 @@ func build_track() -> void:
 		curve_type_flag)
 
 	self.validTrack = valid
-	
+
 	if valid:
 		track.track_visual_component.modulate = Color8(0, 77, 255, int(0.79 * 255))  # Half-transparent blue
 	else:

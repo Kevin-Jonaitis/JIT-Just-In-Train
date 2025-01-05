@@ -1,9 +1,16 @@
-[gd_scene load_steps=3 format=3 uid="uid://bi8vdawjywahq"]
+[gd_scene load_steps=4 format=3 uid="uid://bi8vdawjywahq"]
 
 [ext_resource type="Script" path="res://Scripts/track.gd" id="1_x8ahh"]
 [ext_resource type="PackedScene" uid="uid://bal6ryjtj6vu4" path="res://Scenes/track_visual_component.tscn" id="2_ryam6"]
+[ext_resource type="Script" path="res://Scenes/area_2d.gd" id="4_xf40l"]
 
 [node name="Track" type="Node2D"]
 script = ExtResource("1_x8ahh")
 
 [node name="TrackVisualComponent" parent="." instance=ExtResource("2_ryam6")]
+
+[node name="Area2D" type="Area2D" parent="."]
+collision_mask = 0
+monitoring = false
+monitorable = false
+script = ExtResource("4_xf40l")

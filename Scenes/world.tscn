@@ -6,12 +6,17 @@
 
 [node name="World" type="Node2D"]
 
-[node name="FPS" type="Label" parent="."]
-offset_right = 40.0
-offset_bottom = 23.0
-script = ExtResource("1_brhbh")
-
 [node name="WorldMap" parent="." instance=ExtResource("3_5byin")]
 
 [node name="MouseTracker" type="Node2D" parent="WorldMap"]
 script = ExtResource("2_ocwby")
+
+[node name="FPS" type="Label" parent="."]
+z_index = 4
+offset_left = 1090.0
+offset_top = 4.0
+offset_right = 1144.0
+offset_bottom = 27.0
+text = "FPS: 60"
+vertical_alignment = 1
+script = ExtResource("1_brhbh")

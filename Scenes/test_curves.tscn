@@ -1,9 +1,10 @@
-[gd_scene load_steps=4 format=3 uid="uid://c2hl3edl5xs6d"]
+[gd_scene load_steps=5 format=3 uid="uid://c2hl3edl5xs6d"]
 
 [ext_resource type="PackedScene" uid="uid://o671incsty73" path="res://Scenes/world.tscn" id="1_ajwrv"]
+[ext_resource type="Script" path="res://Scenes/tracks.gd" id="2_b5e4x"]
 [ext_resource type="PackedScene" uid="uid://bi8vdawjywahq" path="res://Scenes/track.tscn" id="2_tekcu"]
 
-[sub_resource type="Curve2D" id="Curve2D_uh8sl"]
+[sub_resource type="Curve2D" id="Curve2D_j63lf"]
 _data = {
 "points": PackedVector2Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 0)
 }
@@ -15,12 +16,13 @@ position = Vector2(1, 0)
 [node name="World" parent="." instance=ExtResource("1_ajwrv")]
 
 [node name="Tracks" type="Node2D" parent="."]
+script = ExtResource("2_b5e4x")
 
 [node name="Track" parent="Tracks" node_paths=PackedStringArray("bezier_curve") instance=ExtResource("2_tekcu")]
-position = Vector2(735, 157)
+position = Vector2(729, 121)
 edit_curve = true
-bezier_curve_prop = SubResource("Curve2D_uh8sl")
-bezier_curve = NodePath("BezierPath2D_2")
+bezier_curve_prop = SubResource("Curve2D_j63lf")
+bezier_curve = NodePath("BezierPath2D_0")
 
-[node name="BezierPath2D_2" type="Path2D" parent="Tracks/Track"]
-curve = SubResource("Curve2D_uh8sl")
+[node name="BezierPath2D_0" type="Path2D" parent="Tracks/Track"]
+curve = SubResource("Curve2D_j63lf")
