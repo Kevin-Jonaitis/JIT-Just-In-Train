@@ -92,7 +92,7 @@ func calculate_rectangles(points: Array, width: float) -> Array:
 func compute_new_track(points: Array, width: int):
 	var test_old_start = Time.get_ticks_usec()
 	check_track_collision(points, width)
-	print("Total time collision check:", Time.get_ticks_usec() - test_old_start)
+	# print("Total time collision check:", Time.get_ticks_usec() - test_old_start)
 
 # Actually adds the shapes to the area
 func solidfy_collision_area():

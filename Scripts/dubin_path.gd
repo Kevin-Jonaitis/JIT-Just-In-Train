@@ -10,7 +10,7 @@ extends Resource
 class_name DubinPath
 
 var name: String
-var length: float
+var length: float = 0
 var segments: Array
 ## Points to draw the path. Note that they are evenly spaced on
 ## arcs, but there are only 2 points for straight lines. So this should be used
@@ -19,7 +19,8 @@ var segments: Array
 
 # Define a small epsilon value for tolerance
 # Vector2.angle() uses (I believe) floats, while atan2() uses doubles percison
-# to account for this, don't be very percise when looking at total length for a segment
+# to account for this, don't be very percise when checking if a length is more than 0
+# because inconsistencies have been introduced by the different precisions
 const EPSILON = 1e-4
 var calcualtedPoints = false
 var _points: Array = []
@@ -27,21 +28,30 @@ var _points: Array = []
 # Variables copied from curve2D
 var bake_interval: float
 
-func _init(name_: String, _segments: Array, bake_interval_: float = 5):
+# The angles of th start and end of the path
+var start_theta: float
+var end_theta: float
+
+func _init(name_: String, _segments: Array, start_theta_: float, end_theta_: float, bake_interval_: float = 5):
 	self.name = name_
 	self.bake_interval = bake_interval_
 	self.segments = filter_segments(_segments)
-
+	for segment in segments:
+		length += segment.length
+	self.start_theta = start_theta_
+	self.end_theta = end_theta_
+	
 func get_points():
 	if (!calcualtedPoints):
 		calcualtedPoints = true
 		calculate_points()
 	return _points
-	
+
+func get_endpoints_and_directions():
+	return [[_points[0], start_theta], [_points[-1], end_theta]]
 
 func calculate_points():
 	for segment in segments:
-			length += segment.length
 			if segment is Line:
 				add_point_if_unique(segment.start)
 				add_point_if_unique(segment.end)

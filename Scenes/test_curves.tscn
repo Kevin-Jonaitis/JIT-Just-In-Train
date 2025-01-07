@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3 uid="uid://c2hl3edl5xs6d"]
 
 [ext_resource type="PackedScene" uid="uid://o671incsty73" path="res://Scenes/world.tscn" id="1_ajwrv"]
-[ext_resource type="Script" path="res://Scenes/tracks.gd" id="2_b5e4x"]
+[ext_resource type="Script" path="res://Scripts/tracks.gd" id="2_b5e4x"]
 [ext_resource type="PackedScene" uid="uid://bi8vdawjywahq" path="res://Scenes/track.tscn" id="2_tekcu"]
 
 [sub_resource type="Curve2D" id="Curve2D_j63lf"]
@@ -20,7 +20,6 @@ script = ExtResource("2_b5e4x")
 
 [node name="Track" parent="Tracks" node_paths=PackedStringArray("bezier_curve") instance=ExtResource("2_tekcu")]
 position = Vector2(729, 121)
-edit_curve = true
 bezier_curve_prop = SubResource("Curve2D_j63lf")
 bezier_curve = NodePath("BezierPath2D_0")
 

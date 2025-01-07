@@ -4,7 +4,7 @@ var trackBuilder: TrackBuilder;
 
 
 func _ready():
-	trackBuilder = TrackBuilder.new(get_tree().root.find_child("Tracks", true, false))
+	trackBuilder = TrackBuilder.new(get_tree().root.find_child("Tracks", true, false), self)
 
 
 func _input(event: InputEvent) -> void:

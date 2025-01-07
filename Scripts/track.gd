@@ -3,10 +3,6 @@
 class_name Track
 extends Node2D
 
-
-# signal points_changed
-
-@onready var curve_points : PackedVector2Array = []
 static var counter = 0
 @onready var track_visual_component: Line2D = $TrackVisualComponent
 ## Used to keep track of last changes in the editor, and if changed, to re-render the points
@@ -27,7 +23,6 @@ var baked_points_editor_checker : PackedVector2Array = []
 			cleanup_bezier_curve()
 		notify_property_list_changed()
 
-
 @export var bezier_curve_prop: Curve2D:
 	get:
 		if (!bezier_curve):
@@ -36,6 +31,26 @@ var baked_points_editor_checker : PackedVector2Array = []
 @export var bezier_curve: Path2D
 var path: Node2D # can be bezier curve or DubinsPath2D
 var dubins_path: DubinPath2D
+
+# Would be better to wrap these next two functions
+func get_curve():
+	if (bezier_curve):
+		return bezier_curve.curve
+	elif (dubins_path):
+		return dubins_path
+	else:
+		printerr("We haven't defined a curve for this track yet!")
+	
+func get_endpoints_and_directions():
+	if (bezier_curve):
+		# push_warning("We haven't tested this yet, use at your own peril. The last points in the curve probably arn't the start and end points")
+		return []
+	elif (dubins_path):	
+		if (!dubins_path.shortest_path):
+			return []
+		return dubins_path.shortest_path.get_endpoints_and_directions()
+	else:
+		push_error("We haven't defined a curve for this track yet!")
 
 func cleanup_bezier_curve() -> void:
 	if bezier_curve:

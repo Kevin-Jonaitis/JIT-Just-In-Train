@@ -7,7 +7,6 @@ class_name DubinsPathMath
 class TangentCircles:
 	var left: CircleInfo
 	var right: CircleInfo
-
 	func _init(_left: CircleInfo, _right: CircleInfo):
 		self.left = _left
 		self.right = _right
@@ -17,26 +16,30 @@ class CircleInfo:
 	## This is the angle from the center of this circle
 	## to the point where the track starts/ends
 	var center_theta: float
+	# The angle of the unit tangent w.r.t. x-axis that is used to construct the left and right cicles
+	var theta: float 
 
 	# Constructor
-	func _init(_center: Vector2, center_theta_: float):
+	func _init(_center: Vector2, center_theta_: float, theta_: float):
 		self.center = _center
 		self.center_theta = center_theta_
+		self.theta = theta_
 
 ## Fetches the center of the left and right circles
 ## and the angles pointing from the center of the circle to point
 static func get_perpendicular_circle_centers(point: Vector2, unit_tangent: Vector2, radius: float) -> TangentCircles:
-	var left_tangent = Vector2(-unit_tangent.y, unit_tangent.x) # 1,0 becomes -> 0, 1
+	var left_tangent = Vector2(-unit_tangent.y, unit_tangent.x)
 	var right_tangent = Vector2(unit_tangent.y, -unit_tangent.x)
 	var left_center_theta = atan2(left_tangent.y, left_tangent.x) # the angle of AB
-	var right_center_theta = atan2(right_tangent.y, right_tangent.x) # 1,0 -> -0, -1
+	var right_center_theta = atan2(right_tangent.y, right_tangent.x)
+	var unit_tangent_theta = atan2(unit_tangent.y, unit_tangent.x)
 	
 	# Calculate the centers of the circles
 	var left_circle_center = point - left_tangent * radius
 	var right_circle_center = point - right_tangent * radius
 	return TangentCircles.new(
-		CircleInfo.new(left_circle_center, left_center_theta),
-		CircleInfo.new(right_circle_center, right_center_theta)
+		CircleInfo.new(left_circle_center, left_center_theta, unit_tangent_theta),
+		CircleInfo.new(right_circle_center, right_center_theta, unit_tangent_theta),
 		)
 
 # Inputs:
@@ -108,7 +111,7 @@ static func dubins_LSL(start: CircleInfo, end: CircleInfo, clockwise: bool, radi
 	#B_theta should be the same as C_theta
 	var endArc = DubinPath.Arc.new(D, AB_theta, DF_theta, radius)
 
-	return DubinPath.new("LSL", [startArc, DubinPath.Line.new(B, C), endArc])
+	return DubinPath.new("LSL", [startArc, DubinPath.Line.new(B, C), endArc], start.theta, end.theta)
 
 static func dubins_RSR(start: CircleInfo, end: CircleInfo, clockwise: bool, radius: int) -> DubinPath:
 	var A = start.center
@@ -130,7 +133,7 @@ static func dubins_RSR(start: CircleInfo, end: CircleInfo, clockwise: bool, radi
 	#B_theta should be the same as C_theta
 	var endArc = DubinPath.Arc.new(D, AB_theta, DF_theta, radius)
 
-	return DubinPath.new("RSR", [startArc, DubinPath.Line.new(B, C), endArc])
+	return DubinPath.new("RSR", [startArc, DubinPath.Line.new(B, C), endArc], start.theta, end.theta)
 
 static func dubins_LSR(start: CircleInfo, end: CircleInfo, radius: int) -> DubinPath:
 	if (start.center.distance_to(end.center) < radius * 2):
@@ -157,7 +160,7 @@ static func dubins_LSR(start: CircleInfo, end: CircleInfo, radius: int) -> Dubin
 	var startArc = DubinPath.Arc.new(A, AS_theta, AB_theta, radius)
 	var endArc = DubinPath.Arc.new(D, DE_theta, DF_theta, radius)
 
-	return DubinPath.new("LSR", [startArc, DubinPath.Line.new(B, E), endArc])
+	return DubinPath.new("LSR", [startArc, DubinPath.Line.new(B, E), endArc], start.theta, end.theta)
 
 static func dubins_RSL(start: CircleInfo, end: CircleInfo, radius: int) -> DubinPath:
 	if (start.center.distance_to(end.center) < radius * 2):
@@ -184,7 +187,7 @@ static func dubins_RSL(start: CircleInfo, end: CircleInfo, radius: int) -> Dubin
 	var startArc = DubinPath.Arc.new(A, AS_theta, AB_theta, radius)
 	var endArc = DubinPath.Arc.new(D, DE_theta, DF_theta, radius)
 
-	return DubinPath.new("RSL", [startArc, DubinPath.Line.new(B, E), endArc])
+	return DubinPath.new("RSL", [startArc, DubinPath.Line.new(B, E), endArc], start.theta, end.theta)
 
 
 ## Different from LRL only that we change the circles we pass in and the rotation direction around
@@ -218,7 +221,7 @@ static func dubins_RLR(start: CircleInfo, end: CircleInfo, radius: int) -> Dubin
 	BE_theta = adjust_end_theta(BC_theta, BE_theta, true)
 	var end_arc = DubinPath.Arc.new(B, BC_theta, BE_theta, radius)
 
-	return DubinPath.new("RLR", [startArc, middle_arc, end_arc])
+	return DubinPath.new("RLR", [startArc, middle_arc, end_arc], start.theta, end.theta)
 
 static func dubins_LRL(start: CircleInfo, end: CircleInfo, radius: int) -> DubinPath:
 	if (start.center.distance_to(end.center) > radius * 4):
@@ -249,7 +252,7 @@ static func dubins_LRL(start: CircleInfo, end: CircleInfo, radius: int) -> Dubin
 	BE_theta = adjust_end_theta(BC_theta, BE_theta, false)
 	var end_arc = DubinPath.Arc.new(B, BC_theta, BE_theta, radius)
 
-	return DubinPath.new("LRL", [startArc, middle_arc, end_arc])
+	return DubinPath.new("LRL", [startArc, middle_arc, end_arc], start.theta, end.theta)
 
 ## Adjust the thetas so that they're in an order that draws them correctly according to the
 ## direction of travel
