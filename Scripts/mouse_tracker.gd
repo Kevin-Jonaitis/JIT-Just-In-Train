@@ -11,7 +11,7 @@ func _input(event: InputEvent) -> void:
 	if  (not (event is InputEventMouseMotion || event.is_action_type())):
 		return
 	if (event is InputEventMouseMotion):
-		trackBuilder.find_nearest_grid_and_tangents(event)
+		trackBuilder.find_nearest_grid_and_tangents(get_global_mouse_position())
 	# if (event is InputEventMouseMotion):
 	if (event.is_action_pressed("left_click")):
 		if (trackBuilder.trackStartingPosition == null):

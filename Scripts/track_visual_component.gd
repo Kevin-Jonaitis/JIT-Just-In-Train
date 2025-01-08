@@ -12,6 +12,7 @@ var crosstie_distance := 7
 
 @onready var parentTrack : Track = get_parent() as Track
 
+
 # Need to update the bezier call here to actually pass in the tangets. Don't feel like doing the rewrite though.
 func update_track_points(points_, length, get_coord_at_offset: Callable, startTangent: Vector2 = Vector2(0,0), endTangent: Vector2 = Vector2(0,0)) -> void:
 	

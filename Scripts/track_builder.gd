@@ -158,8 +158,8 @@ func cancel_track():
 
 	create_track_node_tree()
 	
-func find_nearest_grid_and_tangents(event: InputEventMouseMotion):	
-	var closet_track_endpoints_and_dir = get_closest_track_endpoints_and_directions(event.position)
+func find_nearest_grid_and_tangents(mousePos: Vector2):	
+	var closet_track_endpoints_and_dir = get_closest_track_endpoints_and_directions(mousePos)
 	var mousePosition = null
 	if (closet_track_endpoints_and_dir):
 		mousePosition = closet_track_endpoints_and_dir[0] # Assume the mouse is where the track ends/begins.
@@ -167,12 +167,12 @@ func find_nearest_grid_and_tangents(event: InputEventMouseMotion):
 	else:
 		# Need to null it out so checks for this ring false
 		closet_track_tangent = null
-		mousePosition = event.position
-	var tileGridPosition = MapManager.getGround().local_to_map(event.position)
+		mousePosition = mousePos
+	var tileGridPosition = MapManager.getGround().local_to_map(mousePos)
 	var tileCenterLocalPosition = MapManager.getGround().map_to_local((tileGridPosition))
 
 	var halfDistance = MapManager.cellSize / 2.0
-	var closetWallAndMidpoint = get_closest_wall_and_midpoint(mousePosition, tileCenterLocalPosition, halfDistance)	
+	var closetWallAndMidpoint = get_closest_wall_and_midpoint(mousePos, tileCenterLocalPosition, halfDistance)	
 	wallToHighlight = closetWallAndMidpoint[0];
 	centerPointToHighlight = closetWallAndMidpoint[1];
 	var tangents = calculate_tangents(wallToHighlight[0], wallToHighlight[1])
