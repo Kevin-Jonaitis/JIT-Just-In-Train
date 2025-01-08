@@ -4,6 +4,9 @@ extends Line2D
 var crosstie_distance := 7
 
 
+# We should use this visual building system:
+# https://www.factorio.com/blog/post/fff-163
+
 #@onready var _crosstie_mesh_instance : MeshInstance2D = $Sprite2D2
 @onready var _crosstie_multimesh : MultiMeshInstance2D = $MeshyMesh
 #@onready var _curve_points_multimesh : MultiMeshInstance2D = $CurvePoints
@@ -22,10 +25,11 @@ func update_track_points(points_, length, get_coord_at_offset: Callable, startTa
 	
 	## We add 0.2 pixels to the start and the end of this segment(in the direction it was coming and going) 
 	## so that there's better overlap with the next segment, and we don't get "sliver gaps" between the train paths
-	var draw_points = points_.duplicate()
+	var draw_points = points_.duplicate()	
 	var last_point_value = points_[points_.size() - 1];
 	draw_points.insert(0, points_[0] - (startTangent * 0.2))
-	draw_points.insert(points_.size() - 1, last_point_value - (endTangent * 0.2))
+	draw_points.append(last_point_value - (endTangent * 0.2))
+	
 
 	set_points(draw_points)
 	_update_crossties(length, get_coord_at_offset)

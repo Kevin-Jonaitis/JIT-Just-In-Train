@@ -18,6 +18,8 @@ points = PackedVector2Array(0, 0, 200, 0)
 width = 24.0
 texture = ExtResource("1_a41jy")
 texture_mode = 1
+joint_mode = 1
+antialiased = true
 script = ExtResource("2_sbtrv")
 
 [node name="MeshyMesh" type="MultiMeshInstance2D" parent="."]
