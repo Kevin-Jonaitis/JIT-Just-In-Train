@@ -1,5 +1,5 @@
 @tool
-extends Line2D
+extends Node2D
 
 var crosstie_distance := 7
 
@@ -8,13 +8,15 @@ var crosstie_distance := 7
 # https://www.factorio.com/blog/post/fff-163
 
 #@onready var _crosstie_mesh_instance : MeshInstance2D = $Sprite2D2
-@onready var _crosstie_multimesh : MultiMeshInstance2D = $MeshyMesh
+@onready var _crosstie_multimesh : MultiMeshInstance2D = $Crossties
 #@onready var _curve_points_multimesh : MultiMeshInstance2D = $CurvePoints
 #@onready var _circle_mesh_instance : MeshInstance2D = $Circle
 
 
 @onready var parentTrack : Track = get_parent() as Track
 
+@onready var backing: Line2D = $Backing
+@onready var rail: Line2D = $Rail
 
 # Need to update the bezier call here to actually pass in the tangets. Don't feel like doing the rewrite though.
 func update_track_points(points_, length, get_coord_at_offset: Callable, startTangent: Vector2 = Vector2(0,0), endTangent: Vector2 = Vector2(0,0)) -> void:
@@ -31,11 +33,12 @@ func update_track_points(points_, length, get_coord_at_offset: Callable, startTa
 	draw_points.append(last_point_value - (endTangent * 0.2))
 	
 
-	set_points(draw_points)
+	#set_points(draw_points)
+	rail.set_points(draw_points)
+	backing.set_points(draw_points)
 	_update_crossties(length, get_coord_at_offset)
 
 func make_track_invisible():
-	set_points([])
 	_crosstie_multimesh.multimesh.instance_count = 0
 
 

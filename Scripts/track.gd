@@ -4,7 +4,7 @@ class_name Track
 extends Node2D
 
 static var counter = 0
-@onready var track_visual_component: Line2D = $TrackVisualComponent
+@onready var track_visual_component: Node2D = $TrackVisualComponent
 ## Used to keep track of last changes in the editor, and if changed, to re-render the points
 var baked_points_editor_checker : PackedVector2Array = []
 
@@ -151,7 +151,7 @@ func compute_track(trackStartingPosition,
 		trackStartingControlPoint,
 		trackEndingControlPoint
 		)
-		area2d.compute_new_track(dubins_path.shortest_path.get_points(), track_visual_component.width)
+		area2d.compute_new_track(dubins_path.shortest_path.get_points(), track_visual_component.backing.width)
 
 	else:
 		var curve_result = BezierCurveMath.find_best_curve(

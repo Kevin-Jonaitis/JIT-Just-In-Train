@@ -1,9 +1,10 @@
-[gd_scene load_steps=6 format=3 uid="uid://bal6ryjtj6vu4"]
+[gd_scene load_steps=7 format=3 uid="uid://bal6ryjtj6vu4"]
 
-[ext_resource type="Texture2D" uid="uid://catc5odv18r0m" path="res://Assets/track.png" id="1_a41jy"]
 [ext_resource type="Script" path="res://Scripts/track_visual_component.gd" id="2_sbtrv"]
 [ext_resource type="ArrayMesh" uid="uid://b1i6fqy0ssql0" path="res://Assets/crosstieMesh.tres" id="3_62o4r"]
 [ext_resource type="Texture2D" uid="uid://dihrl27tjmb7p" path="res://Assets/crosstie.png" id="4_ciqjh"]
+[ext_resource type="Texture2D" uid="uid://dll33xay1o84h" path="res://Assets/backing.png" id="5_s2lol"]
+[ext_resource type="Texture2D" uid="uid://dis7ca2iekpgr" path="res://Assets/railing.png" id="7_ukchh"]
 
 [sub_resource type="MultiMesh" id="MultiMesh_1h8cj"]
 resource_local_to_scene = true
@@ -11,19 +12,24 @@ instance_count = 1
 mesh = ExtResource("3_62o4r")
 buffer = PackedFloat32Array(2.38221e-44, 2.24208e-44, 9.80909e-45, 2.10195e-44, 1.12104e-44, 9.80909e-45, 2.24208e-44, 2.10195e-44)
 
-[node name="TrackVisualComponent" type="Line2D"]
-z_index = 1
+[node name="TrackVisualComponent" type="Node2D"]
 z_as_relative = false
-points = PackedVector2Array(0, 0, 200, 0)
-width = 24.0
-texture = ExtResource("1_a41jy")
-texture_mode = 1
-joint_mode = 1
-antialiased = true
 script = ExtResource("2_sbtrv")
 
-[node name="MeshyMesh" type="MultiMeshInstance2D" parent="."]
+[node name="Crossties" type="MultiMeshInstance2D" parent="."]
 show_behind_parent = true
 z_as_relative = false
 multimesh = SubResource("MultiMesh_1h8cj")
 texture = ExtResource("4_ciqjh")
+
+[node name="Backing" type="Line2D" parent="."]
+z_index = 1
+width = 24.0
+texture = ExtResource("5_s2lol")
+texture_mode = 1
+
+[node name="Rail" type="Line2D" parent="."]
+z_index = 2
+width = 24.0
+texture = ExtResource("7_ukchh")
+texture_mode = 1

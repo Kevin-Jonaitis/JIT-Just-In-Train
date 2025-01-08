@@ -8,7 +8,6 @@
 script = ExtResource("1_x8ahh")
 
 [node name="TrackVisualComponent" parent="." instance=ExtResource("2_ryam6")]
-joint_mode = 0
 
 [node name="Area2D" type="Area2D" parent="."]
 collision_mask = 0
