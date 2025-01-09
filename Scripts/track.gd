@@ -40,7 +40,39 @@ func get_curve():
 		return dubins_path
 	else:
 		printerr("We haven't defined a curve for this track yet!")
-	
+# Returns [point, tangent(in radians)]
+func get_point_and_tangent_at_index(index: int):
+	if (bezier_curve):
+		return bezier_curve.curve.get_baked_points()[index]
+		printerr("We haven't really tested this yet")
+	elif (dubins_path):
+		return get_point_and_tangent_at_index_dubin_path(index)
+	else:
+		printerr("We haven't defined a curve for this track yet!")
+
+func get_point_and_tangent_at_index_dubin_path(index: int):
+	# If this is the endpoint for a track. Useful to determine if we should
+	# snap the tangent in the opposite direction
+	var is_start = false
+	var is_end = false
+	var points = dubins_path.shortest_path.get_points()
+	var current = points[index]
+	var theta = null
+	if index >= points.size():
+		return Vector2.ZERO
+
+	if index == 0:
+		theta = dubins_path.shortest_path.start_theta
+		is_start = true
+	elif index == points.size() - 1:
+		theta = dubins_path.shortest_path.end_theta
+		is_end = true
+	else:
+		# For middle points, calculate angle based on neighboring points
+		var next = points[index + 1]
+		theta = (next - current).angle()
+	return [current, theta, is_start, is_end]
+
 func get_endpoints_and_directions():
 	if (bezier_curve):
 		# push_warning("We haven't tested this yet, use at your own peril. The last points in the curve probably arn't the start and end points")

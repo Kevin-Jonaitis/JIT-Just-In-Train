@@ -21,20 +21,24 @@ var segments: Array
 # Vector2.angle() uses (I believe) floats, while atan2() uses doubles percison
 # to account for this, don't be very percise when checking if a length is more than 0
 # because inconsistencies have been introduced by the different precisions
+
+# This works great with a value of 20, if we were to use that for simply collision boxes
+# and snapping points
+static var bake_interval: int = 5
+
 const EPSILON = 1e-4
 var calcualtedPoints = false
 var _points: Array = []
 
 # Variables copied from curve2D
-var bake_interval: float
 
 # The angles of th start and end of the path
 var start_theta: float
 var end_theta: float
 
-func _init(name_: String, _segments: Array, start_theta_: float, end_theta_: float, bake_interval_: float = 5):
+func _init(name_: String, _segments: Array, start_theta_: float, end_theta_: float):
 	self.name = name_
-	self.bake_interval = bake_interval_
+	self.bake_interval = bake_interval
 	self.segments = filter_segments(_segments)
 	for segment in segments:
 		length += segment.length
@@ -53,11 +57,11 @@ func get_endpoints_and_directions():
 func calculate_points():
 	for segment in segments:
 			if segment is Line:
-				add_point_if_unique(segment.start)
-				add_point_if_unique(segment.end)
+				for point in segment.points:
+					add_point_if_unique(point)
 			elif segment is Arc:
 				# Optimization: only calculate points on arc for shortest path(up to 6x faster)
-				var newPoints = segment.calculate_points_on_arc(bake_interval)
+				var newPoints = segment.calculate_points_on_arc()
 				for point in newPoints:
 					add_point_if_unique(point)
 
@@ -110,8 +114,16 @@ class Line:
 		self.start = _start
 		self.end = _end
 		self.length = (_end - _start).length()
-		points.append(start)
+		calculate_points()
+
+	func calculate_points():
+		var direction = (end - start).normalized()
+		var total_points = max(2, ceil(length / DubinPath.bake_interval))
+		for i in range(total_points):
+			var point = start + direction * (i * DubinPath.bake_interval)
+			points.append(point)
 		points.append(end)
+		pass
 
 
 	func get_point_at_offset(offset: float) -> Vector2:
@@ -139,9 +151,9 @@ class Arc:
 		# self.points = calculate_points_on_arc()
 		pass
 			
-	func calculate_points_on_arc(bake_interval: int = 5):
+	func calculate_points_on_arc():
 		var temp_points: PackedVector2Array
-		var num_of_points = max(2, ceil(length / bake_interval)) #always have at least 2 points on the arc
+		var num_of_points = max(2, ceil(length / DubinPath.bake_interval)) #always have at least 2 points on the arc
 		var total_theta = end_theta - start_theta
 		var theta_slice = total_theta / (num_of_points - 1) # Adjust to ensure the last point is included
 		for i in range(num_of_points):

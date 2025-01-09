@@ -4,12 +4,12 @@ class_name TrackBuilder
 
 static var track_counter = 0  # Initialize the counter
 
-# Line from start to endpoint
-var wallToHighlight: Array = [Vector2(), Vector2()]
-var centerPointToHighlight: Vector2
+
 var highlightColor = Color(0, 0, 255, 0.5)
 var circleColor = Color(0, 0, 255)
 
+var currentTrackPlacePoint: Vector2
+# Line that follows the track at the point
 var currentPointTangent: Vector2
 
 var trackStartingPosition = null
@@ -30,7 +30,7 @@ var closet_track_tangent = null
 var track_mode_flag: bool = false
 
 # Switches between minimum tangent and minimum radius modes
-var mouse_tracker_node: Node2D
+var mouse_tracker: Node2D
 var arrow_start : Sprite2D
 var arrow_end : Sprite2D
 var track: Track
@@ -64,7 +64,7 @@ var tracks: Node
 
 func _init(tracks_: Node, mouse_tracker_node_: Node2D):
 	tracks = tracks_
-	mouse_tracker_node = mouse_tracker_node_
+	mouse_tracker = mouse_tracker_node_
 	arrow_start = Sprite2D.new()
 	arrow_end = Sprite2D.new()
 	arrow_start.scale = Vector2(0.03, 0.03)
@@ -82,8 +82,8 @@ func create_track_node_tree():
 	track.track_visual_component
 	track.name = "UserPlacedTrack-" + str(track_counter)
 	track_counter += 1
-	mouse_tracker_node.add_child(arrow_start)
-	mouse_tracker_node.add_child(arrow_end)
+	mouse_tracker.add_child(arrow_start)
+	mouse_tracker.add_child(arrow_end)
 	track.update_stored_curves(curve_type_flag) ## No better way to instantiate unforutenly
 	tracks.add_child(track) 
 	arrow_start.visible = false
@@ -118,7 +118,7 @@ func rotate_sprite(unit_tangent: Vector2, sprite: Sprite2D):
 
 
 func intialize_and_set_start_point():
-	trackStartingPosition = centerPointToHighlight
+	trackStartingPosition = currentTrackPlacePoint
 	trackStartingControlPoint = currentPointTangent
 	track.visible = true	
 
@@ -138,9 +138,8 @@ func solidifyTrack():
 func reset_track_builder():
 	if (track.dubins_path):
 		track.dubins_path.clear_drawables()
-	# if (track):
-	mouse_tracker_node.remove_child(arrow_start)
-	mouse_tracker_node.remove_child(arrow_end)
+	mouse_tracker.remove_child(arrow_start)
+	mouse_tracker.remove_child(arrow_end)
 	track.track_visual_component.modulate = Color(1,1,1,1)
 	trackStartingPosition = null
 	trackEndingPosition = null
@@ -158,36 +157,94 @@ func cancel_track():
 
 	create_track_node_tree()
 	
-func find_nearest_grid_and_tangents(mousePos: Vector2):	
-	var closet_track_endpoints_and_dir = get_closest_track_endpoints_and_directions(mousePos)
-	var mousePosition = null
-	if (closet_track_endpoints_and_dir):
-		mousePosition = closet_track_endpoints_and_dir[0] # Assume the mouse is where the track ends/begins.
-		closet_track_tangent = closet_track_endpoints_and_dir[1]
-	else:
-		# Need to null it out so checks for this ring false
-		closet_track_tangent = null
-		mousePosition = mousePos
-	var tileGridPosition = MapManager.getGround().local_to_map(mousePos)
-	var tileCenterLocalPosition = MapManager.getGround().map_to_local((tileGridPosition))
+func find_nearest_grid_and_tangents(mousePos: Vector2):
+	var mousePosition = mousePos
+	var overlapping_track = mouse_tracker.track_intersector_searcher.check_for_overlap_track()
+	# Used if we need to snap to a track start/end
+	var snap_tangent = null
+	var tangents
 
-	var halfDistance = MapManager.cellSize / 2.0
-	var closetWallAndMidpoint = get_closest_wall_and_midpoint(mousePos, tileCenterLocalPosition, halfDistance)	
-	wallToHighlight = closetWallAndMidpoint[0];
-	centerPointToHighlight = closetWallAndMidpoint[1];
-	var tangents = calculate_tangents(wallToHighlight[0], wallToHighlight[1])
-	if (!trackStartingPosition):
-		if (closet_track_endpoints_and_dir):
-			currentPointTangent = closet_track_tangent
+	# Find the closet track point. If the track endpoint is within our radius, we should "stick" to it. 
+	# and set the tangent to point away from the track
+	# Otherwise, if we did find a track point, we should set the tanget according to the angle at that point and
+	# using our tanget switch
+	# OTHERWISE, just look for the closest grid wall and snap to that
+
+	if (overlapping_track && (overlapping_track["is_start"] || overlapping_track["is_end"])):
+		draw_walls_and_centerpoint(overlapping_track["point"], overlapping_track["angle"])
+		currentTrackPlacePoint = overlapping_track["point"]
+		# We need to snap the tangent in the opposite direction of the track.
+		var reverser;
+		if overlapping_track["is_start"]:
+			reverser = -1
 		else:
-			currentPointTangent = tangents[0] if tangentSwitchStartpoint else tangents[1]
+			reverser = 1
+
+		snap_tangent = reverser * Vector2.from_angle(overlapping_track["angle"])
+	elif(overlapping_track):
+		draw_walls_and_centerpoint(overlapping_track["point"], overlapping_track["angle"])
+		currentTrackPlacePoint = overlapping_track["point"]
+		closet_track_tangent = Vector2.from_angle(overlapping_track["angle"])
+		tangents = [closet_track_tangent, -1 * closet_track_tangent]
+	else:
+		var centerpoint_and_tangets = draw_wall_and_calculate_centerpoint_and_tangent(mousePosition)
+		currentTrackPlacePoint = centerpoint_and_tangets[0]
+		tangents = centerpoint_and_tangets[1]
+	
+	if (snap_tangent):
+		currentPointTangent = snap_tangent
+	else:
+		determine_tangent_from_switches(tangents)
+
+
+	if (!trackStartingPosition):
+		update_arrow_start()
+
+func determine_tangent_from_switches(tangents: Array):
+	if (!trackStartingPosition):
+		currentPointTangent = tangents[0] if tangentSwitchStartpoint else tangents[1]
 	elif(trackStartingPosition && trackEndingPosition):
 		currentPointTangent = tangents[0] if tangentSwitchEndpoint else tangents[1]
 	else:
 		printerr("Unknown state, tracking starting position and track ending position both set")
 
-	if (!trackStartingPosition):
-		update_arrow_start()
+func draw_walls_and_centerpoint(point_position: Vector2, theta: float):
+	# Convert angle to unit vector
+	var direction = Vector2.from_angle(theta)
+	
+	# Calculate perpendicular vector for wall direction
+	var perpendicular = Vector2(-direction.y, direction.x)
+	
+	# Use mouse position directly as center point
+	currentTrackPlacePoint = point_position
+	
+	# Calculate wall endpoints using half cell size
+	var halfDistance = MapManager.cellSize / 2.0
+	var wallStart = point_position + (perpendicular * halfDistance)
+	var wallEnd = point_position - (perpendicular * halfDistance)
+	
+	# Draw debug visuals
+	mouse_tracker.drawableFunctionsToCallLater.append(func(): mouse_tracker.draw_line(wallStart, wallEnd, highlightColor, 3))
+	mouse_tracker.drawableFunctionsToCallLater.append(func(): mouse_tracker.draw_circle(currentTrackPlacePoint, 4, highlightColor, false, 4))
+	
+
+func draw_wall_and_calculate_centerpoint_and_tangent(mousePos: Vector2):
+	var track_position = null 
+	var wallToHighlight  = null
+	var tileGridPosition = MapManager.getGround().local_to_map(mousePos)
+	var tileCenterLocalPosition = MapManager.getGround().map_to_local((tileGridPosition))
+
+	var halfDistance = MapManager.cellSize / 2.0
+	var closetWallAndMidpoint = get_closest_wall_and_midpoint(mousePos)	
+	wallToHighlight = closetWallAndMidpoint[0];
+	track_position = closetWallAndMidpoint[1];
+
+	mouse_tracker.drawableFunctionsToCallLater.append(func(): mouse_tracker.draw_line(wallToHighlight[0], wallToHighlight[1],highlightColor, 3))
+	mouse_tracker.drawableFunctionsToCallLater.append(func(): mouse_tracker.draw_circle(track_position, 4, highlightColor, false, 4))
+	var tangents = calculate_tangents(wallToHighlight[0], wallToHighlight[1])
+
+	return [track_position, tangents]
+	
 
 func update_arrow_end() -> void:
 	arrow_end.visible = true
@@ -203,10 +260,14 @@ func update_arrow_start() -> void:
 	# Determine the arrow's tangent point, it's opposite of the track tangent
 	var arrowPoint = -1 * currentPointTangent
 	rotate_sprite(-1 * arrowPoint, arrow_start)
-	arrow_start.position = centerPointToHighlight + (arrowPoint * (MapManager.cellSize / 2.0))
+	arrow_start.position = currentTrackPlacePoint + (arrowPoint * (MapManager.cellSize / 2.0))
 
 
-func get_closest_wall_and_midpoint(mouse_position: Vector2, tile_center: Vector2, half_distance: int) -> Array:
+func get_closest_wall_and_midpoint(mouse_position: Vector2) -> Array:
+	var tileGridPosition = MapManager.getGround().local_to_map(mouse_position)
+	var tile_center = MapManager.getGround().map_to_local(tileGridPosition)
+	var half_distance = MapManager.cellSize / 2.0
+	
 	# Define the wall edges as start and end points
 	var walls = [
 		[tile_center + Vector2(-half_distance, -half_distance), tile_center + Vector2(-half_distance, half_distance)],   # Left wall
@@ -232,7 +293,7 @@ func get_closest_wall_and_midpoint(mouse_position: Vector2, tile_center: Vector2
 
 func build_track() -> void:
 	# Update ending position
-	trackEndingPosition = centerPointToHighlight
+	trackEndingPosition = currentTrackPlacePoint
 	trackEndingControlPoint = currentPointTangent
 
 	update_arrow_end()

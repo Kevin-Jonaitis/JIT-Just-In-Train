@@ -18,6 +18,15 @@ var crosstie_distance := 7
 @onready var backing: Line2D = $Backing
 @onready var rail: Line2D = $Rail
 
+
+var drawableFunctionsToCallLater: Array[Callable] = []
+
+func _draw():
+	pass
+	# for function in drawableFunctionsToCallLater:
+	# 	function.call()
+	# drawableFunctionsToCallLater.clear()
+
 # Need to update the bezier call here to actually pass in the tangets. Don't feel like doing the rewrite though.
 func update_track_points(points_, length, get_coord_at_offset: Callable, startTangent: Vector2 = Vector2(0,0), endTangent: Vector2 = Vector2(0,0)) -> void:
 	
@@ -37,6 +46,10 @@ func update_track_points(points_, length, get_coord_at_offset: Callable, startTa
 	rail.set_points(draw_points)
 	backing.set_points(draw_points)
 	_update_crossties(length, get_coord_at_offset)
+	for point in draw_points: 
+		drawableFunctionsToCallLater.append(func(): draw_circle(point, 3, Color.BLACK))
+	# drawableFunctionsToCallLater.append(func(): draw_circle(draw_points[-1], 3, Color.BLUE))
+	queue_redraw()
 
 func make_track_invisible():
 	_crosstie_multimesh.multimesh.instance_count = 0

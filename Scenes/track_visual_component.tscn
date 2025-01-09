@@ -13,6 +13,7 @@ mesh = ExtResource("3_62o4r")
 buffer = PackedFloat32Array(2.38221e-44, 2.24208e-44, 9.80909e-45, 2.10195e-44, 1.12104e-44, 9.80909e-45, 2.24208e-44, 2.10195e-44)
 
 [node name="TrackVisualComponent" type="Node2D"]
+z_index = 1
 z_as_relative = false
 script = ExtResource("2_sbtrv")
 
