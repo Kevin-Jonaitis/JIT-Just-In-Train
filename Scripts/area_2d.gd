@@ -1,79 +1,27 @@
 extends Area2D
 
+var uuid: String = Utils.generate_uuid()
 @onready var space_state = get_world_2d().direct_space_state
 
 var segments = []
 var drawableFunctionsToCallLater: Array[Callable] = []
-# Map object id -> track object
-# NOTE: We need to update this when deleting a track, otherwise this will be the last remaining 
-# reference to a track object, and it will never be garbage collected
-var intersecting_tracks : Dictionary = {}
-# the segments we create when doing a recalculation. This will be materalized into
-# actual segments once we solidfy the track
-var polygons = []
 
 func _draw():
 	pass
 	# for function in drawableFunctionsToCallLater:
 	# 	function.call()
-	# drawableFunctionsToCallLater.clear()
+	drawableFunctionsToCallLater.clear()
 
-
-## Use this to check track collisions
-# The way the collision checking works, is we generate rectangles based on the points in our track
-# Then we compare those rectangles to the other tracks in the scene _directly_ using Physics2DServer
-# Once we figure out what intersects, we update the intersecting track dict for both tracks.
-
-# Then, when the user actually clicks to place a track, we solidfy those rectangle shapes by adding them
-# to this track's Area2D, setting the collision maks so that only are dectable, but arn't detecting.
-
-# The combo of physics server for checking collisions and baking the shapes into area2d for saving collision data
-# seems to be the fastest solution for this
-func check_track_collision(points: PackedVector2Array, width: int) -> bool:
-	intersecting_tracks = {}
-	polygons = calculate_rectangles(points, width)
-
-	for rectangle in polygons:
-		drawableFunctionsToCallLater.append(func(): draw_colored_polygon(rectangle, Color.RED))
-	queue_redraw()
-
-	var query = PhysicsShapeQueryParameters2D.new()
-	query.transform = Transform2D.IDENTITY
-	query.collide_with_areas = true
-	query.collide_with_bodies = false
-	query.collision_mask = 1 
-	var temp_shape = ConvexPolygonShape2D.new()
-	query.set_shape(temp_shape)
-		
-	for rectangle_list in polygons:
-		temp_shape.set_points(rectangle_list)
-		var result = space_state.intersect_shape(query)
-		for item in result:
-			if (item.size() > 0 && !intersecting_tracks.has(item.collider_id)):
-				intersecting_tracks[item.collider_id] = item.collider
-	# print("COLLISION TIME: ", Time.get_ticks_usec() - start_time)
-	return 0
-
-
-func compute_new_track(points: Array, width: int):
-	var test_old_start = Time.get_ticks_usec()
-	check_track_collision(points, width)
-	# print("Total time collision check:", Time.get_ticks_usec() - test_old_start)
 
 # Actually adds the shapes to the area
-func solidfy_collision_area():
-	set_collision_layer_value(1, false) #not on any layer
-	set_collision_mask_value(1, true)  #not on any layer
+func solidify_collision_area():
 	# var time_before = Time.get_ticks_usec()
 	add_shapes_to_current_area()
 	# print("Solidify Track: ", Time.get_ticks_usec() - time_before)
-	
-	for track in intersecting_tracks:
-		var instance_id = get_instance_id()
-		# Add this track to the other track list of intersecting tracks
-		intersecting_tracks[track].intersecting_tracks[instance_id] = self
 
 func add_shapes_to_current_area() -> void:
+	var polygons = calculate_rectangles(get_parent().dubins_path.shortest_path.get_points(), \
+	get_parent().track_visual_component.backing.width)
 	collision_layer = 1
 	collision_mask = 0
 

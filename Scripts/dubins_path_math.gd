@@ -93,9 +93,9 @@ static func compute_path(r, path_type, start_circles: TangentCircles, end_circle
 	return null
 	
 static func dubins_LSL(start: CircleInfo, end: CircleInfo, clockwise: bool, radius: int) -> DubinPath:
-	var A = start.center
-	var D = end.center
-	var AD = D - A
+	var A: Vector2 = start.center
+	var D: Vector2 = end.center
+	var AD: Vector2 = D - A
 	var theta = atan2(AD.y, AD.x)
 	var AS_theta = start.center_theta
 	var DF_theta = end.center_theta

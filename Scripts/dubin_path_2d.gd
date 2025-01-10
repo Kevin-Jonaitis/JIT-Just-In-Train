@@ -4,19 +4,25 @@ class_name DubinPath2D
 
 var drawableFunctionsToCallLater: Array[Callable] = []
 var shortest_path: DubinPath
+# Should probably clear this once the shortest path is found
+# Maybe can clear it when the user isn't asking to draw all the paths
 var paths: Array[DubinPath] = []
 
-## Use images here point names and  thetas refererd to:
+## Use images here point names and thetas refererd to:
 ## https://www.habrador.com/tutorials/unity-dubins-paths/2-basic-dubins-paths/
 
 ## Maybe should store passed in variables?
-func calculate_and_draw_paths(start_pos, start_dir, end_pos, end_dir, min_turn_radius) -> bool:
+func calculate_and_draw_paths(start_pos, trackStartAngle, end_pos, trackEndingAngle, min_turn_radius, draw_paths: bool) -> bool:
 	# If the start and end are the same, we don't need to move at all. Short-circuit everything. The shortest
 	# path is standing still. If you really want to calculate this path, just draw a circle(in your perferred direction)
 	# ending at this point. The below code freaks out because of direction of rotation and floating point precision
 	# issues, so gives incosistent results depending on where you start and end. These issues arn't worth figuring out,
 	# because even if I did they'd give some arbitrary result that you probably wouldn't want anyways.
-	if start_pos == end_pos and start_dir == end_dir:
+
+	# Need to keep moving the angle through
+	var start_dir = Vector2.from_angle(trackStartAngle)
+	var end_dir = Vector2.from_angle(trackEndingAngle)
+	if start_pos == end_pos and Utils.check_angle_matches(trackStartAngle,trackEndingAngle):
 		clear_drawables()
 		return false
 	self.paths = DubinsPathMath.compute_dubins_paths(start_pos, start_dir, end_pos, end_dir, min_turn_radius)
@@ -29,11 +35,11 @@ func calculate_and_draw_paths(start_pos, start_dir, end_pos, end_dir, min_turn_r
 		print("NO PATHS FOUND")
 		return false
 	self.shortest_path = DubinsPathMath.get_shortest_dubin_path(paths)
-	draw_tangent_circles(start_pos, start_dir, end_pos, end_dir, min_turn_radius)
-	draw_dubin_paths()
-	draw_path(shortest_path, Color.WHITE)
-	# get_points()
-	queue_redraw()
+	if (draw_paths):
+		draw_tangent_circles(start_pos, start_dir, end_pos, end_dir, min_turn_radius)
+		draw_dubin_paths()
+		draw_path(shortest_path, Color.WHITE)
+		queue_redraw()
 	return true;
 
 

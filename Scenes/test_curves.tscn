@@ -17,7 +17,7 @@ position = Vector2(1, 0)
 [node name="World" parent="." instance=ExtResource("1_ajwrv")]
 position = Vector2(-1, 0)
 
-[node name="Tracks" type="Node2D" parent="."]
+[node name="Tracks" type="Node2D" parent="." groups=["tracks"]]
 script = ExtResource("2_b5e4x")
 
 [node name="Track" parent="Tracks" node_paths=PackedStringArray("bezier_curve") instance=ExtResource("2_tekcu")]
@@ -27,6 +27,8 @@ bezier_curve = NodePath("BezierPath2D_0")
 
 [node name="BezierPath2D_0" type="Path2D" parent="Tracks/Track"]
 curve = SubResource("Curve2D_j63lf")
+
+[node name="Junctions" type="Node2D" parent="Tracks"]
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(577, 324)

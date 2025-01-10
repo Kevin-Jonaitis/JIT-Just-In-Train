@@ -12,10 +12,20 @@ var currentTrackPlacePoint: Vector2
 # Line that follows the track at the point
 var currentPointTangent: Vector2
 
+# In track placement, we sometimes move where the mouse position is based on to snap to things
+# Because of this, we need to make sure we don't "double-snap". That is, snap once when a start position is selected,
+# and then use that snapped position to snap to something else close(like a junction) when we calculate which thing
+# to use when actually placing
+# Therefore, we just keep track of Junctions/Overlaps we chose when we originally "snapped" and keep track of those 
+# through placement calculations
+var current_overlay: TrackOrJunctionOverlap # nullable
+
 var trackStartingPosition = null
+var starting_overlay: TrackOrJunctionOverlap # nullable
 var trackEndingPosition = null
-var trackStartingControlPoint = null
-var trackEndingControlPoint = null
+var ending_overlay: TrackOrJunctionOverlap # nullable
+var trackStartAngle = null
+var trackEndingAngle = null
 # If it's possible to build the track given the starting and ending positions and directions
 var validTrack: bool = false
 
@@ -34,6 +44,9 @@ var mouse_tracker: Node2D
 var arrow_start : Sprite2D
 var arrow_end : Sprite2D
 var track: Track
+
+var track_intersection_searcher: TrackIntersectionSearcher
+
 
 # Sharpest turning radius and other constants
 # var minAllowedRadius = 45
@@ -63,8 +76,9 @@ var curve_type_flag: bool = true:
 var tracks: Node
 
 func _init(tracks_: Node, mouse_tracker_node_: Node2D):
-	tracks = tracks_
 	mouse_tracker = mouse_tracker_node_
+	track_intersection_searcher = TrackIntersectionSearcher.new(mouse_tracker)
+	tracks = tracks_
 	arrow_start = Sprite2D.new()
 	arrow_end = Sprite2D.new()
 	arrow_start.scale = Vector2(0.03, 0.03)
@@ -79,8 +93,8 @@ func _init(tracks_: Node, mouse_tracker_node_: Node2D):
 # Should be called after a cancel or solidify of a track, to create a new one
 func create_track_node_tree():
 	track = trackPreloaded.instantiate()
-	track.track_visual_component
-	track.name = "UserPlacedTrack-" + str(track_counter)
+	# Need the counter, because (probably) this track is added before the other one is free, so there's a name conflict if we just use tempUserTrack
+	track.name = "TempUserTrack" + str(track_counter)
 	track_counter += 1
 	mouse_tracker.add_child(arrow_start)
 	mouse_tracker.add_child(arrow_end)
@@ -119,18 +133,114 @@ func rotate_sprite(unit_tangent: Vector2, sprite: Sprite2D):
 
 func intialize_and_set_start_point():
 	trackStartingPosition = currentTrackPlacePoint
-	trackStartingControlPoint = currentPointTangent
+	starting_overlay = current_overlay
+	trackStartAngle = currentPointTangent.angle()
 	track.visible = true	
 
 
 func solidifyTrack():
-	track.area2d.solidfy_collision_area()
-	track.area2d.set_collision_layer_value(1, true)
-	track.area2d.set_collision_mask_value(1, false) # Should be nothing
-	var test = track.area2d.get_collision_layer()
+	setup_junctions() # This could be done in compute as well.
+	track.name = "UserPlacedTrack-" + str(track_counter)
+	track.area2d.solidify_collision_area()
 
 	reset_track_builder()
 	create_track_node_tree()
+
+# Really, we should clean up our code so that when we instantiate a track, 
+# we also instatiate it's curve type, as well as it's junctions(all at the same time).
+# We should probably just ditch the bezier curve for now. It's so broken
+func setup_junctions():
+	if (track.bezier_curve):
+		assert(false, "We haven't implemented junctions for bezier curves yet")
+	elif (track.dubins_path):
+		create_dubin_junctions()
+	else:
+		assert(false, "We should never get here")
+
+func create_dubin_junctions():
+	if (starting_overlay):
+		handle_track_joining_dubin(starting_overlay, true)
+	else:
+		var first_point = track.dubins_path.shortest_path._points[0]
+		Junction.new_Junction(first_point, tracks, \
+	Junction.NewConnection.new(track, true)) 
+	
+	if (ending_overlay):
+		handle_track_joining_dubin(ending_overlay, false)
+	else:
+		var last_point = track.dubins_path.shortest_path._points[-1]
+		Junction.new_Junction(last_point, tracks, \
+		Junction.NewConnection.new(track, false)) 
+	
+	
+
+func handle_track_joining_dubin(overlap: TrackOrJunctionOverlap, is_start_of_new_track: bool):
+	if (overlap.junction):
+		overlap.junction.add_connection(Junction.NewConnection.new(track, is_start_of_new_track))
+	elif (overlap.trackPointInfo):
+		split_track_at_point(overlap.trackPointInfo, is_start_of_new_track)
+	else:
+		assert(false, "We should never get here, we should always have a junction or track point info if we're in this function")
+
+	
+
+# split existing track and update that existing track's junctions on the _far_ ends
+	# have the directions go the same
+	# but do NOT add junctions to the split track
+# delete old track
+# create a new junction for this _new_ track
+# add the split track ends to the new junction
+func split_track_at_point(trackPointInfo: TrackPointInfo, is_start_of_new_track: bool):	
+	var split_tracks = create_split_track(trackPointInfo)
+	var first_half = split_tracks[0]
+	var second_half = split_tracks[1]
+	var first_half_old_start_junction = trackPointInfo.track.start_junction
+	# var second_half = create_split_track(trackPointInfo, false)
+	var second_half_old_end_junction = trackPointInfo.track.end_junction
+	delete_track(trackPointInfo.track)
+
+	# Start of first half
+	first_half_old_start_junction.add_connection( \
+	Junction.NewConnection.new(first_half, true))
+
+	# End of first half + junction
+	var intersection_junction = Junction.new_Junction(trackPointInfo.get_point(), tracks, \
+	Junction.NewConnection.new(first_half, false))
+
+	# Start of second half
+	intersection_junction.add_connection(Junction.NewConnection.new(second_half, true))
+
+	# The new track at the junction
+	intersection_junction.add_connection(Junction.NewConnection.new(track, is_start_of_new_track))
+
+	# End of the second half
+	second_half_old_end_junction.add_connection(Junction.NewConnection.new(second_half, false))
+
+func create_split_track(trackPointInfo: TrackPointInfo) -> Array[Track]:
+	if (!trackPointInfo.track.dubins_path):
+		assert(false, "We haven't implemented split for any other type of path")
+		return []
+	var new_tracks : Array[Track] = []
+	var new_dubins_paths : Array[DubinPath] = trackPointInfo.track.dubins_path.shortest_path.split_at_point_index(trackPointInfo.point_index)
+	for path in new_dubins_paths:
+		var newTrack = trackPreloaded.instantiate()
+		var name_suffix = newTrack.name + str(track_counter)
+		newTrack.name = "SplitTrack-" + name_suffix
+		track_counter += 1
+		newTrack.update_stored_curves(curve_type_flag) ## No better way to instantiate unforutenly
+		tracks.add_child(newTrack)
+		newTrack.dubins_path.paths.append(path)
+		newTrack.dubins_path.shortest_path = path
+		newTrack.update_visual_and_collision_for_dubin_path()
+		newTrack.area2d.solidify_collision_area()
+		new_tracks.append(newTrack)
+	return new_tracks
+	
+
+func delete_track(track_to_delete: Track):
+	track_to_delete.start_junction.remove_track(track_to_delete)
+	track_to_delete.end_junction.remove_track(track_to_delete)
+	track_to_delete.queue_free()
 
 
 # We want to reset most things, but leave things like
@@ -143,8 +253,10 @@ func reset_track_builder():
 	track.track_visual_component.modulate = Color(1,1,1,1)
 	trackStartingPosition = null
 	trackEndingPosition = null
-	trackStartingControlPoint = null
-	trackEndingControlPoint = null
+	starting_overlay = null
+	ending_overlay = null
+	trackStartAngle = null
+	trackEndingAngle = null
 
 
 func cancel_track():
@@ -159,43 +271,44 @@ func cancel_track():
 	
 func find_nearest_grid_and_tangents(mousePos: Vector2):
 	var mousePosition = mousePos
-	var overlapping_track = mouse_tracker.track_intersector_searcher.check_for_overlap_track()
-	# Used if we need to snap to a track start/end
+	current_overlay = track_intersection_searcher.check_for_junctions_or_track_at_position(mousePosition)
 	var snap_tangent = null
-	var tangents
-
+	var tangents = null
 	# Find the closet track point. If the track endpoint is within our radius, we should "stick" to it. 
 	# and set the tangent to point away from the track
 	# Otherwise, if we did find a track point, we should set the tanget according to the angle at that point and
 	# using our tanget switch
 	# OTHERWISE, just look for the closest grid wall and snap to that
 
-	if (overlapping_track && (overlapping_track["is_start"] || overlapping_track["is_end"])):
-		draw_walls_and_centerpoint(overlapping_track["point"], overlapping_track["angle"])
-		currentTrackPlacePoint = overlapping_track["point"]
-		# We need to snap the tangent in the opposite direction of the track.
-		var reverser;
-		if overlapping_track["is_start"]:
-			reverser = -1
-		else:
-			reverser = 1
+	if (current_overlay):
+		if (current_overlay.junction):
+			draw_walls_and_centerpoint(current_overlay.junction.position, current_overlay.junction._angle)
+			currentTrackPlacePoint = current_overlay.junction.position
 
-		snap_tangent = reverser * Vector2.from_angle(overlapping_track["angle"])
-	elif(overlapping_track):
-		draw_walls_and_centerpoint(overlapping_track["point"], overlapping_track["angle"])
-		currentTrackPlacePoint = overlapping_track["point"]
-		closet_track_tangent = Vector2.from_angle(overlapping_track["angle"])
-		tangents = [closet_track_tangent, -1 * closet_track_tangent]
+			# If there is only one track on the junction, and we don't have a starting position yet,
+			# snap to that junction
+			# Because junctions with 1 line always have an angle that faces _away_ from that line(because
+			# that's how they're constructed), we can just reuse that snap direction.
+			if (current_overlay.junction.lines.size() == 1 && !trackStartingPosition):
+				snap_tangent = Vector2.from_angle(current_overlay.junction._angle)
+			else:
+				tangents = [Vector2.from_angle(current_overlay.junction._angle),
+				Vector2.from_angle(current_overlay.junction._opposite_angle)]
+		elif(current_overlay.trackPointInfo):
+			draw_walls_and_centerpoint(current_overlay.trackPointInfo.get_point(), current_overlay.trackPointInfo.angle)
+			currentTrackPlacePoint = current_overlay.trackPointInfo.get_point()
+			closet_track_tangent = Vector2.from_angle(current_overlay.trackPointInfo.angle)
+			tangents = [closet_track_tangent, -1 * closet_track_tangent]
 	else:
 		var centerpoint_and_tangets = draw_wall_and_calculate_centerpoint_and_tangent(mousePosition)
 		currentTrackPlacePoint = centerpoint_and_tangets[0]
 		tangents = centerpoint_and_tangets[1]
 	
-	if (snap_tangent):
+	# Need to do an explict null check because snap_tangent could be 0
+	if (snap_tangent != null):
 		currentPointTangent = snap_tangent
 	else:
 		determine_tangent_from_switches(tangents)
-
 
 	if (!trackStartingPosition):
 		update_arrow_start()
@@ -251,8 +364,8 @@ func update_arrow_end() -> void:
 	# Determine the arrow's tangent point, it's opposite of the track tangent
 	var arrowPoint = -1 * currentPointTangent
 	# Rotate the arrow sprite to point in the opposite direction of the track's tangent
-	rotate_sprite(trackEndingControlPoint * -1, arrow_end)
-	arrow_end.position = trackEndingPosition + (arrowPoint * (MapManager.cellSize / 2.0))
+	rotate_sprite(Vector2.from_angle(trackEndingAngle), arrow_end)
+	arrow_end.position = trackEndingPosition - (arrowPoint * (MapManager.cellSize / 2.0))
 
 
 func update_arrow_start() -> void:
@@ -294,15 +407,16 @@ func get_closest_wall_and_midpoint(mouse_position: Vector2) -> Array:
 func build_track() -> void:
 	# Update ending position
 	trackEndingPosition = currentTrackPlacePoint
-	trackEndingControlPoint = currentPointTangent
+	ending_overlay = current_overlay
+	trackEndingAngle = currentPointTangent.angle()
 
 	update_arrow_end()
 
 	var valid = track.compute_track(
 		trackStartingPosition, 
-		trackStartingControlPoint, 
+		trackStartAngle, 
 		trackEndingPosition, 
-		trackEndingControlPoint, 
+		trackEndingAngle, 
 		minAllowedRadius,
 		track_mode_flag,
 		curve_type_flag)
@@ -313,27 +427,3 @@ func build_track() -> void:
 		track.track_visual_component.modulate = Color8(0, 77, 255, int(0.79 * 255))  # Half-transparent blue
 	else:
 		track.track_visual_component.modulate = Color(1, 0, 0, 0.5)  # Half-transparent red
-
-# Returns a tuple of [point, direction(as a normalized vector2)] or null
-func get_closest_track_endpoints_and_directions(mouse_position: Vector2):
-	var closest_point = null
-	var closet_point_direction = null
-	var smallest_distance = INF
-	var track_children = tracks.get_children()
-	for track in track_children:
-		var points_and_endpoints = track.get_endpoints_and_directions()
-		for i in range(points_and_endpoints.size()):
-			var distance = points_and_endpoints[i][0].distance_to(mouse_position)
-			if distance < smallest_distance && distance < MapManager.cellSize / 2.0:
-				smallest_distance = distance
-				closest_point = points_and_endpoints[i][0]
-				#Need to do this conversion because our codebase is inconsistent with unit vectors and theats
-				closet_point_direction = Vector2.from_angle(points_and_endpoints[i][1])
-				# We reverse the starting point to point _away_ from the track
-				if (i == 0):
-					closet_point_direction = -1 * closet_point_direction
-	
-	if (closest_point):
-		return [closest_point, closet_point_direction]
-	else:
-		return null

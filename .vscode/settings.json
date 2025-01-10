@@ -1,3 +1,12 @@
 {
-    "godotTools.editorPath.godot4": "c:\\Godot_v4.3-stable_mono_win64\\Godot_v4.3-stable_mono_win64_console.exe"
+    "godotTools.editorPath.godot4": "c:\\Godot_v4.3-stable_mono_win64\\Godot_v4.3-stable_mono_win64_console.exe",
+	// "files.exclude": {
+    //     "**/addons": true
+    // },
+    "search.exclude": {
+        "**/addons": true
+    },
+    "explorer.exclude": {
+        "**/addons": true
+    }
 }

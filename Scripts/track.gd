@@ -3,6 +3,7 @@
 class_name Track
 extends Node2D
 
+var uuid: String = Utils.generate_uuid()
 static var counter = 0
 @onready var track_visual_component: Node2D = $TrackVisualComponent
 ## Used to keep track of last changes in the editor, and if changed, to re-render the points
@@ -10,6 +11,9 @@ var baked_points_editor_checker : PackedVector2Array = []
 
 @onready var area2d: Area2D = $Area2D
 
+
+@onready var start_junction: Junction
+@onready var end_junction: Junction
 
 @export_category("Curve Builder")
 @export var edit_curve: bool = false:
@@ -29,8 +33,8 @@ var baked_points_editor_checker : PackedVector2Array = []
 			return
 		return bezier_curve.curve
 @export var bezier_curve: Path2D
-var path: Node2D # can be bezier curve or DubinsPath2D
 var dubins_path: DubinPath2D
+
 
 # Would be better to wrap these next two functions
 func get_curve():
@@ -41,37 +45,34 @@ func get_curve():
 	else:
 		printerr("We haven't defined a curve for this track yet!")
 # Returns [point, tangent(in radians)]
-func get_point_and_tangent_at_index(index: int):
+func get_point_info_at_index(index: int) -> TrackPointInfo:
 	if (bezier_curve):
-		return bezier_curve.curve.get_baked_points()[index]
-		printerr("We haven't really tested this yet")
+		assert(false, "Unimplemented code path!")
+		return TrackPointInfo.new(self, index, 0)
 	elif (dubins_path):
-		return get_point_and_tangent_at_index_dubin_path(index)
+		return get_track_point_info_dubin_path(index)
 	else:
-		printerr("We haven't defined a curve for this track yet!")
+		assert(false, "This should be impossible!")
+		return TrackPointInfo.new(self, index, 0)
 
-func get_point_and_tangent_at_index_dubin_path(index: int):
+func get_track_point_info_dubin_path(index: int) -> TrackPointInfo:
 	# If this is the endpoint for a track. Useful to determine if we should
 	# snap the tangent in the opposite direction
 	var is_start = false
 	var is_end = false
 	var points = dubins_path.shortest_path.get_points()
 	var current = points[index]
-	var theta = null
 	if index >= points.size():
-		return Vector2.ZERO
+		assert(false, "This should be impossible!")
+		return TrackPointInfo.new(self, index, 0)
+	
+	var theta = dubins_path.shortest_path.get_angle_at_point_index(index)
 
-	if index == 0:
-		theta = dubins_path.shortest_path.start_theta
-		is_start = true
-	elif index == points.size() - 1:
-		theta = dubins_path.shortest_path.end_theta
-		is_end = true
-	else:
-		# For middle points, calculate angle based on neighboring points
-		var next = points[index + 1]
-		theta = (next - current).angle()
-	return [current, theta, is_start, is_end]
+	if (is_start || is_end):
+		assert(false, "This should be a junction, not a point!")
+
+	return TrackPointInfo.new(self, index, theta)
+
 
 func get_endpoints_and_directions():
 	if (bezier_curve):
@@ -82,7 +83,7 @@ func get_endpoints_and_directions():
 			return []
 		return dubins_path.shortest_path.get_endpoints_and_directions()
 	else:
-		push_error("We haven't defined a curve for this track yet!")
+		assert(false, "We haven't defined a curve for this track yet!")
 
 func cleanup_bezier_curve() -> void:
 	if bezier_curve:
@@ -117,6 +118,7 @@ func update_stored_curves(curve_type_flag: bool):
 			cleanup_bezier_curve()
 		if (!dubins_path):
 			dubins_path = DubinPath2D.new()
+			dubins_path.name = "DubinsPath"
 			add_child(dubins_path)
 	else:
 		if (dubins_path):
@@ -124,7 +126,7 @@ func update_stored_curves(curve_type_flag: bool):
 			dubins_path = null
 		if (!bezier_curve):
 			create_bezier_curve()
-	
+
 
 func _validate_property(property : Dictionary):
 	if property.name == "bezier_curve_prop":
@@ -153,44 +155,41 @@ func _ready() -> void:
 	# If the curve was pre-created in the editor, then we should show the goods
 	update_visual_with_bezier_points()
 
-
+# Optimize: Get rid of tangets, use just angles everywhere
 func compute_track(trackStartingPosition, 
-	trackStartingControlPoint, 
+	trackStartAngle: float, 
 	trackEndingPosition, 
-	trackEndingControlPoint, 
+	trackEndingAngle: float,
 	minAllowedRadius, 
 	track_mode_flag,
-	curve_type_flag) -> bool:
+	curve_type_flag,
+	draw_paths: bool = true) -> bool:
 	var validTrack = false;
 
 	if (curve_type_flag):
-		# When dealing with bezier curves, the control point for the end of the track will be in the OPPOSITE
-		# direction of travel. However here we want the actual direction of travel, so we flip it back.
-		var trackEndingDirection = -1 * trackEndingControlPoint
 		validTrack = dubins_path.calculate_and_draw_paths(trackStartingPosition, 
-		trackStartingControlPoint, 
+		trackStartAngle, 
 		trackEndingPosition, 
-		trackEndingDirection, minAllowedRadius)
+		trackEndingAngle, 
+		minAllowedRadius,
+		draw_paths)
 
 		# Return early, because there's no track points on an invalid track
 		if (!validTrack):
 			track_visual_component.make_track_invisible()
 			return validTrack
 
-		track_visual_component.update_track_points(dubins_path.shortest_path.get_points(), 
-		dubins_path.shortest_path.length,
-		dubins_path.shortest_path.get_point_at_offset,
-		trackStartingControlPoint,
-		trackEndingControlPoint
-		)
-		area2d.compute_new_track(dubins_path.shortest_path.get_points(), track_visual_component.backing.width)
+		update_visual_and_collision_for_dubin_path()
 
 	else:
+		# When dealing with bezier curves, the control point for the end of the track will be in the OPPOSITE
+		# direction of travel. However here we want the actual direction of travel, so we flip it back.
+		var trackEndingDirection = -1 * Vector2.from_angle(trackEndingAngle)
 		var curve_result = BezierCurveMath.find_best_curve(
 			trackStartingPosition,
-			trackStartingControlPoint,
+			Vector2.from_angle(trackStartAngle),
 			trackEndingPosition,
-			trackEndingControlPoint,
+			trackEndingDirection,
 			minAllowedRadius,
 			track_mode_flag
 		)
@@ -202,12 +201,24 @@ func compute_track(trackStartingPosition,
 
 		validTrack = curve_result.validTrack
 		update_visual_with_bezier_points()
-
-		area2d.compute_new_track(bezier_curve.curve.get_baked_points(), track_visual_component.width)
-
+	
 	return validTrack
 
+func update_visual_and_collision_for_dubin_path():
+	track_visual_component.update_track_points(dubins_path.shortest_path.get_points(), 
+	dubins_path.shortest_path.length,
+	dubins_path.shortest_path.get_point_at_offset,
+	Vector2.from_angle(dubins_path.shortest_path.start_theta),
+	Vector2.from_angle(dubins_path.shortest_path.end_theta)
+	)
 
-func _on_area_2d_area_entered(area: Area2D) -> void:
-	print("WE ENTERED AN AREA OMG!")
-	pass # Replace with function body.
+
+func get_angle_at_point_index(index: int) -> float:
+	if (bezier_curve):
+		assert(false, "Unimplemented code path!")
+		return -1
+	elif (dubins_path):
+		return dubins_path.shortest_path.get_angle_at_point_index(index)
+	else:
+		assert(false, "We haven't defined a curve for this track yet!")
+		return 0

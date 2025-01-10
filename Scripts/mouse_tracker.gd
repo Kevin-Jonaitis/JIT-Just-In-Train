@@ -1,19 +1,13 @@
 extends Node2D
 
+class_name MouseTracker
+
 var trackBuilder: TrackBuilder;
 
 var drawableFunctionsToCallLater: Array[Callable] = []
 
-@onready var track_intersector_searcher: Area2D = $TrackIntersectionSeracher
-
-
-
 func _ready():
 	trackBuilder = TrackBuilder.new(get_tree().root.find_child("Tracks", true, false), self)
-
-func draw_circle_at_point(point: Vector2):
-	drawableFunctionsToCallLater.append(func(): draw_circle(point, 3, Color.PINK))
-	queue_redraw()
 
 func _input(event: InputEvent) -> void:
 	if  (not (event is InputEventMouseMotion || event.is_action_type())):
@@ -50,3 +44,8 @@ func _draw():
 	for function in drawableFunctionsToCallLater:
 		function.call()
 	drawableFunctionsToCallLater.clear()
+
+
+func draw_circle_at_point(point: Vector2):
+	drawableFunctionsToCallLater.append(func(): draw_circle(point, 3, Color.PINK))
+	queue_redraw()
