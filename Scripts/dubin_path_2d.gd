@@ -12,20 +12,17 @@ var paths: Array[DubinPath] = []
 ## https://www.habrador.com/tutorials/unity-dubins-paths/2-basic-dubins-paths/
 
 ## Maybe should store passed in variables?
-func calculate_and_draw_paths(start_pos, trackStartAngle, end_pos, trackEndingAngle, min_turn_radius, draw_paths: bool) -> bool:
+func calculate_and_draw_paths(start_pos, start_angle: float, end_pos, end_angle: float, min_turn_radius, draw_paths: bool) -> bool:
 	# If the start and end are the same, we don't need to move at all. Short-circuit everything. The shortest
 	# path is standing still. If you really want to calculate this path, just draw a circle(in your perferred direction)
 	# ending at this point. The below code freaks out because of direction of rotation and floating point precision
 	# issues, so gives incosistent results depending on where you start and end. These issues arn't worth figuring out,
 	# because even if I did they'd give some arbitrary result that you probably wouldn't want anyways.
 
-	# Need to keep moving the angle through
-	var start_dir = Vector2.from_angle(trackStartAngle)
-	var end_dir = Vector2.from_angle(trackEndingAngle)
-	if start_pos == end_pos and Utils.check_angle_matches(trackStartAngle,trackEndingAngle):
+	if start_pos == end_pos and Utils.check_angle_matches(start_angle,end_angle):
 		clear_drawables()
 		return false
-	self.paths = DubinsPathMath.compute_dubins_paths(start_pos, start_dir, end_pos, end_dir, min_turn_radius)
+	self.paths = DubinsPathMath.compute_dubins_paths(start_pos, start_angle, end_pos, end_angle, min_turn_radius)
 	# Technically, we should never return a path size of 0. Dubins paths are always valid.
 	# The only time this really happens
 	# is if the starting point is also the ending point. Maybe the user wants to draw this
@@ -36,7 +33,7 @@ func calculate_and_draw_paths(start_pos, trackStartAngle, end_pos, trackEndingAn
 		return false
 	self.shortest_path = DubinsPathMath.get_shortest_dubin_path(paths)
 	if (draw_paths):
-		draw_tangent_circles(start_pos, start_dir, end_pos, end_dir, min_turn_radius)
+		draw_tangent_circles(start_pos, start_angle, end_pos, end_angle, min_turn_radius)
 		draw_dubin_paths()
 		draw_path(shortest_path, Color.WHITE)
 		queue_redraw()
@@ -61,10 +58,10 @@ func draw_path(path: DubinPath, color: Color) -> void:
 				func(): draw_polyline(PackedVector2Array(path.get_points()), color, 3))
 
 # Function to draw two circles based on tangent, radius, and point
-func draw_tangent_circles(start_pos, start_dir, end_pos, end_dir, radius):
+func draw_tangent_circles(start_pos, start_angle: float, end_pos, end_angle: float, radius):
 
-	var circles_start = DubinsPathMath.get_perpendicular_circle_centers(start_pos, start_dir, radius)
-	var circles_end = DubinsPathMath.get_perpendicular_circle_centers(end_pos, end_dir, radius)
+	var circles_start = DubinsPathMath.get_perpendicular_circle_centers(start_pos, start_angle, radius)
+	var circles_end = DubinsPathMath.get_perpendicular_circle_centers(end_pos, end_angle, radius)
 
 	# Draw the circles
 	drawableFunctionsToCallLater.append(func(): draw_circle(circles_start.left.center, radius, Color.RED, false, 2))

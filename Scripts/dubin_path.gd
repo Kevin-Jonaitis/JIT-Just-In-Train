@@ -66,16 +66,36 @@ func add_point_if_unique(point: Vector2) -> void:
 	if _points.is_empty() or not _points[-1].is_equal_approx(point):
 		_points.append(point)
 
+# Written by Chat-GPT, tested by yours truly
 func get_angle_at_point_index(index: int) -> float:
-	if index == 0:
-		return start_theta
-	elif index == _points.size() - 1 || index == -1:
-		return end_theta
-	else:
-		var next = _points[index + 1]
-		var current = _points[index]
-		return (next - current).angle()
+	var result: Array = find_segment_with_point(index)
+	var seg_idx: int = result[0]
+	var local_idx: int = result[1]
+	var seg = segments[seg_idx]  # Could be either Line or Arc
 
+	if seg is Line:
+		# For a straight line, the tangent angle is constant
+		var line_seg : Line = seg
+		return (line_seg.end - line_seg.start).angle()
+
+	elif seg is Arc:
+		# For an arc, get the actual point, then compute tangent from the center
+		var arc_seg : Arc = seg
+		var arc_point: Vector2 = arc_seg.points[local_idx]
+		var vec_from_center: Vector2 = arc_point - arc_seg.center
+		var angle_to_center: float = vec_from_center.angle()
+
+		# Determine direction of travel (sign) based on start/end theta
+		var direction_sign: float = 1.0
+		if arc_seg.end_theta < arc_seg.start_theta:
+			direction_sign = -1.0
+
+		# Tangent = radial direction ± 90°, depending on arc direction
+		return angle_to_center + direction_sign * PI / 2.0
+
+	# Fallback (should never happen if segments are only Line or Arc)
+	assert(false, "This should never happen.")
+	return 0.0
 
 ## Filter out segments that don't have any length; this pretty much only
 ## happens when it's a straight line

@@ -16,7 +16,7 @@ class CircleInfo:
 	## This is the angle from the center of this circle
 	## to the point where the track starts/ends
 	var center_theta: float
-	# The angle of the unit tangent w.r.t. x-axis that is used to construct the left and right cicles
+	# The angle of the unit tangent at the point w.r.t. x-axis that is used to construct the left and right cicles
 	var theta: float 
 
 	# Constructor
@@ -27,35 +27,38 @@ class CircleInfo:
 
 ## Fetches the center of the left and right circles
 ## and the angles pointing from the center of the circle to point
-static func get_perpendicular_circle_centers(point: Vector2, unit_tangent: Vector2, radius: float) -> TangentCircles:
-	var left_tangent = Vector2(-unit_tangent.y, unit_tangent.x)
-	var right_tangent = Vector2(unit_tangent.y, -unit_tangent.x)
-	var left_center_theta = atan2(left_tangent.y, left_tangent.x) # the angle of AB
-	var right_center_theta = atan2(right_tangent.y, right_tangent.x)
-	var unit_tangent_theta = atan2(unit_tangent.y, unit_tangent.x)
-	
+static func get_perpendicular_circle_centers(point: Vector2, angle: float, radius: float) -> TangentCircles:
+	# Calculate the perpendicular directions based on the angle in a left-handed system
+	var left_tangent_angle = angle + PI / 2  # Rotate 90 degrees clockwise
+	var right_tangent_angle = angle - PI / 2  # Rotate 90 degrees counterclockwise
+
+	# Calculate the tangent directions
+	var left_tangent = Vector2(cos(left_tangent_angle), sin(left_tangent_angle))
+	var right_tangent = Vector2(cos(right_tangent_angle), sin(right_tangent_angle))
+
 	# Calculate the centers of the circles
 	var left_circle_center = point - left_tangent * radius
 	var right_circle_center = point - right_tangent * radius
-	return TangentCircles.new(
-		CircleInfo.new(left_circle_center, left_center_theta, unit_tangent_theta),
-		CircleInfo.new(right_circle_center, right_center_theta, unit_tangent_theta),
-		)
 
+	# Create and return the result
+	return TangentCircles.new(
+		CircleInfo.new(left_circle_center, left_tangent_angle, angle),
+		CircleInfo.new(right_circle_center, right_tangent_angle, angle)
+	)
 # Inputs:
 # start_pos: Vector2 - starting position (x, y)
 # start_dir: Vector2 - starting direction (unit vector)
 # end_pos: Vector2 - ending position (x, y)
 # end_dir: Vector2 - ending direction (unit vector)
 # min_turn_radius: float - minimum turning radius
-static func compute_dubins_paths(start_pos, start_dir, end_pos, end_dir, min_turn_radius) -> Array[DubinPath]:
+static func compute_dubins_paths(start_pos: Vector2, start_angle: float, end_pos: Vector2, end_angle: float, min_turn_radius) -> Array[DubinPath]:
 	# var path_types = ["LSR"]
 	var path_types = ["LSL", "RSR", "LSR", "RSL", "RLR", "LRL"]
 
 	var paths: Array[DubinPath] = []
 	
-	var circles_start = get_perpendicular_circle_centers(start_pos, start_dir, min_turn_radius)
-	var circles_end = get_perpendicular_circle_centers(end_pos, end_dir, min_turn_radius)
+	var circles_start = get_perpendicular_circle_centers(start_pos, start_angle, min_turn_radius)
+	var circles_end = get_perpendicular_circle_centers(end_pos, end_angle, min_turn_radius)
 
 	for path_type in path_types:
 		var path = compute_path(min_turn_radius, path_type, circles_start, circles_end)
