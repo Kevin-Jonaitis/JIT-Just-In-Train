@@ -19,6 +19,7 @@ config/icon="res://icon.png"
 
 MapManager="*res://Scripts/map_manager.gd"
 Utils="*res://Scripts/utils.gd"
+EventBus="*res://Scripts/event_bus.gd"
 
 [display]
 
@@ -36,6 +37,13 @@ enabled=PackedStringArray("res://addons/gut/plugin.cfg")
 [global_group]
 
 tracks="the tracks node"
+
+[gui]
+
+common/snap_controls_to_pixels=false
+theme/default_font_hinting=2
+theme/default_font_multichannel_signed_distance_field=true
+theme/lcd_subpixel_layout=0
 
 [input]
 
@@ -89,9 +97,20 @@ pan={
 "events": [Object(InputEventMouseButton,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":true,"meta_pressed":false,"button_mask":1,"position":Vector2(284, 26),"global_position":Vector2(303, 117),"factor":1.0,"button_index":1,"canceled":false,"pressed":true,"double_click":false,"script":null)
 ]
 }
+place_train_or_track={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":84,"key_label":0,"unicode":116,"location":0,"echo":false,"script":null)
+]
+}
+interact_mode={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":4194306,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+]
+}
 
 [layer_names]
 
 2d_physics/layer_1="tracks"
 2d_physics/layer_2="newTrack"
 2d_physics/layer_3="junction"
+2d_physics/layer_4="trains"

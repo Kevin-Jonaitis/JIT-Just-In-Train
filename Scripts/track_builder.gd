@@ -1,4 +1,4 @@
-extends RefCounted
+extends Node2D
 class_name TrackBuilder
 
 
@@ -40,12 +40,16 @@ var closet_track_tangent = null
 var track_mode_flag: bool = false
 
 # Switches between minimum tangent and minimum radius modes
-var mouse_tracker: Node2D
-var arrow_start : Sprite2D
 var arrow_end : Sprite2D
+var arrow_start : Sprite2D
 var track: Track
 
-var track_intersection_searcher: TrackIntersectionSearcher
+@onready var track_intersection_searcher: TrackIntersectionSearcher = TrackIntersectionSearcher.new(self)
+#TODO: This could be better
+@onready var tracks: Tracks = $"../../Tracks"
+@onready var trains: Trains = $"../../Trains"
+
+var drawableFunctionsToCallLater: Array[Callable] = []
 
 
 # Sharpest turning radius and other constants
@@ -60,10 +64,16 @@ var minAllowedRadius = 100:
 		
 var ratio_distance_to_baked_points = 5
 
+func _draw():
+	for function in drawableFunctionsToCallLater:
+		function.call()
+	drawableFunctionsToCallLater.clear()
 
 # Preloaded assets
 const trackPreloaded = preload("res://Scenes/track.tscn")
-const track_direction_arrow = preload("res://Assets/arrow_single.png");
+const track_direction_arrow = preload("res://Assets/arrow_single.png")
+const scene: PackedScene = preload("res://Scenes/track_builder.tscn")
+
 
 
 var curve_type_flag: bool = true:
@@ -73,12 +83,7 @@ var curve_type_flag: bool = true:
 			track.update_stored_curves(curve_type_flag)
 
 
-var tracks: Node
-
-func _init(tracks_: Node, mouse_tracker_node_: Node2D):
-	mouse_tracker = mouse_tracker_node_
-	track_intersection_searcher = TrackIntersectionSearcher.new(mouse_tracker)
-	tracks = tracks_
+func _ready():
 	arrow_start = Sprite2D.new()
 	arrow_end = Sprite2D.new()
 	arrow_start.scale = Vector2(0.03, 0.03)
@@ -96,8 +101,8 @@ func create_track_node_tree():
 	# Need the counter, because (probably) this track is added before the other one is free, so there's a name conflict if we just use tempUserTrack
 	track.name = "TempUserTrack" + str(track_counter)
 	track_counter += 1
-	mouse_tracker.add_child(arrow_start)
-	mouse_tracker.add_child(arrow_end)
+	add_child(arrow_start)
+	add_child(arrow_end)
 	track.update_stored_curves(curve_type_flag) ## No better way to instantiate unforutenly
 	tracks.add_child(track) 
 	arrow_start.visible = false
@@ -158,20 +163,32 @@ func setup_junctions():
 		assert(false, "We should never get here")
 
 func create_dubin_junctions():
+	var startingJunction;
 	if (starting_overlay):
 		handle_track_joining_dubin(starting_overlay, true)
 	else:
 		var first_point = track.dubins_path.shortest_path._points[0]
-		Junction.new_Junction(first_point, tracks, \
-	Junction.NewConnection.new(track, true)) 
+		startingJunction = Junction.new_Junction(first_point, tracks, \
+	Junction.NewConnection.new(track, true))
 	
+	# Check if our ending point overlaps our just-placed starting junction
+	if (startingJunction):
+		var point_to_check
+		if (ending_overlay && ending_overlay.trackPointInfo):
+			point_to_check = ending_overlay.trackPointInfo.get_point()
+		if (!ending_overlay):
+			point_to_check = track.dubins_path.shortest_path._points[-1]
+		if (point_to_check && \
+		track_intersection_searcher.is_junction_within_search_radius(startingJunction, point_to_check)):
+			startingJunction.add_connection(Junction.NewConnection.new(track, false))
+			return
+
 	if (ending_overlay):
 		handle_track_joining_dubin(ending_overlay, false)
 	else:
 		var last_point = track.dubins_path.shortest_path._points[-1]
 		Junction.new_Junction(last_point, tracks, \
 		Junction.NewConnection.new(track, false)) 
-	
 	
 
 func handle_track_joining_dubin(overlap: TrackOrJunctionOverlap, is_start_of_new_track: bool):
@@ -197,6 +214,8 @@ func split_track_at_point(trackPointInfo: TrackPointInfo, is_start_of_new_track:
 	var first_half_old_start_junction = trackPointInfo.track.start_junction
 	# var second_half = create_split_track(trackPointInfo, false)
 	var second_half_old_end_junction = trackPointInfo.track.end_junction
+	# Update the references for all train stops to this new point
+	trains.update_train_stops(trackPointInfo.get_point(), first_half, second_half)
 	delete_track(trackPointInfo.track)
 
 	# Start of first half
@@ -248,8 +267,8 @@ func delete_track(track_to_delete: Track):
 func reset_track_builder():
 	if (track.dubins_path):
 		track.dubins_path.clear_drawables()
-	mouse_tracker.remove_child(arrow_start)
-	mouse_tracker.remove_child(arrow_end)
+	remove_child(arrow_start)
+	remove_child(arrow_end)
 	track.track_visual_component.modulate = Color(1,1,1,1)
 	trackStartingPosition = null
 	trackEndingPosition = null
@@ -312,6 +331,9 @@ func find_nearest_grid_and_tangents(mousePos: Vector2):
 
 	if (!trackStartingPosition):
 		update_arrow_start()
+	
+	queue_redraw()
+
 
 func determine_tangent_from_switches(tangents: Array):
 	if (!trackStartingPosition):
@@ -337,8 +359,8 @@ func draw_walls_and_centerpoint(point_position: Vector2, theta: float):
 	var wallEnd = point_position - (perpendicular * halfDistance)
 	
 	# Draw debug visuals
-	mouse_tracker.drawableFunctionsToCallLater.append(func(): mouse_tracker.draw_line(wallStart, wallEnd, highlightColor, 3))
-	mouse_tracker.drawableFunctionsToCallLater.append(func(): mouse_tracker.draw_circle(currentTrackPlacePoint, 4, highlightColor, false, 4))
+	drawableFunctionsToCallLater.append(func(): draw_line(wallStart, wallEnd, highlightColor, 3))
+	drawableFunctionsToCallLater.append(func(): draw_circle(currentTrackPlacePoint, 4, highlightColor, false, 4))
 	
 
 func draw_wall_and_calculate_centerpoint_and_tangent(mousePos: Vector2):
@@ -352,8 +374,8 @@ func draw_wall_and_calculate_centerpoint_and_tangent(mousePos: Vector2):
 	wallToHighlight = closetWallAndMidpoint[0];
 	track_position = closetWallAndMidpoint[1];
 
-	mouse_tracker.drawableFunctionsToCallLater.append(func(): mouse_tracker.draw_line(wallToHighlight[0], wallToHighlight[1],highlightColor, 3))
-	mouse_tracker.drawableFunctionsToCallLater.append(func(): mouse_tracker.draw_circle(track_position, 4, highlightColor, false, 4))
+	drawableFunctionsToCallLater.append(func(): draw_line(wallToHighlight[0], wallToHighlight[1],highlightColor, 3))
+	drawableFunctionsToCallLater.append(func(): draw_circle(track_position, 4, highlightColor, false, 4))
 	var tangents = calculate_tangents(wallToHighlight[0], wallToHighlight[1])
 
 	return [track_position, tangents]
@@ -427,3 +449,8 @@ func build_track() -> void:
 		track.track_visual_component.modulate = Color8(0, 77, 255, int(0.79 * 255))  # Half-transparent blue
 	else:
 		track.track_visual_component.modulate = Color(1, 0, 0, 0.5)  # Half-transparent red
+
+
+func draw_circle_at_point(point: Vector2):
+	drawableFunctionsToCallLater.append(func(): draw_circle(point, 3, Color.PINK))
+	queue_redraw()

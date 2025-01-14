@@ -3,7 +3,6 @@ extends Area2D
 var uuid: String = Utils.generate_uuid()
 @onready var space_state = get_world_2d().direct_space_state
 
-var segments = []
 var drawableFunctionsToCallLater: Array[Callable] = []
 
 func _draw():
@@ -40,7 +39,7 @@ func add_shapes_to_current_area() -> void:
 func calculate_rectangles(points: Array, width: float) -> Array:
 	var temp_recs = []
 	if points.size() < 2:
-		push_error("Not enough points to calculate polygons. At least two points are required.")
+		assert(false, "Not enough points to calculate polygons. At least two points are required.")
 		return []
 
 	for i in range(points.size()):

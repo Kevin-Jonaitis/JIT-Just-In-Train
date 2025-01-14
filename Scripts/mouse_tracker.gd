@@ -2,14 +2,72 @@ extends Node2D
 
 class_name MouseTracker
 
-var trackBuilder: TrackBuilder;
+@onready var trackBuilder: TrackBuilder = $TrackBuilder
+@onready var train_builder: TrainBuilder = $TrainBuilder
+@onready var interactive_mode: InteractiveMode = $InteractiveMode
 
 var drawableFunctionsToCallLater: Array[Callable] = []
 
-func _ready():
-	trackBuilder = TrackBuilder.new(get_tree().root.find_child("Tracks", true, false), self)
 
-func _input(event: InputEvent) -> void:
+
+
+# true = place track, false = place train
+var track_or_train = true
+
+# Interact_or_edit mode
+var interact_or_edit_mode = false
+
+func _ready():
+	train_builder.set_train_builder_disabled()
+
+func _unhandled_input(event: InputEvent) -> void:
+
+	if (event.is_action_pressed("interact_mode")):
+		interact_or_edit_mode = !interact_or_edit_mode #Toggable, we should change this later to be more user friendly
+
+	if (event.is_action_pressed("place_train_or_track")): # Maybe this could go top level?
+		track_or_train = !track_or_train
+
+	if (interact_or_edit_mode):
+		handle_interact_mode(event)
+	else:
+		handle_edit_mode(event)
+
+# TODO: There's got to be a better way to do this
+func hide_editor_modes():
+	trackBuilder.visible = false
+	trackBuilder.cancel_track()
+	train_builder.set_train_builder_disabled()
+
+func hide_interact_mode():
+	interactive_mode.hide_UI()
+	
+func handle_interact_mode(event: InputEvent):
+	hide_editor_modes()
+	interactive_mode.handle_input(event)
+	pass
+
+func handle_edit_mode(event: InputEvent):
+	hide_interact_mode()
+	
+	if (track_or_train):
+		trackBuilder.drawableFunctionsToCallLater.clear()
+		trackBuilder.find_nearest_grid_and_tangents(get_global_mouse_position())
+		trackBuilder.visible = true
+		train_builder.set_train_builder_disabled()
+		trackBuilder.queue_redraw()
+	elif (!track_or_train):
+		trackBuilder.visible = false
+		train_builder.set_train_builder_enabled()			
+
+	if (track_or_train):
+		handle_track_building(event)
+	else:
+		train_builder.handle_input(event)
+
+
+
+func handle_track_building(event: InputEvent):
 	if  (not (event is InputEventMouseMotion || event.is_action_type())):
 		return
 	if (event is InputEventMouseMotion):
@@ -37,15 +95,8 @@ func _input(event: InputEvent) -> void:
 	## Always recompute the track on any inputEvent
 	if (trackBuilder.trackStartingPosition):
 		trackBuilder.build_track()
-	queue_redraw()
-
 	
 func _draw():
 	for function in drawableFunctionsToCallLater:
 		function.call()
 	drawableFunctionsToCallLater.clear()
-
-
-func draw_circle_at_point(point: Vector2):
-	drawableFunctionsToCallLater.append(func(): draw_circle(point, 3, Color.PINK))
-	queue_redraw()

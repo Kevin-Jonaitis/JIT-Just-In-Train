@@ -18,6 +18,16 @@ var crosstie_distance := 7
 @onready var backing: Line2D = $Backing
 @onready var rail: Line2D = $Rail
 
+func _ready():
+	## VERY IMPORTANT: THIS RADIUS MUST BE BIGGER THAN 
+	## THE WIDTH OF 1/2 of TRACK. If it's not, when the mouse gets close to a track
+	## we might collide with the track before a junction, causing us not to see
+	## the junction, which will mess up adding tracks to junctions
+	if (Junction_Collison_Shape.JUNCTION_RADIUS <= backing.width / 2 || \
+	Junction_Collison_Shape.JUNCTION_RADIUS <= backing.width / 2):
+		assert(false, "Son, you just made a grave mistake. Check the comment above your failure, and weep.")
+		pass
+
 
 var drawableFunctionsToCallLater: Array[Callable] = []
 

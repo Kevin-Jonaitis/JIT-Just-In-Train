@@ -57,9 +57,6 @@ class NewConnection:
 
 func add_connection(connection: NewConnection) -> void:
 	# Check if the track is already connected
-	for existing in lines:
-		if existing.track.uuid == connection.track.uuid and Utils.check_angle_matches(existing.approach_from_angle,connection.angle):
-			assert(false, "Track is already connected to this junction at the same angle!!")
 	
 	var track_connection = null
 
@@ -70,6 +67,10 @@ func add_connection(connection: NewConnection) -> void:
 	else:
 		assert(false, "Connection angle doesn't match junction angle or opposite angle")
 		return
+	
+	for existing in lines:
+		if existing.track.uuid == connection.track.uuid and Utils.check_angle_matches(existing.approach_from_angle,track_connection.approach_from_angle):
+				assert(false, "Track is already connected to this junction at the same angle!!")
 	
 	lines.append(track_connection)
 
@@ -105,4 +106,9 @@ static func new_Junction(position_: Vector2, tracksNode: Tracks, connection: New
 	junction.add_connection(NewConnection.new(connection.track, connection.connected_at_start))
 	junction.position = position_
 	tracksNode.junctions.add_child(junction)
+	junction.queue_redraw()
 	return junction
+
+#func _draw() -> void:
+	#print("THE POSITION", position)
+	#draw_circle(Vector2.ZERO, 18, Color(1,0,0,0.3))
