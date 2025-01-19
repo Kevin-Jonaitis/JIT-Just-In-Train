@@ -143,10 +143,11 @@ func intialize_and_set_start_point():
 
 
 func solidifyTrack():
+	track.build_track(starting_overlay, ending_overlay, "UserPlacedTrack-" + str(track_counter))
 	setup_junctions() # This could be done in compute as well.
-	track.name = "UserPlacedTrack-" + str(track_counter)
-	track.area2d.solidify_collision_area()
-	track.temp = false
+	# track.name = 
+	# track.area2d.solidify_collision_area()
+	# track.temp = false
 
 	reset_track_builder()
 	create_track_node_tree()
@@ -209,7 +210,7 @@ func split_track_at_point(trackPointInfo: TrackPointInfo, is_start_of_new_track:
 	var second_half_old_end_junction = trackPointInfo.track.end_junction
 	# Update the references for all train stops uing these new tracks
 	trains.update_train_stops(trackPointInfo.track, first_half, second_half)
-	delete_track(trackPointInfo.track)
+	trackPointInfo.track.delete_track()
 
 	# Start of first half
 	first_half_old_start_junction.add_connection( \
@@ -244,11 +245,6 @@ func create_split_track(trackPointInfo: TrackPointInfo) -> Array[Track]:
 		newTrack.area2d.solidify_collision_area()
 		new_tracks.append(newTrack)
 	return new_tracks
-
-func delete_track(track_to_delete: Track):
-	track_to_delete.start_junction.remove_track(track_to_delete)
-	track_to_delete.end_junction.remove_track(track_to_delete)
-	track_to_delete.queue_free()
 
 
 # We want to reset most things, but leave things like

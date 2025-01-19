@@ -14,6 +14,11 @@ var baked_points_editor_checker : PackedVector2Array = []
 
 @onready var start_junction: Junction
 @onready var end_junction: Junction
+@onready var junctions: Junctions = $"../../Junctions"
+@onready var trains: Trains = $"../../Trains"
+@onready var tracks: Tracks = $"../../Tracks"
+
+
 
 # Determines if this track has been "placed/solidified" yet or not
 var temp = true
@@ -38,13 +43,15 @@ static func new_Track(name_: String, curve_type_flag_: bool, tracks: Tracks, vis
 	return track
 
 
-# func solidifyTrack(track_counter: int):
-# 	assert(!dubins_path || !dubin_path.paths, "We haven't defined a path yet!")
-
-# 	# setup_junctions() # This could be done in compute as well.
-# 	name = "UserPlacedTrack-" + str(track_counter)
-# 	area2d.solidify_collision_area()
-# 	temp = false
+func build_track(starting_overlay, ending_overlay, optional_name: String):
+	assert(dubins_path && dubins_path.shortest_path, "We haven't defined a path yet!")
+	if (optional_name):
+		name = optional_name
+	# setup_junctions() # This could be done in compute as well.
+	# name = "UserPlacedTrack-" + str(track_counter)
+	# setup_junctions(starting_overlay, ending_overlay)
+	area2d.solidify_collision_area()
+	temp = false
 	
 
 @export_category("Curve Builder")
@@ -189,6 +196,12 @@ func update_visual_with_bezier_points():
 			)
 
 
+# Manually set the track path, rather than computing it
+func set_track_path_manual(path: DubinPath):
+	dubins_path.paths.append(path)
+	dubins_path.shortest_path = path
+	update_visual_for_dubin_path()
+
 # Optimize: Get rid of tangets, use just angles everywhere
 func compute_track(trackStartingPosition, 
 	trackStartAngle: float, 
@@ -256,3 +269,54 @@ func get_angle_at_point_index(index: int) -> float:
 	else:
 		assert(false, "We haven't defined a curve for this track yet!")
 		return 0
+
+func delete_track():
+	start_junction.remove_track(self)
+	end_junction.remove_track(self)
+	self.queue_free()
+
+func split_track_at_point(trackPointInfo: TrackPointInfo, is_start_of_new_track: bool):	
+	var split_tracks = create_split_track(trackPointInfo)
+	var first_half = split_tracks[0]
+	var second_half = split_tracks[1]
+	var first_half_old_start_junction = trackPointInfo.track.start_junction
+	# var second_half = create_split_track(trackPointInfo, false)
+	var second_half_old_end_junction = trackPointInfo.track.end_junction
+	# Update the references for all train stops uing these new tracks
+	trains.update_train_stops(trackPointInfo.track, first_half, second_half)
+	trackPointInfo.track.delete_track()
+
+	# Start of first half
+	first_half_old_start_junction.add_connection( \
+	Junction.NewConnection.new(first_half, true))
+
+	# End of first half + junction
+	var intersection_junction = Junction.new_Junction(trackPointInfo.get_point(), junctions, \
+	Junction.NewConnection.new(first_half, false))
+
+	# Start of second half
+	intersection_junction.add_connection(Junction.NewConnection.new(second_half, true))
+
+	# The new track at the junction
+	intersection_junction.add_connection(Junction.NewConnection.new(self, is_start_of_new_track))
+
+	# End of the second half
+	second_half_old_end_junction.add_connection(Junction.NewConnection.new(second_half, false))
+
+func create_split_track(trackPointInfo: TrackPointInfo) -> Array[Track]:
+	if (!trackPointInfo.track.dubins_path):
+		assert(false, "We haven't implemented split for any other type of path")
+		return []
+	var new_tracks : Array[Track] = []
+	var new_dubins_paths : Array[DubinPath] = trackPointInfo.track.dubins_path.shortest_path.split_at_point_index(trackPointInfo.point_index)
+	for path in new_dubins_paths:
+		var curve_type_flag = true if dubins_path else false
+		var newTrack = Track.new_Track("SplitTrack-" + str(TrackBuilder.track_counter), curve_type_flag, tracks)
+		TrackBuilder.track_counter += 1
+		# tracks.add_child(newTrack)
+		newTrack.dubins_path.paths.append(path)
+		newTrack.dubins_path.shortest_path = path
+		newTrack.update_visual_for_dubin_path()
+		newTrack.area2d.solidify_collision_area()
+		new_tracks.append(newTrack)
+	return new_tracks
