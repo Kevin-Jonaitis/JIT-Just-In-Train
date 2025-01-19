@@ -48,6 +48,7 @@ var track: Track
 #TODO: This could be better
 @onready var tracks: Tracks = $"../../Tracks"
 @onready var trains: Trains = $"../../Trains"
+@onready var junctions: Junctions = $"../../Junctions"
 
 var drawableFunctionsToCallLater: Array[Callable] = []
 
@@ -97,17 +98,15 @@ func _ready():
 # Setups a new track(with arrows)
 # Should be called after a cancel or solidify of a track, to create a new one
 func create_track_node_tree():
-	track = trackPreloaded.instantiate()
+	track = Track.new_Track("TempUserTrack" + str(track_counter), curve_type_flag, tracks, false)
 	# Need the counter, because (probably) this track is added before the other one is free, so there's a name conflict if we just use tempUserTrack
-	track.name = "TempUserTrack" + str(track_counter)
 	track_counter += 1
+	
 	add_child(arrow_start)
 	add_child(arrow_end)
-	track.update_stored_curves(curve_type_flag) ## No better way to instantiate unforutenly
-	tracks.add_child(track) 
+	# tracks.add_child(track) 
 	arrow_start.visible = false
 	arrow_end.visible = false
-	track.visible = false
 
 func flip_track_direction():
 	if (!trackEndingPosition):
@@ -147,6 +146,7 @@ func solidifyTrack():
 	setup_junctions() # This could be done in compute as well.
 	track.name = "UserPlacedTrack-" + str(track_counter)
 	track.area2d.solidify_collision_area()
+	track.temp = false
 
 	reset_track_builder()
 	create_track_node_tree()
@@ -168,7 +168,7 @@ func create_dubin_junctions():
 		handle_track_joining_dubin(starting_overlay, true)
 	else:
 		var first_point = track.dubins_path.shortest_path._points[0]
-		startingJunction = Junction.new_Junction(first_point, tracks, \
+		startingJunction = Junction.new_Junction(first_point, junctions, \
 	Junction.NewConnection.new(track, true))
 	
 	# Check if our ending point overlaps our just-placed starting junction
@@ -187,7 +187,7 @@ func create_dubin_junctions():
 		handle_track_joining_dubin(ending_overlay, false)
 	else:
 		var last_point = track.dubins_path.shortest_path._points[-1]
-		Junction.new_Junction(last_point, tracks, \
+		Junction.new_Junction(last_point, junctions, \
 		Junction.NewConnection.new(track, false)) 
 	
 
@@ -200,13 +200,6 @@ func handle_track_joining_dubin(overlap: TrackOrJunctionOverlap, is_start_of_new
 		assert(false, "We should never get here, we should always have a junction or track point info if we're in this function")
 
 	
-
-# split existing track and update that existing track's junctions on the _far_ ends
-	# have the directions go the same
-	# but do NOT add junctions to the split track
-# delete old track
-# create a new junction for this _new_ track
-# add the split track ends to the new junction
 func split_track_at_point(trackPointInfo: TrackPointInfo, is_start_of_new_track: bool):	
 	var split_tracks = create_split_track(trackPointInfo)
 	var first_half = split_tracks[0]
@@ -214,8 +207,8 @@ func split_track_at_point(trackPointInfo: TrackPointInfo, is_start_of_new_track:
 	var first_half_old_start_junction = trackPointInfo.track.start_junction
 	# var second_half = create_split_track(trackPointInfo, false)
 	var second_half_old_end_junction = trackPointInfo.track.end_junction
-	# Update the references for all train stops to this new point
-	trains.update_train_stops(trackPointInfo.get_point(), first_half, second_half)
+	# Update the references for all train stops uing these new tracks
+	trains.update_train_stops(trackPointInfo.track, first_half, second_half)
 	delete_track(trackPointInfo.track)
 
 	# Start of first half
@@ -223,7 +216,7 @@ func split_track_at_point(trackPointInfo: TrackPointInfo, is_start_of_new_track:
 	Junction.NewConnection.new(first_half, true))
 
 	# End of first half + junction
-	var intersection_junction = Junction.new_Junction(trackPointInfo.get_point(), tracks, \
+	var intersection_junction = Junction.new_Junction(trackPointInfo.get_point(), junctions, \
 	Junction.NewConnection.new(first_half, false))
 
 	# Start of second half
@@ -242,19 +235,15 @@ func create_split_track(trackPointInfo: TrackPointInfo) -> Array[Track]:
 	var new_tracks : Array[Track] = []
 	var new_dubins_paths : Array[DubinPath] = trackPointInfo.track.dubins_path.shortest_path.split_at_point_index(trackPointInfo.point_index)
 	for path in new_dubins_paths:
-		var newTrack = trackPreloaded.instantiate()
-		var name_suffix = newTrack.name + str(track_counter)
-		newTrack.name = "SplitTrack-" + name_suffix
+		var newTrack = Track.new_Track("SplitTrack-" + str(track_counter), curve_type_flag, tracks)
 		track_counter += 1
-		newTrack.update_stored_curves(curve_type_flag) ## No better way to instantiate unforutenly
-		tracks.add_child(newTrack)
+		# tracks.add_child(newTrack)
 		newTrack.dubins_path.paths.append(path)
 		newTrack.dubins_path.shortest_path = path
-		newTrack.update_visual_and_collision_for_dubin_path()
+		newTrack.update_visual_for_dubin_path()
 		newTrack.area2d.solidify_collision_area()
 		new_tracks.append(newTrack)
 	return new_tracks
-	
 
 func delete_track(track_to_delete: Track):
 	track_to_delete.start_junction.remove_track(track_to_delete)
@@ -426,13 +415,22 @@ func get_closest_wall_and_midpoint(mouse_position: Vector2) -> Array:
 	return [closest_wall, closest_midpoint]
 
 
-func build_track() -> void:
+func compute_path() -> void:
 	# Update ending position
 	trackEndingPosition = currentTrackPlacePoint
 	ending_overlay = current_overlay
 	trackEndingAngle = currentPointTangent.angle()
 
 	update_arrow_end()
+
+	# track.compute_path(trackStartingPosition, 
+	# 	trackStartAngle, 
+	# 	trackEndingPosition, 
+	# 	trackEndingAngle, 
+	# 	minAllowedRadius,
+	# 	track_mode_flag,
+	# 	curve_type_flag)
+
 
 	var valid = track.compute_track(
 		trackStartingPosition, 

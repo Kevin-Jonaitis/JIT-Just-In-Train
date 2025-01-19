@@ -15,6 +15,38 @@ var baked_points_editor_checker : PackedVector2Array = []
 @onready var start_junction: Junction
 @onready var end_junction: Junction
 
+# Determines if this track has been "placed/solidified" yet or not
+var temp = true
+
+const trackPreloaded = preload("res://Scenes/track.tscn")
+
+
+func _ready():
+	checkBeizerCurveInChildren()
+	is_ready_called = true
+
+	# If the curve was pre-created in the editor, then we should show the goods
+	update_visual_with_bezier_points()
+	# area2d.solidify_collision_area()
+
+static func new_Track(name_: String, curve_type_flag_: bool, tracks: Tracks, visible = true) -> Track:
+	var track: Track = trackPreloaded.instantiate()
+	track.name = name_
+	track.update_stored_curves(curve_type_flag_)
+	track.visible = visible
+	tracks.add_child(track)
+	return track
+
+
+# func solidifyTrack(track_counter: int):
+# 	assert(!dubins_path || !dubin_path.paths, "We haven't defined a path yet!")
+
+# 	# setup_junctions() # This could be done in compute as well.
+# 	name = "UserPlacedTrack-" + str(track_counter)
+# 	area2d.solidify_collision_area()
+# 	temp = false
+	
+
 @export_category("Curve Builder")
 @export var edit_curve: bool = false:
 	set(value):
@@ -34,6 +66,15 @@ var baked_points_editor_checker : PackedVector2Array = []
 		return bezier_curve.curve
 @export var bezier_curve: Path2D
 var dubins_path: DubinPath2D
+
+func get_length():
+	if (bezier_curve):
+		assert(false, "Unimplemented code path!")
+	elif (dubins_path):
+		return dubins_path.shortest_path.length
+	else:
+		assert(false, "Unimplemented code path!")
+		return 0
 
 
 # Would be better to wrap these next two functions
@@ -58,8 +99,8 @@ func get_point_info_at_index(index: int) -> TrackPointInfo:
 func get_track_point_info_dubin_path(index: int) -> TrackPointInfo:
 	# If this is the endpoint for a track. Useful to determine if we should
 	# snap the tangent in the opposite direction
-	var is_start = false
 	var is_end = false
+	var is_start = false
 	var points = dubins_path.shortest_path.get_points()
 	var current = points[index]
 	if index >= points.size():
@@ -148,13 +189,6 @@ func update_visual_with_bezier_points():
 			)
 
 
-func _ready() -> void:
-	checkBeizerCurveInChildren()
-	is_ready_called = true
-
-	# If the curve was pre-created in the editor, then we should show the goods
-	update_visual_with_bezier_points()
-
 # Optimize: Get rid of tangets, use just angles everywhere
 func compute_track(trackStartingPosition, 
 	trackStartAngle: float, 
@@ -179,7 +213,7 @@ func compute_track(trackStartingPosition,
 			track_visual_component.make_track_invisible()
 			return validTrack
 
-		update_visual_and_collision_for_dubin_path()
+		update_visual_for_dubin_path()
 
 	else:
 		# When dealing with bezier curves, the control point for the end of the track will be in the OPPOSITE
@@ -204,7 +238,7 @@ func compute_track(trackStartingPosition,
 	
 	return validTrack
 
-func update_visual_and_collision_for_dubin_path():
+func update_visual_for_dubin_path():
 	track_visual_component.update_track_points(dubins_path.shortest_path.get_points(), 
 	dubins_path.shortest_path.length,
 	dubins_path.shortest_path.get_point_at_offset,

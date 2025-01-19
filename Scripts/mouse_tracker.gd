@@ -94,7 +94,7 @@ func handle_track_building(event: InputEvent):
 
 	## Always recompute the track on any inputEvent
 	if (trackBuilder.trackStartingPosition):
-		trackBuilder.build_track()
+		trackBuilder.compute_path()
 	
 func _draw():
 	for function in drawableFunctionsToCallLater:

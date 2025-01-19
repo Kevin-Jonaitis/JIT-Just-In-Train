@@ -20,6 +20,10 @@ var lines: Array[TrackConnection]
 var _angle: float
 var _opposite_angle: float
 
+
+#Map<internal_node_id, internal_node_object>
+var virtual_nodes: Dictionary = {}
+
 const scene: PackedScene = preload("res://Scenes/junction.tscn")
 
 # Cases:
@@ -92,12 +96,13 @@ func get_outgoing_connections(track: Track) -> TrackConnection:
 	for connection in lines:
 		if connection.track.uuid == track.uuid:
 			angle_dir = connection.approach_from_angle
+			break;
 	for connection in lines:
 		if connection.approach_from_angle != angle_dir:
 			outgoing_conenctions.append(connection)
 	return outgoing_conenctions	
 
-static func new_Junction(position_: Vector2, tracksNode: Tracks, connection: NewConnection) -> Junction:
+static func new_Junction(position_: Vector2, junctionsNode: Junctions, connection: NewConnection) -> Junction:
 	var junction: Junction = scene.instantiate()
 	junction.name = "Junction-" + str(counter)
 	counter += 1
@@ -105,7 +110,7 @@ static func new_Junction(position_: Vector2, tracksNode: Tracks, connection: New
 	junction._opposite_angle = Utils.normalize_angle_0_to_2_pi(connection.angle + PI)
 	junction.add_connection(NewConnection.new(connection.track, connection.connected_at_start))
 	junction.position = position_
-	tracksNode.junctions.add_child(junction)
+	junctionsNode.add_child(junction)
 	junction.queue_redraw()
 	return junction
 

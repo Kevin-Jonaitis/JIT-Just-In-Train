@@ -64,7 +64,7 @@ func re_render():
 		var size = current_train.stops.size()
 		for stop_index in range(current_train.stops.size()):
 			var stop = current_train.stops[stop_index]
-			var stop_element = StopElement.new_stop_element(stop.track.name, current_train, stop_index)
+			var stop_element = StopElement.new_stop_element(stop.track.name + "-" + str(stop.point_index), current_train, stop_index)
 			stop_element.connect("on_station_removed", _on_station_removed)
 			vBox.add_child(stop_element)
 			pass

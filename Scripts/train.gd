@@ -8,6 +8,8 @@ signal stops_changed(stops: Array[TrackPointInfo])
 
 const TRAIN_COLLISION_LAYER = 8
 
+# Used to differentiate from the "temp" train
+var is_placed = false
 
 #Could be tracks, could be Stations
 var stops: Array[TrackPointInfo] = []:

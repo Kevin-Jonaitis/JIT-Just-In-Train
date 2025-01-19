@@ -11,6 +11,11 @@ var paths: Array[DubinPath] = []
 ## Use images here point names and thetas refererd to:
 ## https://www.habrador.com/tutorials/unity-dubins-paths/2-basic-dubins-paths/
 
+func compute_dubin_paths(start_pos, start_angle: float, end_pos, end_angle: float, min_turn_radius) -> Array[DubinPath]:
+	if start_pos == end_pos and Utils.check_angle_matches(start_angle,end_angle):
+		return []
+	return DubinsPathMath.compute_dubins_paths(start_pos, start_angle, end_pos, end_angle, min_turn_radius)
+
 ## Maybe should store passed in variables?
 func calculate_and_draw_paths(start_pos, start_angle: float, end_pos, end_angle: float, min_turn_radius, draw_paths: bool) -> bool:
 	# If the start and end are the same, we don't need to move at all. Short-circuit everything. The shortest

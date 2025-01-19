@@ -2,19 +2,26 @@ extends Node2D
 
 class_name Trains
 
-var trains : Array[Train] = []
+var trains : Array[Train]:
+	get:
+		var result : Array[Train] = []
+		for child in get_children():
+			if (child.is_placed):
+				result.append(child)
+		return result			
 
 func _on_train_placed(train: Train) -> void:
 	add_child(train)
-	trains.append(train)
 
-func update_train_stops(old_point: Vector2, new_track_a: Track, new_track_b: Track):
+# Given an old track that's being split into 2 new tracks, update the train stops on the old track
+func update_train_stops(old_track: Track, new_track_a: Track, new_track_b: Track):
 	for train in trains:
+		var result = train.stops.size()
 		for stop_index in range(train.stops.size()):
-			var potential_point = get_point_info_on_new_tracks(train.stops[stop_index].get_point(), new_track_a, new_track_b)
-			if (potential_point):
-				train.stops[stop_index] = potential_point
-				return
+			if (train.stops[stop_index].track.uuid == old_track.uuid):
+				var potential_point = get_point_info_on_new_tracks(train.stops[stop_index].get_point(), new_track_a, new_track_b)
+				if (potential_point):
+					train.stops[stop_index] = potential_point
 
 			
 func get_point_info_on_new_tracks(old_point: Vector2, new_track_a: Track, new_track_b: Track) -> TrackPointInfo:

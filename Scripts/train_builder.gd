@@ -32,6 +32,7 @@ func _ready():
 func create_new_train(visible_: bool):
 	train = trainScene.instantiate()
 	train.visible = visible_
+	train.is_placed = true
 	valid_train_placement = false
 	add_new_train.emit(train)
 
