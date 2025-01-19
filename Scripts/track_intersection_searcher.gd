@@ -38,14 +38,6 @@ func check_for_collision(position: Vector2, mask: int) -> Array[Dictionary]:
 	query.set_shape(circle_shape)
 	return space_state.intersect_shape(query)
 
-
-func is_junction_within_search_radius(junction_one: Junction, point: Vector2) -> bool:
-	if (point.distance_to(junction_one.position) <= SEARCH_RADIUS):
-		return true
-	else:
-		return false
-
-
 func check_for_junction_at_position(position: Vector2):
 	var junctions_found = []
 	var results = check_for_collision(position, 4) # value 4 = bitmask 3

@@ -76,12 +76,13 @@ func add_connection(connection: NewConnection) -> void:
 		if existing.track.uuid == connection.track.uuid and Utils.check_angle_matches(existing.approach_from_angle,track_connection.approach_from_angle):
 				assert(false, "Track is already connected to this junction at the same angle!!")
 	
-	lines.append(track_connection)
-
 	if(connection.connected_at_start):
 		connection.track.start_junction = self
 	else:
 		connection.track.end_junction = self
+
+	lines.append(track_connection)
+
 
 func remove_track(track: Track) -> void:
 	for i in range(lines.size()):

@@ -100,11 +100,9 @@ func _ready():
 func create_track_node_tree():
 	track = Track.new_Track("TempUserTrack" + str(track_counter), curve_type_flag, tracks, false)
 	# Need the counter, because (probably) this track is added before the other one is free, so there's a name conflict if we just use tempUserTrack
-	track_counter += 1
 	
 	add_child(arrow_start)
 	add_child(arrow_end)
-	# tracks.add_child(track) 
 	arrow_start.visible = false
 	arrow_end.visible = false
 
@@ -144,108 +142,9 @@ func intialize_and_set_start_point():
 
 func solidifyTrack():
 	track.build_track(starting_overlay, ending_overlay, "UserPlacedTrack-" + str(track_counter))
-	setup_junctions() # This could be done in compute as well.
-	# track.name = 
-	# track.area2d.solidify_collision_area()
-	# track.temp = false
 
 	reset_track_builder()
 	create_track_node_tree()
-
-# Really, we should clean up our code so that when we instantiate a track, 
-# we also instatiate it's curve type, as well as it's junctions(all at the same time).
-# We should probably just ditch the bezier curve for now. It's so broken
-func setup_junctions():
-	if (track.bezier_curve):
-		assert(false, "We haven't implemented junctions for bezier curves yet")
-	elif (track.dubins_path):
-		create_dubin_junctions()
-	else:
-		assert(false, "We should never get here")
-
-func create_dubin_junctions():
-	var startingJunction;
-	if (starting_overlay):
-		handle_track_joining_dubin(starting_overlay, true)
-	else:
-		var first_point = track.dubins_path.shortest_path._points[0]
-		startingJunction = Junction.new_Junction(first_point, junctions, \
-	Junction.NewConnection.new(track, true))
-	
-	# Check if our ending point overlaps our just-placed starting junction
-	if (startingJunction):
-		var point_to_check
-		if (ending_overlay && ending_overlay.trackPointInfo):
-			point_to_check = ending_overlay.trackPointInfo.get_point()
-		if (!ending_overlay):
-			point_to_check = track.dubins_path.shortest_path._points[-1]
-		if (point_to_check && \
-		track_intersection_searcher.is_junction_within_search_radius(startingJunction, point_to_check)):
-			startingJunction.add_connection(Junction.NewConnection.new(track, false))
-			return
-
-	if (ending_overlay):
-		handle_track_joining_dubin(ending_overlay, false)
-	else:
-		var last_point = track.dubins_path.shortest_path._points[-1]
-		Junction.new_Junction(last_point, junctions, \
-		Junction.NewConnection.new(track, false)) 
-	
-
-func handle_track_joining_dubin(overlap: TrackOrJunctionOverlap, is_start_of_new_track: bool):
-	if (overlap.junction):
-		overlap.junction.add_connection(Junction.NewConnection.new(track, is_start_of_new_track))
-	elif (overlap.trackPointInfo):
-		split_track_at_point(overlap.trackPointInfo, is_start_of_new_track)
-	else:
-		assert(false, "We should never get here, we should always have a junction or track point info if we're in this function")
-
-	
-func split_track_at_point(trackPointInfo: TrackPointInfo, is_start_of_new_track: bool):	
-	var split_tracks = create_split_track(trackPointInfo)
-	var first_half = split_tracks[0]
-	var second_half = split_tracks[1]
-	var first_half_old_start_junction = trackPointInfo.track.start_junction
-	# var second_half = create_split_track(trackPointInfo, false)
-	var second_half_old_end_junction = trackPointInfo.track.end_junction
-	# Update the references for all train stops uing these new tracks
-	trains.update_train_stops(trackPointInfo.track, first_half, second_half)
-	trackPointInfo.track.delete_track()
-
-	# Start of first half
-	first_half_old_start_junction.add_connection( \
-	Junction.NewConnection.new(first_half, true))
-
-	# End of first half + junction
-	var intersection_junction = Junction.new_Junction(trackPointInfo.get_point(), junctions, \
-	Junction.NewConnection.new(first_half, false))
-
-	# Start of second half
-	intersection_junction.add_connection(Junction.NewConnection.new(second_half, true))
-
-	# The new track at the junction
-	intersection_junction.add_connection(Junction.NewConnection.new(track, is_start_of_new_track))
-
-	# End of the second half
-	second_half_old_end_junction.add_connection(Junction.NewConnection.new(second_half, false))
-
-func create_split_track(trackPointInfo: TrackPointInfo) -> Array[Track]:
-	if (!trackPointInfo.track.dubins_path):
-		assert(false, "We haven't implemented split for any other type of path")
-		return []
-	var new_tracks : Array[Track] = []
-	var new_dubins_paths : Array[DubinPath] = trackPointInfo.track.dubins_path.shortest_path.split_at_point_index(trackPointInfo.point_index)
-	for path in new_dubins_paths:
-		var newTrack = Track.new_Track("SplitTrack-" + str(track_counter), curve_type_flag, tracks)
-		track_counter += 1
-		# tracks.add_child(newTrack)
-		newTrack.dubins_path.paths.append(path)
-		newTrack.dubins_path.shortest_path = path
-		newTrack.update_visual_for_dubin_path()
-		newTrack.area2d.solidify_collision_area()
-		new_tracks.append(newTrack)
-	return new_tracks
-
 
 # We want to reset most things, but leave things like
 # arrow direction and track type intack for next track placement
@@ -418,15 +317,6 @@ func compute_path() -> void:
 	trackEndingAngle = currentPointTangent.angle()
 
 	update_arrow_end()
-
-	# track.compute_path(trackStartingPosition, 
-	# 	trackStartAngle, 
-	# 	trackEndingPosition, 
-	# 	trackEndingAngle, 
-	# 	minAllowedRadius,
-	# 	track_mode_flag,
-	# 	curve_type_flag)
-
 
 	var valid = track.compute_track(
 		trackStartingPosition, 
