@@ -61,16 +61,16 @@ func re_render():
 	if (current_train):
 		pass
 		train_name.text = current_train.name
-		var size = current_train.stops.size()
 		for stop_index in range(current_train.stops.size()):
-			var stop = current_train.stops[stop_index]
-			var stop_element = StopElement.new_stop_element(stop.track.name + "-" + str(stop.point_index), current_train, stop_index)
+			var stop: Train.Stop = current_train.stops[stop_index]
+			var stop_element = StopElement.new_stop_element(stop.forward_stop.get_temp_track_name() + "-" + str(stop.forward_stop.get_temp_node_point_index()), current_train, stop_index)
 			stop_element.connect("on_station_removed", _on_station_removed)
 			vBox.add_child(stop_element)
 			pass
 
-# We're assuming here we're only dealing with one train at a time
-func _on_station_removed(train: Train):
+# Should this really be here? Do we need to centralize the code here?
+func _on_station_removed(train: Train, stop_index: int) -> void:
+	train.remove_stop(stop_index)
 	re_render()
 	pass
 

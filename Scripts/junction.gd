@@ -59,6 +59,37 @@ class NewConnection:
 		else:
 			angle = track.get_angle_at_point_index(-1)
 
+func get_virtual_node(track: Track, is_entry: bool) -> VirtualNode:
+	var node_name = VirtualNode.generate_name(self, track, is_entry)
+	if (virtual_nodes.has(node_name)):
+		return virtual_nodes[node_name]
+	else:
+		assert(false, "Virtual node not found, this should never happen!")
+		return null
+
+func add_vritual_nodes_for_connection(connection_: TrackConnection) -> void:
+	var entry_node = VirtualNode.new_virtual_node(self, connection_.track, true)
+	var exit_node = VirtualNode.new_virtual_node(self, connection_.track, false)
+	
+	# You can only travel to nodes that are the opposite angle
+	var approach_from_angle = connection_.approach_from_angle
+	var approachable_connections = !approach_from_angle
+
+	var connected_nodes_in : Array[VirtualNode] = []
+	var connected_nodes_out : Array[VirtualNode] = []
+	for connection in lines:
+		if connection == connection_:
+			continue
+		if connection.approach_from_angle == approachable_connections:
+			connected_nodes_in.append(get_virtual_node(connection.track, true))
+			connected_nodes_out.append(get_virtual_node(connection.track, false))
+	
+	for out_node in connected_nodes_out:
+		entry_node.add_connected_node(out_node, 0) # It's free to travel internally
+
+	for in_node in connected_nodes_in:
+		in_node.add_connected_node(exit_node, 0) # It's free to travel internally
+
 func add_connection(connection: NewConnection) -> void:
 	# Check if the track is already connected
 	
@@ -82,13 +113,33 @@ func add_connection(connection: NewConnection) -> void:
 		connection.track.end_junction = self
 
 	lines.append(track_connection)
+	add_vritual_nodes_for_connection(track_connection)
 
 
-func remove_track(track: Track) -> void:
+func remove_track_and_nodes(track: Track) -> void:
 	for i in range(lines.size()):
 		if lines[i].track.uuid == track.uuid:
 			lines.remove_at(i)
 			return
+	remove_virtual_nodes_and_references(track)
+
+# Copilot 90% generated Yehaw
+func remove_virtual_nodes_and_references(track: Track):
+	var entry_node_name = VirtualNode.generate_name(self, track, true)
+	var exit_node_name = VirtualNode.generate_name(self, track, false)
+
+	remove_node_and_references(entry_node_name)
+	remove_node_and_references(exit_node_name)
+
+func remove_node_and_references(node_name: String):
+	if (virtual_nodes.has(node_name)):
+		virtual_nodes.erase(node_name)
+
+	# Remove references to this track in other nodes
+	for node in virtual_nodes.values():
+		if (node.connected_nodes.has(node_name)):
+			node.connected_nodes.erase(node_name)
+
 
 func get_outgoing_connections(track: Track) -> TrackConnection:
 	var outgoing_conenctions = []

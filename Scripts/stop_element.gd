@@ -28,5 +28,4 @@ static func new_stop_element(name: String, train_: Train, stop_index: int) -> St
 	return stop_element
 
 func _on_remove_pressed() -> void:
-	train.stops.remove_at(stop_index)
-	emit_signal("on_station_removed", train)
+	emit_signal("on_station_removed", train, stop_index)

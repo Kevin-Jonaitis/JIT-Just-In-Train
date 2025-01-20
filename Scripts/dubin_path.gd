@@ -29,7 +29,12 @@ static var bake_interval: int = 5
 const EPSILON = 1e-4
 var calcualtedPoints = false
 # use get_points()
-var _points: Array = []
+var _points: Array[Vector2] = []
+# Dumb way to figure out which segment a point is a part of. 
+# We don't know because points sometimes overlap in segments, and there are a bunch
+# of edge cases that can determine which segment a point is a part of which 
+# frankly I'm too lazy to figure out
+var segment_index_for_point: Array[int] = []
 
 # Direction the track is HEADED. start_theta should point INTO the track, end_theta should point OUT of the track
 var start_theta: float
@@ -52,19 +57,23 @@ func get_endpoints_and_directions():
 	return [[_points[0], start_theta], [_points[-1], end_theta]]
 
 func calculate_points():
-	for segment in segments:
+	for segment_index in range(segments.size()):
+			var segment = segments[segment_index]
 			if segment is Line:
 				for point in segment.points:
-					add_point_if_unique(point)
+					add_point_if_unique(point, segment_index)
 			elif segment is Arc:
 				for point in segment.points:
-					add_point_if_unique(point)
+					add_point_if_unique(point, segment_index)
 
 ## Prevents two of the same point from being added to the 
 ## points array. This can happen on the boundary of two segments
-func add_point_if_unique(point: Vector2) -> void:
+func add_point_if_unique(point: Vector2, segment_index: int) -> void:
 	if _points.is_empty() or not _points[-1].is_equal_approx(point):
 		_points.append(point)
+		segment_index_for_point.append(segment_index)
+	else:
+		pass # For breakpointing
 
 # Written by Chat-GPT, tested by yours truly
 func get_angle_at_point_index(index: int) -> float:
@@ -128,6 +137,15 @@ func get_point_at_offset(offset: float) -> Vector2:
 		current_length += segment.length
 	
 	return _points[-1]
+
+func get_distance_to_point(point_index: int) -> float:
+	var running_distance = 0
+	var segment_index = segment_index_for_point[point_index]
+	for segment in range(segment_index - 1):
+		running_distance += segments[segment].length
+	var point = _points[point_index]
+	var segment_distance = segments[segment_index].get_distance_from_start_to_point(point)
+	return segment_distance + running_distance
 
 # Split this path at the given point index into 2 dubin paths
 func split_at_point_index(point_index: int) -> Array[DubinPath]:
@@ -213,6 +231,9 @@ class Line:
 	func get_point_at_offset(offset: float) -> Vector2:
 		var t = offset / length
 		return start.lerp(end, t)
+	
+	func get_distance_from_start_to_point(point: Vector2) -> float:
+		return (point - start).length()
 
 # All the data needed to construct an arc
 ## We should draw the arc from start_angle towards the value of end_angle in a 
@@ -257,3 +278,8 @@ class Arc:
 			# Counterclockwise traversal
 			theta = start_theta - (start_theta - end_theta) * t
 		return center + Vector2(radius * cos(theta), radius * sin(theta))
+
+	func get_distance_from_start_to_point(point: Vector2) -> float:
+		var angle = (point - center).angle()
+		var angle_diff = Utils.angle_diff(start_theta, angle)
+		return abs(radius * angle_diff)
