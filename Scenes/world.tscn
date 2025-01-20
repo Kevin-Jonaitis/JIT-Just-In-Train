@@ -115,6 +115,7 @@ script = ExtResource("4_n16fs")
 
 [node name="Track" parent="Tracks" node_paths=PackedStringArray("bezier_curve") instance=ExtResource("5_n4hhv")]
 position = Vector2(867, 202)
+edit_curve = null
 bezier_curve_prop = SubResource("Curve2D_xvilm")
 bezier_curve = NodePath("BezierPath2D_0")
 

@@ -10,6 +10,8 @@ static var counter = 0
 var baked_points_editor_checker : PackedVector2Array = []
 
 @onready var area2d: Area2D = $Area2D
+var junction_manager : JunctionManager = JunctionManager.new(self)
+var virtual_node_manager : VirtualNodeManager = VirtualNodeManager.new(self)
 
 
 # Always connected at the index 0 of points
@@ -51,9 +53,9 @@ func build_track(starting_overlay: TrackOrJunctionOverlap, ending_overlay: Track
 		name = optional_name
 	assert(dubins_path && dubins_path.shortest_path, "We haven't defined a path yet!")
 
-	setup_junctions(starting_overlay, ending_overlay)
+	junction_manager.setup_junctions(starting_overlay, ending_overlay)
 
-	setup_interjunction_virtual_nodes()
+	virtual_node_manager.setup_interjunction_virtual_nodes()
 	area2d.solidify_collision_area()
 	temp = false
 
@@ -105,25 +107,6 @@ func get_point_info_at_index(index: int) -> TrackPointInfo:
 	else:
 		assert(false, "This should be impossible!")
 		return TrackPointInfo.new(self, index, 0)
-
-
-# Nodes that connect across a track
-func setup_interjunction_virtual_nodes():
-	assert(start_junction && end_junction, "We should have junctions by now! Can't construct pathfinding nodes without them!")
-	var start_entry_node = VirtualNode.new_virtual_node(start_junction, self, true)
-	var start_exit_node = VirtualNode.new_virtual_node(start_junction, self, false)
-	var end_entry_node = VirtualNode.new_virtual_node(end_junction, self, true)
-	var end_exit_node = VirtualNode.new_virtual_node(end_junction, self, false)
-
-	start_exit_node.add_connected_node(end_entry_node, length())
-	end_exit_node.add_connected_node(start_entry_node, length())
-	pass
-
-# We need to do this, otherwise, we'll have a memory leak, because of cyclic references
-func delete_interjunction_virtual_nodes():
-	assert(start_junction && end_junction, "We should have both junctions! Something went wrong")
-	start_junction.remove_virtual_nodes_and_references(self)
-	end_junction.remove_virtual_nodes_and_references(self)
 
 
 func get_track_point_info_dubin_path(index: int) -> TrackPointInfo:
@@ -295,7 +278,7 @@ func get_angle_at_point_index(index: int) -> float:
 func delete_track():
 	start_junction.remove_track_and_nodes(self)
 	end_junction.remove_track_and_nodes(self)
-	delete_interjunction_virtual_nodes()
+	virtual_node_manager.delete_interjunction_virtual_nodes()
 	self.queue_free()
 
 func get_distance_to_point(point_index: int) -> float:
@@ -308,137 +291,6 @@ func get_distance_to_point(point_index: int) -> float:
 		assert(false, "We haven't defined a curve for this track yet!")
 		return 0
 
-# Adds a temp node in the track at the point index, and returns the two new nodes
-func add_temp_virtual_node(point_index: int, train: Train) -> Array[VirtualNode]:
-	var point_info = get_point_info_at_index(point_index)
-	var distance_to_start = get_distance_to_point(point_index)
-	var distance_to_end = dubins_path.shortest_path.length - distance_to_start
-	assert(distance_to_end > 0, "Somehow we have a negative distance to the end of the track!")
-	var start_entry_node = start_junction.get_virtual_node(self, true)
-	var start_exit_node: VirtualNode = start_junction.get_virtual_node(self, false)
-	var end_entry_node = end_junction.get_virtual_node(self, true)
-	var end_exit_node = end_junction.get_virtual_node(self, false)
-
-	var temp_node_start_junc_end_junc = VirtualNode.new_temp_node(self, point_index, true, train)
-	var temp_node_end_junc_start_junc = VirtualNode.new_temp_node(self, point_index, false, train)
-
-	start_exit_node.connected_nodes.erase(end_entry_node.name)
-	end_exit_node.connected_nodes.erase(start_entry_node.name)
-
-	start_exit_node.add_connected_node(temp_node_start_junc_end_junc, distance_to_start)
-	temp_node_start_junc_end_junc.add_connected_node(end_entry_node, distance_to_end)
-
-	end_entry_node.add_connected_node(temp_node_end_junc_start_junc, distance_to_end)
-	temp_node_end_junc_start_junc.add_connected_node(start_exit_node, distance_to_start)
-
-	return [temp_node_end_junc_start_junc, temp_node_start_junc_end_junc]
-
-# Remove a virtual node that's between a track's start and ending internal nodes
-func remove_temp_virtual_node(point_index: int, train: Train):
-	var start_entry_node = start_junction.get_virtual_node(self, true)
-	var start_exit_node: VirtualNode = start_junction.get_virtual_node(self, false)
-	var end_entry_node = end_junction.get_virtual_node(self, true)
-	var end_exit_node = end_junction.get_virtual_node(self, false)
-
-	var node_forward_name = VirtualNode.generate_name_temp_node(self, point_index, true, train)
-	var node_backward_name  = VirtualNode.generate_name_temp_node(self, point_index, false, train)
-	var node_forward = start_exit_node.connected_nodes[node_forward_name]
-	assert(node_forward, "This should never fail if we're explicitly removing a node")
-	var node_backwards = end_exit_node.connected_nodes[node_backward_name]
-	assert(node_backwards, "This should never fail if we're explicitly removing a node")
-
-	# Reconnect two junctions together
-	start_exit_node.add_connected_node(end_entry_node, 0)
-	end_exit_node.add_connected_node(start_entry_node, 0)
-
-	node_forward.free()
-	node_backwards.free()
-
-
-# Create a track with the following juctions. If the start or end overlaps an existing track, split that track up into 2 tracks,
-# and create those new tracks with the new junctions as well
-func setup_junctions(starting_overlay: TrackOrJunctionOverlap, ending_overlay: TrackOrJunctionOverlap):
-	if (bezier_curve):
-		assert(false, "We haven't implemented junctions for bezier curves yet")
-	elif (dubins_path):
-		create_dubin_junctions(starting_overlay, ending_overlay)
-	else:
-		assert(false, "We should never get here")
-
-func create_dubin_junctions(starting_overlay: TrackOrJunctionOverlap, ending_overlay: TrackOrJunctionOverlap):
-	var startingJunction;
-	if (starting_overlay):
-		handle_track_joining_dubin(starting_overlay, true)
-	else:
-		var first_point = dubins_path.shortest_path._points[0]
-		startingJunction = Junction.new_Junction(first_point, junctions, \
-	Junction.NewConnection.new(self, true))
-	
-	# Check if our ending point overlaps our just-placed starting junction
-	if (startingJunction):
-		var point_to_check
-		if (ending_overlay && ending_overlay.trackPointInfo):
-			point_to_check = ending_overlay.trackPointInfo.get_point()
-		if (!ending_overlay):
-			point_to_check = dubins_path.shortest_path._points[-1]
-		if (point_to_check && \
-		is_junction_within_search_radius(startingJunction, point_to_check)):
-			startingJunction.add_connection(Junction.NewConnection.new(self, false))
-			return
-
-	if (ending_overlay):
-		handle_track_joining_dubin(ending_overlay, false)
-	else:
-		var last_point = dubins_path.shortest_path._points[-1]
-		Junction.new_Junction(last_point, junctions, \
-		Junction.NewConnection.new(self, false)) 
-
-
-func is_junction_within_search_radius(junction_one: Junction, point: Vector2) -> bool:
-	if (point.distance_to(junction_one.position) <= TrackIntersectionSearcher.SEARCH_RADIUS):
-		return true
-	else:
-		return false
-
-func handle_track_joining_dubin(overlap: TrackOrJunctionOverlap, is_start_of_new_track: bool):
-	if (overlap.junction):
-		overlap.junction.add_connection(Junction.NewConnection.new(self, is_start_of_new_track))
-	elif (overlap.trackPointInfo):
-		var middle_junction = split_track_at_point(overlap.trackPointInfo)
-		middle_junction.add_connection(Junction.NewConnection.new(self, is_start_of_new_track))
-	else:
-		assert(false, "We should never get here, we should always have a junction or track point info if we're in this function")
-
-func split_track_at_point(trackPointInfo: TrackPointInfo) -> Junction:	
-	var split_tracks: Array[Track] = create_split_track(trackPointInfo)
-	var first_half = split_tracks[0]
-	var second_half = split_tracks[1]
-	trains.update_train_stops(trackPointInfo.track, first_half, second_half)
-	trackPointInfo.track.delete_track()
-	return split_tracks[0].end_junction
-
-func create_split_track(trackPointInfo: TrackPointInfo) -> Array[Track]:
-	if (!trackPointInfo.track.dubins_path):
-		assert(false, "We haven't implemented split for any other type of path")
-		return []
-	var new_tracks : Array[Track] = []
-	var new_dubins_paths : Array[DubinPath] = trackPointInfo.track.dubins_path.shortest_path.split_at_point_index(trackPointInfo.point_index)
-	var middleJunction: Junction
-	var curve_type_flag = true if dubins_path else false
-	for i in range(new_dubins_paths.size()):
-		var newTrack = Track.new_Track("SplitTrack-" + str(TrackBuilder.track_counter), curve_type_flag, tracks)
-		newTrack.set_track_path_manual(new_dubins_paths[i])
-
-		if (i == 0):
-			newTrack.build_track(TrackOrJunctionOverlap.new(trackPointInfo.track.start_junction, null), null)
-			middleJunction = newTrack.end_junction
-		elif (i == 1):
-			newTrack.build_track(TrackOrJunctionOverlap.new(middleJunction, null), TrackOrJunctionOverlap.new(trackPointInfo.track.end_junction, null))
-		else:
-			assert(false, "We should never get here")
-		
-		new_tracks.append(newTrack)
-	return new_tracks
 
 func length():
 	if (bezier_curve):
@@ -448,3 +300,9 @@ func length():
 	else:
 		assert(false, "We haven't defined a curve for this track yet!")
 		return 0
+
+func add_temp_virtual_node(point_index: int, train: Train) -> Array[VirtualNode]:
+	return virtual_node_manager.add_temp_virtual_node(point_index, train)
+
+func remove_temp_virtual_node(point_index: int, train: Train):
+	virtual_node_manager.remove_temp_virtual_node(point_index, train)
