@@ -31,13 +31,19 @@ var stops: Array[Stop] = []:
 		emit_signal("stops_changed", stops)
 
 
+func create_stop(stop_point: TrackPointInfo) -> Stop:
+	var stop = Stop.new(stop_point.track.add_temp_virtual_node(stop_point.point_index, self))
+	return stop
+
 func add_stop(stop_point: TrackPointInfo) -> void:
-	Stop.new(stop_point.track.add_temp_virtual_node(stop_point.point_index, self))
-	stops.append(stop_point)
+	stops.append(create_stop(stop_point))
 	emit_signal("stops_changed", stops)
 
 func remove_stop(stop_index: int) -> void:
 	var stop = stops[stop_index]
-	stop.track.remove_temp_virtual_node(stops[stop_index].point_index, self)
+	var point_index = stop.forward_stop.temp_node_index
+	# This should remove both temp nodes
+	# Kinda roundabout, but works
+	stop.forward_stop.temp_node_track.remove_temp_virtual_node(point_index, self)
 	stops.remove_at(stop_index)
 	emit_signal("stops_changed", stops)

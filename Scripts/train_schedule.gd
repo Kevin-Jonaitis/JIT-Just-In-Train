@@ -11,8 +11,8 @@ var current_train: Train:
 var stop_element_scene = preload("res://Scenes/UI/stop_element.tscn")
 
 func _on_request_train_ui_show(show_or_hide: bool) -> void:
+	reset_state()
 	if (show_or_hide):
-		reset_state()
 		self.show()
 	else:
 		self.hide()
@@ -59,7 +59,6 @@ func clear_children():
 func re_render():
 	clear_children()
 	if (current_train):
-		pass
 		train_name.text = current_train.name
 		for stop_index in range(current_train.stops.size()):
 			var stop: Train.Stop = current_train.stops[stop_index]
@@ -81,4 +80,4 @@ func _on_add_station_pressed() -> void:
 
 
 func _on_exit_button_pressed() -> void:
-	hide() # Maybe should be reset state
+	_on_request_train_ui_show(false)

@@ -6,7 +6,6 @@
 
 [node name="Track" type="Node2D"]
 script = ExtResource("1_x8ahh")
-edit_curve = null
 
 [node name="TrackVisualComponent" parent="." instance=ExtResource("2_ryam6")]
 

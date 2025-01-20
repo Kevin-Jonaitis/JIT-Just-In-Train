@@ -38,6 +38,7 @@ func _ready():
 	update_visual_with_bezier_points()
 
 static func new_Track(name_: String, curve_type_flag_: bool, tracks_: Tracks, visible_ = true) -> Track:
+	assert(!name_.contains("-"), "This will break pathfinding name parssing if we have a '-' in the name")
 	var track: Track = trackPreloaded.instantiate()
 	track.name = name_
 	track.update_stored_curves(curve_type_flag_)
@@ -50,6 +51,7 @@ static func new_Track(name_: String, curve_type_flag_: bool, tracks_: Tracks, vi
 
 func build_track(starting_overlay: TrackOrJunctionOverlap, ending_overlay: TrackOrJunctionOverlap, optional_name = null):
 	if (optional_name):
+		assert(!optional_name.contains("-"), "This will break pathfinding name parssing if we have a '-' in the name")
 		name = optional_name
 	assert(dubins_path && dubins_path.shortest_path, "We haven't defined a path yet!")
 
@@ -306,3 +308,10 @@ func add_temp_virtual_node(point_index: int, train: Train) -> Array[VirtualNode]
 
 func remove_temp_virtual_node(point_index: int, train: Train):
 	virtual_node_manager.remove_temp_virtual_node(point_index, train)
+
+func get_point_at_index(index: int) -> Vector2:
+	if (dubins_path):
+		return dubins_path.shortest_path.get_point_at_index(index)
+	else:
+		assert(false, "We haven't defined a curve for this track yet, or you're using a curve type we haven't implemented!!")
+		return Vector2.ZERO

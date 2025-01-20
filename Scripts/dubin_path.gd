@@ -141,7 +141,7 @@ func get_point_at_offset(offset: float) -> Vector2:
 func get_distance_to_point(point_index: int) -> float:
 	var running_distance = 0
 	var segment_index = segment_index_for_point[point_index]
-	for segment in range(segment_index - 1):
+	for segment in range(segment_index):
 		running_distance += segments[segment].length
 	var point = _points[point_index]
 	var segment_distance = segments[segment_index].get_distance_from_start_to_point(point)
@@ -281,5 +281,8 @@ class Arc:
 
 	func get_distance_from_start_to_point(point: Vector2) -> float:
 		var angle = (point - center).angle()
-		var angle_diff = Utils.angle_diff(start_theta, angle)
+		var angle_diff = angle_difference(start_theta, angle)
 		return abs(radius * angle_diff)
+
+func get_point_at_index(index: int) -> Vector2:
+	return _points[index]

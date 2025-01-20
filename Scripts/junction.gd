@@ -71,24 +71,22 @@ func add_vritual_nodes_for_connection(connection_: TrackConnection) -> void:
 	var entry_node = VirtualNode.new_virtual_node(self, connection_.track, true)
 	var exit_node = VirtualNode.new_virtual_node(self, connection_.track, false)
 	
+	virtual_nodes[entry_node.name] =  entry_node
+	virtual_nodes[exit_node.name] =  exit_node
+	
 	# You can only travel to nodes that are the opposite angle
 	var approach_from_angle = connection_.approach_from_angle
 	var approachable_connections = !approach_from_angle
 
-	var connected_nodes_in : Array[VirtualNode] = []
-	var connected_nodes_out : Array[VirtualNode] = []
 	for connection in lines:
 		if connection == connection_:
 			continue
 		if connection.approach_from_angle == approachable_connections:
-			connected_nodes_in.append(get_virtual_node(connection.track, true))
-			connected_nodes_out.append(get_virtual_node(connection.track, false))
-	
-	for out_node in connected_nodes_out:
-		entry_node.add_connected_node(out_node, 0) # It's free to travel internally
-
-	for in_node in connected_nodes_in:
-		in_node.add_connected_node(exit_node, 0) # It's free to travel internally
+			 # It's free to travel internally
+			var connected_node_out = get_virtual_node(connection.track, false)
+			entry_node.add_connected_node(connected_node_out, 0)
+			var connected_node_in = get_virtual_node(connection.track, true)
+			connected_node_in.add_connected_node(exit_node, 0)
 
 func add_connection(connection: NewConnection) -> void:
 	# Check if the track is already connected
@@ -156,7 +154,7 @@ func get_outgoing_connections(track: Track) -> TrackConnection:
 
 static func new_Junction(position_: Vector2, junctionsNode: Junctions, connection: NewConnection) -> Junction:
 	var junction: Junction = scene.instantiate()
-	junction.name = "Junction-" + str(counter)
+	junction.name = "Junction_" + str(counter)
 	counter += 1
 	junction._angle = Utils.normalize_angle_0_to_2_pi(connection.angle)
 	junction._opposite_angle = Utils.normalize_angle_0_to_2_pi(connection.angle + PI)
@@ -164,6 +162,7 @@ static func new_Junction(position_: Vector2, junctionsNode: Junctions, connectio
 	junction.position = position_
 	junctionsNode.add_child(junction)
 	junction.queue_redraw()
+	assert(!junction.name.contains("-"), "This will break pathfinding name parssing if we have a '-' in the name")
 	return junction
 
 #func _draw() -> void:

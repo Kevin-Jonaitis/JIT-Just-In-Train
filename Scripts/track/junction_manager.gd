@@ -75,7 +75,7 @@ func create_split_track(trackPointInfo: TrackPointInfo) -> Array[Track]:
 	var middleJunction: Junction
 	var curve_type_flag = true if track.dubins_path else false
 	for i in range(new_dubins_paths.size()):
-		var newTrack = Track.new_Track("SplitTrack-" + str(TrackBuilder.track_counter), curve_type_flag, track.tracks)
+		var newTrack = Track.new_Track("SplitTrack_" + str(TrackBuilder.track_counter), curve_type_flag, track.tracks)
 		newTrack.set_track_path_manual(new_dubins_paths[i])
 
 		if (i == 0):

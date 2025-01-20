@@ -141,7 +141,7 @@ func intialize_and_set_start_point():
 
 
 func solidifyTrack():
-	track.build_track(starting_overlay, ending_overlay, "UserPlacedTrack-" + str(track_counter))
+	track.build_track(starting_overlay, ending_overlay, "UserPlacedTrack_" + str(track_counter))
 
 	reset_track_builder()
 	create_track_node_tree()
