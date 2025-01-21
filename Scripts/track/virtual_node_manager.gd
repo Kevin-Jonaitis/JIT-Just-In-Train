@@ -28,7 +28,7 @@ func delete_interjunction_virtual_nodes():
 
 
 # Adds a temp node in the track at the point index, and returns the two new nodes
-func add_temp_virtual_node(point_index: int, train: Train) -> Array[VirtualNode]:
+func add_temp_virtual_nodes(point_index: int, train: Train) -> Array[VirtualNode]:
 	var point_info = track.get_point_info_at_index(point_index)
 	var distance_to_start = track.get_distance_to_point(point_index)
 	var length = track.dubins_path.shortest_path.length

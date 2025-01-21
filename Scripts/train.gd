@@ -2,7 +2,7 @@ extends Sprite2D
 
 class_name Train
 
-signal stops_changed(stops: Array[Stop])
+signal stops_changed(stops: Array[StopOption])
 
 
 
@@ -10,33 +10,28 @@ signal stops_changed(stops: Array[Stop])
 
 const TRAIN_COLLISION_LAYER = 8
 
-class Stop:
-	var forward_stop: VirtualNode
-	var backward_stop: VirtualNode
-
-	func _init(nodes: Array[VirtualNode]):
-		for node in nodes:
-			if "forward" in node.name:
-				forward_stop = node
-			elif "backward" in node.name:
-				backward_stop = node
-
 # Used to differentiate from the "temp" train
 var is_placed = false
 
 #Could be tracks, could be Stations
-var stops: Array[Stop] = []:
+var stops: Array[StopOption] = []:
 	set(value):
 		stops = value
 		emit_signal("stops_changed", stops)
 
+# Generated schedule from stops
+var schedule: Schedule:
+	set(value):
+		schedule = value
+		queue_redraw()
 
-func create_stop(stop_point: TrackPointInfo) -> Stop:
-	var stop = Stop.new(stop_point.track.add_temp_virtual_node(stop_point.point_index, self))
+
+func create_stop_option(stop_point: TrackPointInfo) -> StopOption:
+	var stop = StopOption.new(stop_point.track.add_temp_virtual_nodes(stop_point.point_index, self))
 	return stop
 
 func add_stop(stop_point: TrackPointInfo) -> void:
-	stops.append(create_stop(stop_point))
+	stops.append(create_stop_option(stop_point))
 	emit_signal("stops_changed", stops)
 
 func remove_stop(stop_index: int) -> void:
@@ -47,3 +42,15 @@ func remove_stop(stop_index: int) -> void:
 	stop.forward_stop.temp_node_track.remove_temp_virtual_node(point_index, self)
 	stops.remove_at(stop_index)
 	emit_signal("stops_changed", stops)
+
+
+var colors = [Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.CYAN, Color.MAGENTA, Color.ORANGE, Color.PURPLE, Color.PINK, Color.TEAL, Color.GRAY, Color.LIME, Color.AQUA, Color.OLIVE, Color.MAROON, Color.TEAL, Color.SILVER, Color.WHITE, Color.BLACK]
+func _draw():
+	if (!schedule):
+		return
+	for path in schedule.segments:
+		for track : Track in path.tracks:
+			var color = colors[randi() % colors.size()]
+			for point in track.get_points():
+				draw_circle(point, 5, color)
+			draw_line(track.start_point, track.end_point, Color(0, 0, 0), 2)

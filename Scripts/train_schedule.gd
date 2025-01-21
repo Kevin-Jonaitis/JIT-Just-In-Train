@@ -16,6 +16,8 @@ func _on_request_train_ui_show(show_or_hide: bool) -> void:
 		self.show()
 	else:
 		self.hide()
+		var schedule = Pathfinder.find_path(current_train.stops, true, true)
+		current_train.schedule = schedule
 
 func reset_state():
 	selecting_station_mode = false
@@ -61,7 +63,7 @@ func re_render():
 	if (current_train):
 		train_name.text = current_train.name
 		for stop_index in range(current_train.stops.size()):
-			var stop: Train.Stop = current_train.stops[stop_index]
+			var stop: StopOption = current_train.stops[stop_index]
 			var stop_element = StopElement.new_stop_element(stop.forward_stop.get_temp_track_name() + "-" + str(stop.forward_stop.get_temp_node_point_index()), current_train, stop_index)
 			stop_element.connect("on_station_removed", _on_station_removed)
 			vBox.add_child(stop_element)

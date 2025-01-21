@@ -90,6 +90,14 @@ func get_length():
 		assert(false, "Unimplemented code path!")
 		return 0
 
+func get_points():
+	if (bezier_curve):
+		assert(false, "Unimplemented code path!")
+	elif (dubins_path):
+		return dubins_path.shortest_path.get_points()
+	else:
+		assert(false, "Unimplemented code path!")
+		return []
 
 # Would be better to wrap these next two functions
 func get_curve():
@@ -303,8 +311,8 @@ func length():
 		assert(false, "We haven't defined a curve for this track yet!")
 		return 0
 
-func add_temp_virtual_node(point_index: int, train: Train) -> Array[VirtualNode]:
-	return virtual_node_manager.add_temp_virtual_node(point_index, train)
+func add_temp_virtual_nodes(point_index: int, train: Train) -> Array[VirtualNode]:
+	return virtual_node_manager.add_temp_virtual_nodes(point_index, train)
 
 func remove_temp_virtual_node(point_index: int, train: Train):
 	virtual_node_manager.remove_temp_virtual_node(point_index, train)
