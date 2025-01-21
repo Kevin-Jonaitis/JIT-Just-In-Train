@@ -39,9 +39,11 @@ func get_temp_track_name():
 	var split = name.split("-")
 	return split[1]
 
+func erase_connected_node(node: VirtualNode):
+	return connected_nodes.erase(node.name)
 	
-static func new_temp_node(track: Track, point_index: int, direction: bool, train: Train):
-	var node_name = generate_name_temp_node(track, point_index, direction, train)
+static func new_temp_node(track: Track, point_index: int, forward: bool, train: Train):
+	var node_name = generate_name_temp_node(track, point_index, forward, train)
 	var node = VirtualNode.new()
 	node.temp_node_location = track.get_point_at_index(point_index)
 	node.temp_node_index = point_index
@@ -57,10 +59,26 @@ static func generate_name(junction: Junction, track: Track, is_entry: bool):
 		return str(junction.name, "-", track.name, "-exit")
 
 # <temp>-<track-name>-<index>-<train>-<direction>
-static func generate_name_temp_node(track: Track, index: int, direction: bool, train: Train):
-	var direction_str = "forward" if direction else "backward"
+static func generate_name_temp_node(track: Track, index: int, forward: bool, train: Train):
+	var direction_str = "forward" if forward else "backward"
 	return str("temp-", track.name, "-", index, "-", train.name, "-", direction_str)
 
 func add_connected_node(node: VirtualNode, cost: float):
-
 	connected_nodes[node.name] = NodeAndCost.new(node, cost)
+
+
+# Always returns a positive value
+static func cost_between_temp_nodes(node1: VirtualNode, node2: VirtualNode) -> float:
+	var distance_to_node_1 = node1.temp_node_track.get_distance_to_point(node1.temp_node_index)
+	var distance_to_node_2 = node2.temp_node_track.get_distance_to_point(node2.temp_node_index)
+	return abs(distance_to_node_2 - distance_to_node_1)
+
+static func insert_node_between_temp_nodes(node1: VirtualNode, node2: VirtualNode, new_node: VirtualNode):
+	assert(new_node.temp_node_index, "Was expecting a temp node!")
+	if (node1.junction)
+	var cost_1_to_new = VirtualNode.cost_between_temp_nodes(node1, new_node)
+	var cost_new_to_2 = VirtualNode.cost_between_temp_nodes(new_node, node2)
+
+	node1.add_connected_node(new_node, cost_1_to_new)
+	new_node.add_connected_node(node2, cost_new_to_2)
+	node1.erase_connected_node(node2)

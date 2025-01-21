@@ -27,6 +27,8 @@ func delete_interjunction_virtual_nodes():
 
 
 
+## TODO: we need to be able to have multiple temp nodes on the same track
+
 # Adds a temp node in the track at the point index, and returns the two new nodes
 func add_temp_virtual_nodes(point_index: int, train: Train) -> Array[VirtualNode]:
 	var point_info = track.get_point_info_at_index(point_index)
@@ -42,8 +44,8 @@ func add_temp_virtual_nodes(point_index: int, train: Train) -> Array[VirtualNode
 	var temp_node_start_junc_end_junc = VirtualNode.new_temp_node(track, point_index, true, train)
 	var temp_node_end_junc_start_junc = VirtualNode.new_temp_node(track, point_index, false, train)
 
-	start_exit_node.connected_nodes.erase(end_entry_node.name)
-	end_exit_node.connected_nodes.erase(start_entry_node.name)
+	start_exit_node.erase_connected_node(end_entry_node)
+	end_exit_node.erase_connected_node(start_entry_node)
 
 	start_exit_node.add_connected_node(temp_node_start_junc_end_junc, distance_to_start)
 	temp_node_start_junc_end_junc.add_connected_node(end_entry_node, distance_to_end)
@@ -52,6 +54,40 @@ func add_temp_virtual_nodes(point_index: int, train: Train) -> Array[VirtualNode
 	temp_node_end_junc_start_junc.add_connected_node(start_entry_node, distance_to_start)
 
 	return [temp_node_end_junc_start_junc, temp_node_start_junc_end_junc]
+
+
+	# Adds a temp node in the track at the point index, and returns the two new nodes
+func add_temp_virtual_nodes_two(point_index: int, train: Train) -> Array[VirtualNode]:
+	var point_info = track.get_point_info_at_index(point_index)
+	var distance_to_start = track.get_distance_to_point(point_index)
+	var length = track.dubins_path.shortest_path.length
+	var distance_to_end = length - distance_to_start
+	assert(distance_to_end > 0, "Somehow we have a negative distance to the end of the track!")
+	var start_entry_node: VirtualNode = track.start_junction.get_virtual_node(track, true)
+	var start_exit_node: VirtualNode = track.start_junction.get_virtual_node(track, false)
+	var end_entry_node: VirtualNode = track.end_junction.get_virtual_node(track, true)
+	var end_exit_node: VirtualNode = track.end_junction.get_virtual_node(track, false)
+
+	var temp_node_start_junc_end_junc = VirtualNode.new_temp_node(track, point_index, true, train)
+	var temp_node_end_junc_start_junc = VirtualNode.new_temp_node(track, point_index, false, train)
+
+	var current_node : VirtualNode = start_exit_node
+	var distance_to_current_node = INF
+	while current_node != end_entry_node:
+		assert(current_node.connected_nodes.values().size() == 1, "We should only have one connected node")
+		var next_node: VirtualNode = current_node.connected_nodes.values()[0].virtual_node
+		if (next_node.virtual_node.temp_node_index < point_index):
+			current_node = next_node
+			distance_to_current_node = current_node.virtual_node.get_distance_to_temp_node_strat_of_track()
+			continue
+		else:
+			insert_node_between(current_node, next_node, temp_node_start_junc_end_junc)
+			return
+		# if distance_to_next > distance_to_start:
+		# 	break
+		# distance_to_start -= distance_to_next
+		current_node = next_node
+
 
 # Remove a virtual node that's between a track's start and ending internal nodes
 func remove_temp_virtual_node(point_index: int, train: Train):
@@ -67,10 +103,10 @@ func remove_temp_virtual_node(point_index: int, train: Train):
 	var node_backwards = end_exit_node.connected_nodes[node_backward_name]
 	assert(node_backwards, "This should never fail if we're explicitly removing a node")
 	
-	var forward_erased = start_exit_node.connected_nodes.erase(node_forward_name)
+	var forward_erased = start_exit_node.erase_connected_node(node_forward)
 	assert(forward_erased, "We should have found this node")
 	
-	var backwards_erased = end_exit_node.connected_nodes.erase(node_backward_name)
+	var backwards_erased = end_exit_node.erase_connected_node(node_backwards)
 	assert(backwards_erased, "We should have found this node")
 	
 	# There are still refernces from the forward and backward nodes to their next nodes,
