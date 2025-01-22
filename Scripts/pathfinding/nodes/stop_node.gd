@@ -20,7 +20,7 @@ func get_position() -> Vector2:
 
 static func generate_name(track: Track, index: int, forward: bool, train: Train):
 	var direction_str = "forward" if forward else "backward"
-	return str("stop-", track.name, "-", index, "-", train.name, "-", direction_str)
+	return str("stop-", track.name, "-", index, "-", train.uuid, "-", direction_str)
 
 
 # I know, holding data in the string name is not the fastest or most secure, 

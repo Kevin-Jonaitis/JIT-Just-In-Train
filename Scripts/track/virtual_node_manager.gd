@@ -34,8 +34,8 @@ func add_stops_to_track(point_index: int, train: Train) -> Array[StopNode]:
 	var temp_node_start_junc_end_junc = StopNode.new(track, point_index, true, train)
 	var temp_node_end_junc_start_junc = StopNode.new(track, point_index, false, train)
 
-	insert_stop_between_junctions(start_exit_node, end_entry_node, temp_node_start_junc_end_junc)
-	insert_stop_between_junctions(end_exit_node, start_entry_node, temp_node_end_junc_start_junc)
+	insert_stop_between_junctions(start_exit_node, end_entry_node, temp_node_start_junc_end_junc, train)
+	insert_stop_between_junctions(end_exit_node, start_entry_node, temp_node_end_junc_start_junc, train)
 
 	return [temp_node_end_junc_start_junc, temp_node_start_junc_end_junc]
 
@@ -48,15 +48,15 @@ func remove_stop_from_track(point_index: int, train: Train) -> void:
 	var node_forward_name = StopNode.generate_name(track, point_index, true, train)
 	var node_backward_name  = StopNode.generate_name(track, point_index, false, train)
 
-	delete_stop_between_junctions(start_exit_node, end_entry_node, node_forward_name)
-	delete_stop_between_junctions(end_exit_node, start_entry_node, node_backward_name)
+	delete_stop_between_junctions(start_exit_node, end_entry_node, node_forward_name, train)
+	delete_stop_between_junctions(end_exit_node, start_entry_node, node_backward_name, train)
 
 
-func insert_stop_between_junctions(start_node: JunctionNode, end_node: JunctionNode, node_of_interest: StopNode) -> void:
+func insert_stop_between_junctions(start_node: JunctionNode, end_node: JunctionNode, node_of_interest: StopNode, train: Train) -> void:
 	var current_node = start_node
 	while current_node != end_node:
-		assert(current_node.connected_nodes.values().size() == 1, "We should only have one connected node")
-		var next_node: VirtualNode = current_node.connected_nodes.values()[0].virtual_node
+		assert(current_node.get_connected_nodes(train).size() == 1, "We should only have one connected node")
+		var next_node: VirtualNode = current_node.get_connected_nodes(train)[0].virtual_node
 		if (next_node == end_node):
 				insert_stop_between_nodes(current_node, next_node, node_of_interest)
 				return 
@@ -69,13 +69,13 @@ func insert_stop_between_junctions(start_node: JunctionNode, end_node: JunctionN
 
 	assert(false, "We should have found the node spot and returned")
 
-func delete_stop_between_junctions(start_node: JunctionNode, end_node: JunctionNode, stop_name: String) -> void:
+func delete_stop_between_junctions(start_node: JunctionNode, end_node: JunctionNode, stop_name: String, train) -> void:
 	var current_node = start_node
 	while current_node != end_node:
-		assert(current_node.connected_nodes.values().size() == 1, "We should only have one connected node")
-		var next_node: VirtualNode = current_node.connected_nodes.values()[0].virtual_node
+		assert(current_node.get_connected_nodes(train).size() == 1, "We should only have one connected node")
+		var next_node: VirtualNode = current_node.get_connected_nodes(train)[0].virtual_node
 		if (next_node.name == stop_name):
-				remove_stop_after_this_node(current_node)
+				remove_stop_after_this_node(current_node, train)
 				return 
 		current_node = next_node
 	
@@ -106,11 +106,11 @@ static func insert_stop_between_nodes(node1: VirtualNode, node2: VirtualNode, ne
 	new_node.add_connected_node(node2, cost_new_to_2)
 	node1.erase_connected_node(node2)
 
-static func remove_stop_after_this_node(node_before_delete: VirtualNode):
-	assert(node_before_delete.connected_nodes.size() == 1, "Node 1 should only be connected to one node")
-	var node_to_delete: StopNode = node_before_delete.connected_nodes.values()[0].virtual_node
-	node_before_delete.connected_nodes.clear()
+static func remove_stop_after_this_node(node_before_delete: VirtualNode, train: Train):
+	assert(node_before_delete.get_connected_nodes(train).size() == 1, "Node 1 should only be connected to one node")
+	var node_to_delete: StopNode = node_before_delete.get_connected_nodes(train)[0].virtual_node
+	node_before_delete.clear()
 	assert(node_to_delete.connected_nodes.size() == 1, "Node to delete should only be connected to one node")
-	var node_and_cost_after_node = node_to_delete.connected_nodes.values()[0]
-	node_to_delete.connected_nodes.clear()
+	var node_and_cost_after_node = node_to_delete.get_connected_nodes(train)[0]
+	node_to_delete.clear()
 	node_before_delete.connected_nodes[node_and_cost_after_node.virtual_node.name] = node_and_cost_after_node

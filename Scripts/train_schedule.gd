@@ -16,7 +16,7 @@ func _on_request_train_ui_show(show_or_hide: bool) -> void:
 		self.show()
 	else:
 		self.hide()
-		var schedule = Pathfinder.find_path(current_train.stops, true, true)
+		var schedule = Pathfinder.find_path(current_train, true, true)
 		current_train.schedule = schedule
 
 func reset_state():

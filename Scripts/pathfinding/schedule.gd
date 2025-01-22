@@ -2,6 +2,7 @@ extends RefCounted
 
 class_name Schedule
 
+# path between each pair of stops
 var segments: Array[Path]
 var stops: Array[VirtualNode]
 

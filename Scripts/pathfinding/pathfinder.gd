@@ -23,7 +23,10 @@ func _init():
 # For every pair of StopOptions, find the shortest path between them in either direction(forward or backward)
 # Add the shortest path to the schedule for that segment
 # Arugments allow optionally setting the direction of the first stop option
-static func find_path(stop_options: Array[StopOption], start_forward: bool, start_backwards: bool) -> Schedule:
+static func find_path(train: Train, start_forward: bool, start_backwards: bool) -> Schedule:
+	var stop_options = train.stops
+	# key: virtual node, value: shortest path there
+	var dp = []
 	var start_virtual_node
 	var end_virtual_node
 	
@@ -48,14 +51,19 @@ static func find_path(stop_options: Array[StopOption], start_forward: bool, star
 		end_nodes.append(next_stop_options.backward_stop
 		)
 		var shortest_path_length: float = INF
+		var shortest_path
+		var shortest_path_start_node
 		for start_node in start_nodes:
 			for end_node in end_nodes:
-				var path = find_path_between_nodes(start_node, end_node)
+				var path = find_path_between_nodes(start_node, end_node, train)
 				if path.length < shortest_path_length:
 					shortest_path_length = path.length
+					shortest_path = path
+					shortest_path_start_node = start_node
 					schedule.add_path(path)
 					schedule.stops.append(start_node)
 					last_end_node = end_node
+		shortest_path
 
 	schedule.stops.append(last_end_node)
 	return schedule
@@ -73,7 +81,7 @@ static func heuristic(a: VirtualNode, b: VirtualNode) -> float:
 	return get_node_position(a).distance_to(get_node_position(b))
 
 # Copilot generated(it is A* as requested, and looks like code from A* algorithm wiki page)
-static func find_path_between_nodes(start: VirtualNode, end: VirtualNode) -> Path:
+static func find_path_between_nodes(start: VirtualNode, end: VirtualNode, train: Train) -> Path:
 	var open_set: PriorityQueue = PriorityQueue.new()
 	var came_from = {}
 	var g_score = {}
@@ -93,9 +101,9 @@ static func find_path_between_nodes(start: VirtualNode, end: VirtualNode) -> Pat
 			continue
 		visited[current.name] = true
 
-		for connected_name in current.connected_nodes.keys():
-			var neighbor = current.connected_nodes[connected_name].virtual_node
-			var cost_to_neighbor = current.connected_nodes[connected_name].cost
+		for connected_node in current.get_connected_nodes(train):
+			var neighbor = connected_node.virtual_node
+			var cost_to_neighbor = connected_node.cost
 			if visited.has(neighbor.name):
 				continue
 			var tentative_g = g_score[current.name] + cost_to_neighbor
@@ -105,22 +113,16 @@ static func find_path_between_nodes(start: VirtualNode, end: VirtualNode) -> Pat
 				f_score[neighbor.name] = tentative_g + heuristic(neighbor, end)
 				open_set.insert(neighbor, f_score[neighbor.name])
 
-	var empty_path : Path = Path.new()
-	empty_path.nodes = []
-	empty_path.length = 0
-	return empty_path
+	# No path found
+	return Path.new([], 0)
 
 static func reconstruct_path(came_from: Dictionary, current: VirtualNode) -> Path:
-	# Reconstruct path
-	var result_path : Path = Path.new()
-	result_path.nodes = []
-	result_path.length = 0.0
-	var path_nodes = [current]
+	var length: float = 0
+	var path_nodes : Array[VirtualNode] = [current]
 	while came_from.has(current.name):
 		var prev = came_from[current.name]
-		var cost_segment = prev.connected_nodes[current.name].cost
-		result_path.length += cost_segment
+		var cost_segment = prev.get_node_and_cost(current.name).cost
+		length += cost_segment
 		path_nodes.insert(0, prev)
 		current = prev
-	result_path.nodes = path_nodes
-	return result_path
+	return Path.new(path_nodes, length)

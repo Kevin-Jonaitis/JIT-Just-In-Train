@@ -2,9 +2,11 @@ extends Sprite2D
 
 class_name Train
 
+
+
 signal stops_changed(stops: Array[StopOption])
 
-
+var uuid = Utils.generate_uuid()
 
 @onready var area2d : Area2D = $Area2D
 
@@ -46,11 +48,12 @@ func remove_stop(stop_index: int) -> void:
 
 var colors = [Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.CYAN, Color.MAGENTA, Color.ORANGE, Color.PURPLE, Color.PINK, Color.TEAL, Color.GRAY, Color.LIME, Color.AQUA, Color.OLIVE, Color.MAROON, Color.TEAL, Color.SILVER, Color.WHITE, Color.BLACK]
 func _draw():
-	if (!schedule):
-		return
-	for path in schedule.segments:
-		for track : Track in path.tracks:
-			var color = colors[randi() % colors.size()]
-			for point in track.get_points():
-				draw_circle(point, 5, color)
-			draw_line(track.start_point, track.end_point, Color(0, 0, 0), 2)
+	pass
+	# if (!schedule):
+	# 	return
+	# for path in schedule.segments:
+	# 	for track : Track in path.track_segments:
+	# 		var color = colors[randi() % colors.size()]
+	# 		for point in track.get_points():
+	# 			draw_circle(point, 5, color)
+	# 		draw_line(track.start_point, track.end_point, Color(0, 0, 0), 2)

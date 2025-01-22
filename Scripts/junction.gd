@@ -68,8 +68,8 @@ func get_virtual_node(track: Track, is_entry: bool) -> VirtualNode:
 		return null
 
 func add_vritual_nodes_for_connection(connection_: TrackConnection) -> void:
-	var entry_node = JunctionNode.new(self, connection_.track, true)
-	var exit_node = JunctionNode.new(self, connection_.track, false)
+	var entry_node = JunctionNode.new(self, connection_.track, true, connection_.connected_at_start)
+	var exit_node = JunctionNode.new(self, connection_.track, false, connection_.connected_at_start)
 	
 	virtual_nodes[entry_node.name] =  entry_node
 	virtual_nodes[exit_node.name] =  exit_node
@@ -135,8 +135,7 @@ func remove_node_and_references(node_name: String):
 
 	# Remove references to this track in other nodes
 	for node in virtual_nodes.values():
-		if (node.connected_nodes.has(node_name)):
-			node.connected_nodes.erase(node_name)
+		node.erase_connected_node(node_name)
 
 
 func get_outgoing_connections(track: Track) -> TrackConnection:
