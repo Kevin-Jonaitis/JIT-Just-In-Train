@@ -36,10 +36,10 @@ func add_stop(stop_point: TrackPointInfo) -> void:
 
 func remove_stop(stop_index: int) -> void:
 	var stop = stops[stop_index]
-	var point_index = stop.forward_stop.temp_node_index
+	var point_index = stop.forward_stop.point_index
 	# This should remove both temp nodes
 	# Kinda roundabout, but works
-	stop.forward_stop.temp_node_track.remove_temp_virtual_node(point_index, self)
+	stop.forward_stop.track.remove_stop_from_track(point_index, self)
 	stops.remove_at(stop_index)
 	emit_signal("stops_changed", stops)
 

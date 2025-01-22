@@ -11,7 +11,7 @@ var name: String:
 		assert(name == "", "Name cannot be changed")
 		name = value
 
-# Map<connected_node_name NodeAndCost>
+# Map<connected_node_name NodeAndCost>!! (caused at least one bug because it wasn't typed :( )
 var connected_nodes: Dictionary
 # All nodes are either entry/exit to a track in a junction, or are ON a track
 var track: Track

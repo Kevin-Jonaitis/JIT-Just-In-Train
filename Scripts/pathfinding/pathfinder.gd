@@ -61,9 +61,9 @@ static func find_path(stop_options: Array[StopOption], start_forward: bool, star
 	return schedule
 
 static func get_node_position(node: VirtualNode) -> Vector2:
-	if node.temp_node_track and node.temp_node_location != null:
-		return node.temp_node_location
-	elif node.junction:
+	if (node is StopNode):
+		return node.get_position()
+	elif (node is JunctionNode):
 		return node.junction.position
 
 	assert(false, "We should never get here")

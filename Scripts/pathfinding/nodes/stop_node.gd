@@ -12,9 +12,9 @@ func _init(track_: Track, point_index_: int, forward_: bool, train_: Train):
 	self.name = generate_name(track_, point_index_, forward_, train_)
 	self.track = track_
 	self.point_index = point_index_
-	self.trian = train_
+	self.train = train_
 
-func get_location() -> Vector2:
+func get_position() -> Vector2:
 	return track.dubins_path.shortest_path.get_point_at_index(point_index)
 
 

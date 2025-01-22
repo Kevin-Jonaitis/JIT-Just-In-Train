@@ -61,7 +61,8 @@ func insert_stop_between_junctions(start_node: JunctionNode, end_node: JunctionN
 				insert_stop_between_nodes(current_node, next_node, node_of_interest)
 				return 
 		assert(next_node is StopNode, "We should only have stop nodes in between")
-		if (next_node.point_index < node_of_interest.point_index):
+		if ((current_node == start_node || current_node.point_index <= node_of_interest.point_index) &&
+		next_node.point_index >= node_of_interest.point_index):
 			insert_stop_between_nodes(current_node, next_node, node_of_interest)
 			return
 		current_node = next_node
@@ -90,8 +91,8 @@ static func cost_between_nodes(node1: VirtualNode, node2: VirtualNode) -> float:
 	elif (node1 is StopNode and node2 is JunctionNode):
 		return abs(node1.track.get_distance_to_point(node1.point_index))
 	elif (node1 is StopNode and node2 is StopNode):
-		var distance_to_node_1 = node1.temp_node_track.get_distance_to_point(node1.temp_node_index)
-		var distance_to_node_2 = node2.temp_node_track.get_distance_to_point(node2.temp_node_index)
+		var distance_to_node_1 = node1.track.get_distance_to_point(node1.point_index)
+		var distance_to_node_2 = node2.track.get_distance_to_point(node2.point_index)
 		return abs(distance_to_node_2 - distance_to_node_1)
 	else:
 		assert(false, "We should never get here")
@@ -107,9 +108,9 @@ static func insert_stop_between_nodes(node1: VirtualNode, node2: VirtualNode, ne
 
 static func remove_stop_after_this_node(node_before_delete: VirtualNode):
 	assert(node_before_delete.connected_nodes.size() == 1, "Node 1 should only be connected to one node")
-	var node_to_delete: StopNode = node_before_delete.connected_nodes.values()[0]
+	var node_to_delete: StopNode = node_before_delete.connected_nodes.values()[0].virtual_node
 	node_before_delete.connected_nodes.clear()
 	assert(node_to_delete.connected_nodes.size() == 1, "Node to delete should only be connected to one node")
-	var node_after_node_to_remove = node_to_delete.connected_nodes.values()[0]
+	var node_and_cost_after_node = node_to_delete.connected_nodes.values()[0]
 	node_to_delete.connected_nodes.clear()
-	node_before_delete.connected_nodes[node_after_node_to_remove.name] = node_after_node_to_remove
+	node_before_delete.connected_nodes[node_and_cost_after_node.virtual_node.name] = node_and_cost_after_node
