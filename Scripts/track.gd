@@ -311,11 +311,11 @@ func length():
 		assert(false, "We haven't defined a curve for this track yet!")
 		return 0
 
-func add_temp_virtual_nodes(point_index: int, train: Train) -> Array[VirtualNode]:
-	return virtual_node_manager.add_temp_virtual_nodes(point_index, train)
+func add_stops_to_track(point_index: int, train: Train) -> Array[StopNode]:
+	return virtual_node_manager.add_stops_to_track(point_index, train)
 
-func remove_temp_virtual_node(point_index: int, train: Train):
-	virtual_node_manager.remove_temp_virtual_node(point_index, train)
+func remove_stop_from_track(point_index: int, train: Train):
+	virtual_node_manager.remove_stop_from_track(point_index, train)
 
 func get_point_at_index(index: int) -> Vector2:
 	if (dubins_path):

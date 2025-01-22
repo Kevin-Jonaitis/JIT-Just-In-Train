@@ -60,7 +60,7 @@ class NewConnection:
 			angle = track.get_angle_at_point_index(-1)
 
 func get_virtual_node(track: Track, is_entry: bool) -> VirtualNode:
-	var node_name = VirtualNode.generate_name(self, track, is_entry)
+	var node_name = JunctionNode.generate_name(self, track, is_entry)
 	if (virtual_nodes.has(node_name)):
 		return virtual_nodes[node_name]
 	else:
@@ -68,8 +68,8 @@ func get_virtual_node(track: Track, is_entry: bool) -> VirtualNode:
 		return null
 
 func add_vritual_nodes_for_connection(connection_: TrackConnection) -> void:
-	var entry_node = VirtualNode.new_virtual_node(self, connection_.track, true)
-	var exit_node = VirtualNode.new_virtual_node(self, connection_.track, false)
+	var entry_node = JunctionNode.new(self, connection_.track, true)
+	var exit_node = JunctionNode.new(self, connection_.track, false)
 	
 	virtual_nodes[entry_node.name] =  entry_node
 	virtual_nodes[exit_node.name] =  exit_node
@@ -123,8 +123,8 @@ func remove_track_and_nodes(track: Track) -> void:
 
 # Copilot 90% generated Yehaw
 func remove_virtual_nodes_and_references(track: Track):
-	var entry_node_name = VirtualNode.generate_name(self, track, true)
-	var exit_node_name = VirtualNode.generate_name(self, track, false)
+	var entry_node_name = JunctionNode.generate_name(self, track, true)
+	var exit_node_name = JunctionNode.generate_name(self, track, false)
 
 	remove_node_and_references(entry_node_name)
 	remove_node_and_references(exit_node_name)

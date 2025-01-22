@@ -31,7 +31,8 @@ var calcualtedPoints = false
 # use get_points()
 var _points: Array[Vector2] = []
 # Dumb way to figure out which segment a point is a part of. 
-# We don't know because points sometimes overlap in segments, and there are a bunch
+# We don't know because points sometimes overlap in segments ad we filter them out in the
+# final points array, and there are a bunch
 # of edge cases that can determine which segment a point is a part of which 
 # frankly I'm too lazy to figure out
 var segment_index_for_point: Array[int] = []

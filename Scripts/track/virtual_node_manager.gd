@@ -25,95 +25,91 @@ func delete_interjunction_virtual_nodes():
 	track.start_junction.remove_virtual_nodes_and_references(track)
 	track.end_junction.remove_virtual_nodes_and_references(track)
 
-
-
-## TODO: we need to be able to have multiple temp nodes on the same track
-
-# Adds a temp node in the track at the point index, and returns the two new nodes
-func add_temp_virtual_nodes(point_index: int, train: Train) -> Array[VirtualNode]:
-	var point_info = track.get_point_info_at_index(point_index)
-	var distance_to_start = track.get_distance_to_point(point_index)
-	var length = track.dubins_path.shortest_path.length
-	var distance_to_end = length - distance_to_start
-	assert(distance_to_end > 0, "Somehow we have a negative distance to the end of the track!")
-	var start_entry_node = track.start_junction.get_virtual_node(track, true)
-	var start_exit_node: VirtualNode = track.start_junction.get_virtual_node(track, false)
-	var end_entry_node = track.end_junction.get_virtual_node(track, true)
-	var end_exit_node = track.end_junction.get_virtual_node(track, false)
-
-	var temp_node_start_junc_end_junc = VirtualNode.new_temp_node(track, point_index, true, train)
-	var temp_node_end_junc_start_junc = VirtualNode.new_temp_node(track, point_index, false, train)
-
-	start_exit_node.erase_connected_node(end_entry_node)
-	end_exit_node.erase_connected_node(start_entry_node)
-
-	start_exit_node.add_connected_node(temp_node_start_junc_end_junc, distance_to_start)
-	temp_node_start_junc_end_junc.add_connected_node(end_entry_node, distance_to_end)
-
-	end_exit_node.add_connected_node(temp_node_end_junc_start_junc, distance_to_end)
-	temp_node_end_junc_start_junc.add_connected_node(start_entry_node, distance_to_start)
-
-	return [temp_node_end_junc_start_junc, temp_node_start_junc_end_junc]
-
-
-	# Adds a temp node in the track at the point index, and returns the two new nodes
-func add_temp_virtual_nodes_two(point_index: int, train: Train) -> Array[VirtualNode]:
-	var point_info = track.get_point_info_at_index(point_index)
-	var distance_to_start = track.get_distance_to_point(point_index)
-	var length = track.dubins_path.shortest_path.length
-	var distance_to_end = length - distance_to_start
-	assert(distance_to_end > 0, "Somehow we have a negative distance to the end of the track!")
+func add_stops_to_track(point_index: int, train: Train) -> Array[StopNode]:
 	var start_entry_node: VirtualNode = track.start_junction.get_virtual_node(track, true)
 	var start_exit_node: VirtualNode = track.start_junction.get_virtual_node(track, false)
 	var end_entry_node: VirtualNode = track.end_junction.get_virtual_node(track, true)
 	var end_exit_node: VirtualNode = track.end_junction.get_virtual_node(track, false)
 
-	var temp_node_start_junc_end_junc = VirtualNode.new_temp_node(track, point_index, true, train)
-	var temp_node_end_junc_start_junc = VirtualNode.new_temp_node(track, point_index, false, train)
+	var temp_node_start_junc_end_junc = StopNode.new(track, point_index, true, train)
+	var temp_node_end_junc_start_junc = StopNode.new(track, point_index, false, train)
 
-	var current_node : VirtualNode = start_exit_node
-	var distance_to_current_node = INF
-	while current_node != end_entry_node:
+	insert_stop_between_junctions(start_exit_node, end_entry_node, temp_node_start_junc_end_junc)
+	insert_stop_between_junctions(end_exit_node, start_entry_node, temp_node_end_junc_start_junc)
+
+	return [temp_node_end_junc_start_junc, temp_node_start_junc_end_junc]
+
+func remove_stop_from_track(point_index: int, train: Train) -> void:
+	var start_entry_node: VirtualNode = track.start_junction.get_virtual_node(track, true)
+	var start_exit_node: VirtualNode = track.start_junction.get_virtual_node(track, false)
+	var end_entry_node: VirtualNode = track.end_junction.get_virtual_node(track, true)
+	var end_exit_node: VirtualNode = track.end_junction.get_virtual_node(track, false)
+
+	var node_forward_name = StopNode.generate_name(track, point_index, true, train)
+	var node_backward_name  = StopNode.generate_name(track, point_index, false, train)
+
+	delete_stop_between_junctions(start_exit_node, end_entry_node, node_forward_name)
+	delete_stop_between_junctions(end_exit_node, start_entry_node, node_backward_name)
+
+
+func insert_stop_between_junctions(start_node: JunctionNode, end_node: JunctionNode, node_of_interest: StopNode) -> void:
+	var current_node = start_node
+	while current_node != end_node:
 		assert(current_node.connected_nodes.values().size() == 1, "We should only have one connected node")
 		var next_node: VirtualNode = current_node.connected_nodes.values()[0].virtual_node
-		if (next_node.virtual_node.temp_node_index < point_index):
-			current_node = next_node
-			distance_to_current_node = current_node.virtual_node.get_distance_to_temp_node_strat_of_track()
-			continue
-		else:
-			insert_node_between(current_node, next_node, temp_node_start_junc_end_junc)
+		if (next_node == end_node):
+				insert_stop_between_nodes(current_node, next_node, node_of_interest)
+				return 
+		assert(next_node is StopNode, "We should only have stop nodes in between")
+		if (next_node.point_index < node_of_interest.point_index):
+			insert_stop_between_nodes(current_node, next_node, node_of_interest)
 			return
-		# if distance_to_next > distance_to_start:
-		# 	break
-		# distance_to_start -= distance_to_next
 		current_node = next_node
 
+	assert(false, "We should have found the node spot and returned")
 
-# Remove a virtual node that's between a track's start and ending internal nodes
-func remove_temp_virtual_node(point_index: int, train: Train):
-	var start_entry_node = track.start_junction.get_virtual_node(track, true)
-	var start_exit_node: VirtualNode = track.start_junction.get_virtual_node(track, false)
-	var end_entry_node = track.end_junction.get_virtual_node(track, true)
-	var end_exit_node = track.end_junction.get_virtual_node(track, false)
+func delete_stop_between_junctions(start_node: JunctionNode, end_node: JunctionNode, stop_name: String) -> void:
+	var current_node = start_node
+	while current_node != end_node:
+		assert(current_node.connected_nodes.values().size() == 1, "We should only have one connected node")
+		var next_node: VirtualNode = current_node.connected_nodes.values()[0].virtual_node
+		if (next_node.name == stop_name):
+				remove_stop_after_this_node(current_node)
+				return 
+		current_node = next_node
+	
+	assert(false, "We should have found the node and returned")
 
-	var node_forward_name = VirtualNode.generate_name_temp_node(track, point_index, true, train)
-	var node_backward_name  = VirtualNode.generate_name_temp_node(track, point_index, false, train)
-	var node_forward = start_exit_node.connected_nodes[node_forward_name]
-	assert(node_forward, "This should never fail if we're explicitly removing a node")
-	var node_backwards = end_exit_node.connected_nodes[node_backward_name]
-	assert(node_backwards, "This should never fail if we're explicitly removing a node")
-	
-	var forward_erased = start_exit_node.erase_connected_node(node_forward)
-	assert(forward_erased, "We should have found this node")
-	
-	var backwards_erased = end_exit_node.erase_connected_node(node_backwards)
-	assert(backwards_erased, "We should have found this node")
-	
-	# There are still refernces from the forward and backward nodes to their next nodes,
-	# but those _should_ be deleted becasuse we delete references to the forward/backwards node,
-	# and that should cascade a deletion.
-	# TODO: This assumption could be wrong though and there could be a memory leak
+# Always returns a positive value
+static func cost_between_nodes(node1: VirtualNode, node2: VirtualNode) -> float:
+	if (node1 is JunctionNode and node2 is JunctionNode):
+		assert(node1.track.uuid == node2.track.uuid, "Junction nodes should be on the same track")
+		return node1.track.get_length()
+	elif (node1 is JunctionNode and node2 is StopNode):
+		return abs(node2.track.get_distance_to_point(node2.point_index))
+	elif (node1 is StopNode and node2 is JunctionNode):
+		return abs(node1.track.get_distance_to_point(node1.point_index))
+	elif (node1 is StopNode and node2 is StopNode):
+		var distance_to_node_1 = node1.temp_node_track.get_distance_to_point(node1.temp_node_index)
+		var distance_to_node_2 = node2.temp_node_track.get_distance_to_point(node2.temp_node_index)
+		return abs(distance_to_node_2 - distance_to_node_1)
+	else:
+		assert(false, "We should never get here")
+		return 0
 
-	# Reconnect two junctions together
-	start_exit_node.add_connected_node(end_entry_node, 0)
-	end_exit_node.add_connected_node(start_entry_node, 0)
+static func insert_stop_between_nodes(node1: VirtualNode, node2: VirtualNode, new_node: StopNode):
+	var cost_1_to_new = cost_between_nodes(node1, new_node)
+	var cost_new_to_2 = cost_between_nodes(new_node, node2)
+
+	node1.add_connected_node(new_node, cost_1_to_new)
+	new_node.add_connected_node(node2, cost_new_to_2)
+	node1.erase_connected_node(node2)
+
+static func remove_stop_after_this_node(node_before_delete: VirtualNode):
+	assert(node_before_delete.connected_nodes.size() == 1, "Node 1 should only be connected to one node")
+	var node_to_delete: StopNode = node_before_delete.connected_nodes.values()[0]
+	node_before_delete.connected_nodes.clear()
+	assert(node_to_delete.connected_nodes.size() == 1, "Node to delete should only be connected to one node")
+	var node_after_node_to_remove = node_to_delete.connected_nodes.values()[0]
+	node_to_delete.connected_nodes.clear()
+	node_before_delete.connected_nodes[node_after_node_to_remove.name] = node_after_node_to_remove

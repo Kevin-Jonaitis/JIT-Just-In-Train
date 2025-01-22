@@ -27,7 +27,7 @@ var schedule: Schedule:
 
 
 func create_stop_option(stop_point: TrackPointInfo) -> StopOption:
-	var stop = StopOption.new(stop_point.track.add_temp_virtual_nodes(stop_point.point_index, self))
+	var stop = StopOption.new(stop_point.track.add_stops_to_track(stop_point.point_index, self))
 	return stop
 
 func add_stop(stop_point: TrackPointInfo) -> void:

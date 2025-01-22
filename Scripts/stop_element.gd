@@ -20,10 +20,10 @@ func _ready():
 	pass
 
 
-static func new_stop_element(name: String, train_: Train, stop_index: int) -> StopElement:
+static func new_stop_element(name_: String, train_: Train, stop_index_: int) -> StopElement:
 	var stop_element = scene.instantiate()
-	stop_element.train_name = name
-	stop_element.stop_index = stop_index
+	stop_element.train_name = name_
+	stop_element.stop_index = stop_index_
 	stop_element.train = train_
 	return stop_element
 
