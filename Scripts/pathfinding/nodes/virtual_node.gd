@@ -27,18 +27,38 @@ func get_node_and_cost(name: String) -> NodeAndCost:
 # each train will have it's own directed graph along that track
 # and when we're pathfinding, we only see that path(by using this function)
 func get_connected_nodes(train: Train) -> Array[NodeAndCost]:
-	return _connected_nodes.values().filter(
-		func(node): 
+	var result : Array[NodeAndCost]
+	# Workaround for https://github.com/godotengine/godot/issues/72566
+	result.assign(_connected_nodes.values().filter(
+		func(node: NodeAndCost): 
 			if node.virtual_node is StopNode && node.virtual_node.train.uuid != train.uuid:
 				return false
 			else:
 				return true
-			)
+			))
+	return result
 
 	# connected_nodes.values().filter(lambda x: x.virtual_node is StopNode && x.virtual_node.train == filter)
 
-func erase_connected_node(node: VirtualNode):
-	return _connected_nodes.erase(node.name)
+func get_stop_for_train_or_junction(train: Train) -> NodeAndCost:
+	var nodes = get_connected_nodes(train)
+	assert(nodes.size() <= 2, "There should not be more than 2 connected nodes")
+	# Prefer the stop node
+	for node in nodes:
+		if node.virtual_node is StopNode && node.virtual_node.train == train:
+			return node
+
+	# Go through again and return junction node
+	for node in nodes:
+		if node.virtual_node is JunctionNode:
+			return node
+
+	assert(false, "Should never get here")
+	return null
+
+func erase_connected_node(name: String):
+	return _connected_nodes.erase(name)
+
 
 func clear():
 	_connected_nodes.clear()

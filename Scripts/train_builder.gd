@@ -6,7 +6,7 @@ class_name TrainBuilder
 signal add_new_train(train: Node2D)
 
 var trainScene: PackedScene = preload("res://Scenes/train.tscn")
-var train: Sprite2D
+var train: Node2D
 
 var enabled = false
 

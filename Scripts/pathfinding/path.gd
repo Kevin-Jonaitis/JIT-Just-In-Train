@@ -34,27 +34,30 @@ var length: float
 # stop to junction(same track) # care
 # stop to stop(same track)
 
-#write a function in the path class that creates the track_segments from nodes. Note that there are 5 pairs of nodes that can occur in the nodes array:
-#Junction to Junction(still on the same track) Junction to Junction(different tracks) Junction to stop(same track) stop to junction(same track) stop to stop(same track)
-#keep track of the current track for the node. as you iterate over nodes, as soon as track changes, complete a segment for that track, starting at whatever the point index was for the first node on that track and ending on the current index for that track. add that track to the list of track segments.
+# write a function in the path class that creates the TrackSegment from nodes.
+
+# Assume as you iterate through the nodes, you will change from one track to another. Only create a TrackSegment for each track that the nodes go over.
+
+# Make sure to set the correct start_index and end_index. These are the index of the points on the track. A junction node will either start at the beginning or end of the track, and a stop node
+# will be somewhere in the middle of the track.
 func create_track_segments():
 	track_segments.clear()
-	var current_track = null
-	var start_index = -1
-	
-	for i in range(nodes.size()):
-		var node = nodes[i]
-		if node.track.uuid != current_track.uuid:
-			# close out previous segment
-			if current_track != null and start_index != -1:
-				var end_index = nodes[i - 1].virtual_node.get_point_index()
-				var segment = TrackSegment.new(current_track, start_index, end_index)
-				track_segments.append(segment)
-			# start a new segment
-			current_track = node.track
-			start_index = node.virtual_node.get_point_index()
+	if nodes.size() < 2:
+		return
 
-		# if we're at the last node, close out the segment
-		if i == nodes.size() - 1:
-			var segment = TrackSegment.new(current_track, start_index, node.virtual_node.get_point_index())
+	var current_track: Track = nodes[0].track
+	var start_index: int = nodes[0].get_point_index()
+
+	for i in range(1, nodes.size()):
+		var node = nodes[i]
+		if node.track != current_track:
+			var end_index: int = nodes[i - 1].get_point_index()
+			var segment = TrackSegment.new(current_track, start_index, end_index)
 			track_segments.append(segment)
+			current_track = node.track
+			start_index = node.get_point_index()
+
+	# Add the last segment
+	var last_end_index: int = nodes[nodes.size() - 1].get_point_index()
+	var last_segment = TrackSegment.new(current_track, start_index, last_end_index)
+	track_segments.append(last_segment)

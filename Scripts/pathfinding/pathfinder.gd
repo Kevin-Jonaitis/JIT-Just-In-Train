@@ -26,7 +26,9 @@ func _init():
 static func find_path(train: Train, start_forward: bool, start_backwards: bool) -> Schedule:
 	var stop_options = train.stops
 	# key: virtual node, value: shortest path there
-	var dp = []
+	#map nodea, nodeb, path
+
+	var dp = {}
 	var start_virtual_node
 	var end_virtual_node
 	
@@ -63,7 +65,6 @@ static func find_path(train: Train, start_forward: bool, start_backwards: bool) 
 					schedule.add_path(path)
 					schedule.stops.append(start_node)
 					last_end_node = end_node
-		shortest_path
 
 	schedule.stops.append(last_end_node)
 	return schedule
@@ -114,7 +115,7 @@ static func find_path_between_nodes(start: VirtualNode, end: VirtualNode, train:
 				open_set.insert(neighbor, f_score[neighbor.name])
 
 	# No path found
-	return Path.new([], 0)
+	return Path.new([], INF)
 
 static func reconstruct_path(came_from: Dictionary, current: VirtualNode) -> Path:
 	var length: float = 0

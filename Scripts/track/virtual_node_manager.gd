@@ -34,8 +34,8 @@ func add_stops_to_track(point_index: int, train: Train) -> Array[StopNode]:
 	var temp_node_start_junc_end_junc = StopNode.new(track, point_index, true, train)
 	var temp_node_end_junc_start_junc = StopNode.new(track, point_index, false, train)
 
-	insert_stop_between_junctions(start_exit_node, end_entry_node, temp_node_start_junc_end_junc, train)
-	insert_stop_between_junctions(end_exit_node, start_entry_node, temp_node_end_junc_start_junc, train)
+	insert_stop_between_junctions(start_exit_node, end_entry_node, temp_node_start_junc_end_junc, train, compare_forward)
+	insert_stop_between_junctions(end_exit_node, start_entry_node, temp_node_end_junc_start_junc, train, compare_backward)
 
 	return [temp_node_end_junc_start_junc, temp_node_start_junc_end_junc]
 
@@ -48,21 +48,32 @@ func remove_stop_from_track(point_index: int, train: Train) -> void:
 	var node_forward_name = StopNode.generate_name(track, point_index, true, train)
 	var node_backward_name  = StopNode.generate_name(track, point_index, false, train)
 
+
 	delete_stop_between_junctions(start_exit_node, end_entry_node, node_forward_name, train)
 	delete_stop_between_junctions(end_exit_node, start_entry_node, node_backward_name, train)
 
+# These are used as comprators in insert_stop_between_junctions 
+func compare_forward(current_node: VirtualNode, next_node: VirtualNode, start_node: VirtualNode, node_of_interest: StopNode) -> bool:
+	if ((current_node == start_node || current_node.point_index <= node_of_interest.point_index) &&
+		next_node.point_index >= node_of_interest.point_index):
+			return true
+	return false
 
-func insert_stop_between_junctions(start_node: JunctionNode, end_node: JunctionNode, node_of_interest: StopNode, train: Train) -> void:
+func compare_backward(current_node: VirtualNode, next_node: VirtualNode, start_node: VirtualNode, node_of_interest: StopNode) -> bool:
+	if ((current_node == start_node || current_node.point_index >= node_of_interest.point_index) &&
+		next_node.point_index <= node_of_interest.point_index):
+			return true
+	return false
+
+func insert_stop_between_junctions(start_node: JunctionNode, end_node: JunctionNode, node_of_interest: StopNode, train: Train, comparator: Callable) -> void:
 	var current_node = start_node
 	while current_node != end_node:
-		assert(current_node.get_connected_nodes(train).size() == 1, "We should only have one connected node")
-		var next_node: VirtualNode = current_node.get_connected_nodes(train)[0].virtual_node
+		var next_node: VirtualNode = current_node.get_stop_for_train_or_junction(train).virtual_node
 		if (next_node == end_node):
 				insert_stop_between_nodes(current_node, next_node, node_of_interest)
 				return 
 		assert(next_node is StopNode, "We should only have stop nodes in between")
-		if ((current_node == start_node || current_node.point_index <= node_of_interest.point_index) &&
-		next_node.point_index >= node_of_interest.point_index):
+		if (comparator.call(current_node, next_node, start_node, node_of_interest)):
 			insert_stop_between_nodes(current_node, next_node, node_of_interest)
 			return
 		current_node = next_node
@@ -72,8 +83,7 @@ func insert_stop_between_junctions(start_node: JunctionNode, end_node: JunctionN
 func delete_stop_between_junctions(start_node: JunctionNode, end_node: JunctionNode, stop_name: String, train) -> void:
 	var current_node = start_node
 	while current_node != end_node:
-		assert(current_node.get_connected_nodes(train).size() == 1, "We should only have one connected node")
-		var next_node: VirtualNode = current_node.get_connected_nodes(train)[0].virtual_node
+		var next_node: VirtualNode = current_node.get_stop_for_train_or_junction(train).virtual_node
 		if (next_node.name == stop_name):
 				remove_stop_after_this_node(current_node, train)
 				return 
@@ -104,13 +114,15 @@ static func insert_stop_between_nodes(node1: VirtualNode, node2: VirtualNode, ne
 
 	node1.add_connected_node(new_node, cost_1_to_new)
 	new_node.add_connected_node(node2, cost_new_to_2)
-	node1.erase_connected_node(node2)
+	
+	# Do not erase pointers between junctions, this should always be a viable path
+	if (node1 is JunctionNode and node2 is JunctionNode):
+		return
+	node1.erase_connected_node(node2.name)
 
 static func remove_stop_after_this_node(node_before_delete: VirtualNode, train: Train):
-	assert(node_before_delete.get_connected_nodes(train).size() == 1, "Node 1 should only be connected to one node")
-	var node_to_delete: StopNode = node_before_delete.get_connected_nodes(train)[0].virtual_node
-	node_before_delete.clear()
-	assert(node_to_delete.connected_nodes.size() == 1, "Node to delete should only be connected to one node")
-	var node_and_cost_after_node = node_to_delete.get_connected_nodes(train)[0]
+	var node_to_delete: StopNode = node_before_delete.get_stop_for_train_or_junction(train).virtual_node
+	node_before_delete.erase_connected_node(node_to_delete.name)
+	var node_and_cost_after_node = node_to_delete.get_stop_for_train_or_junction(train)
 	node_to_delete.clear()
-	node_before_delete.connected_nodes[node_and_cost_after_node.virtual_node.name] = node_and_cost_after_node
+	node_before_delete.add_connected_node(node_and_cost_after_node.virtual_node, node_and_cost_after_node.cost)

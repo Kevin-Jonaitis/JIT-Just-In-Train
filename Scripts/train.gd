@@ -1,4 +1,4 @@
-extends Sprite2D
+extends Node2D
 
 class_name Train
 
@@ -47,13 +47,17 @@ func remove_stop(stop_index: int) -> void:
 
 
 var colors = [Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.CYAN, Color.MAGENTA, Color.ORANGE, Color.PURPLE, Color.PINK, Color.TEAL, Color.GRAY, Color.LIME, Color.AQUA, Color.OLIVE, Color.MAROON, Color.TEAL, Color.SILVER, Color.WHITE, Color.BLACK]
+
 func _draw():
-	pass
-	# if (!schedule):
-	# 	return
-	# for path in schedule.segments:
-	# 	for track : Track in path.track_segments:
-	# 		var color = colors[randi() % colors.size()]
-	# 		for point in track.get_points():
-	# 			draw_circle(point, 5, color)
-	# 		draw_line(track.start_point, track.end_point, Color(0, 0, 0), 2)
+	if not schedule:
+		return
+	for path in schedule.stops_path:
+		var color = colors[randi() % colors.size()]
+		for segment in path.track_segments:
+			var start_index = segment.start_point_index
+			var end_index = segment.end_point_index
+			var step = 1 if start_index < end_index else -1
+			for i in range(start_index, end_index, step):
+				var point_a = segment.track.get_point_at_index(i)
+				var point_b = segment.track.get_point_at_index(i + step)
+				draw_line(to_local(point_a), to_local(point_b), color, 4)
