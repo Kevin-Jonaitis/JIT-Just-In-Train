@@ -1,13 +1,13 @@
 [gd_scene load_steps=4 format=3 uid="uid://dcoe2hsmx5c22"]
 
+[ext_resource type="Script" path="res://Scripts/train.gd" id="1_spncn"]
 [ext_resource type="Texture2D" uid="uid://swsml3kqpwau" path="res://Dank.png" id="1_w42ok"]
-[ext_resource type="Script" path="res://Scripts/train.gd" id="2_s5bjc"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_mxkxs"]
 size = Vector2(2020, 1020)
 
 [node name="Train" type="Node2D"]
-script = ExtResource("2_s5bjc")
+script = ExtResource("1_spncn")
 
 [node name="TrainSprite" type="Sprite2D" parent="."]
 z_index = 1

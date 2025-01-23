@@ -3,11 +3,29 @@ extends RefCounted
 
 class_name Path
 
+
+var nodes: Array[VirtualNode]  = []
+var track_segments: Array[TrackSegment] = []
+
+var start_node
+var goal_node
+
+var length: float
+
 func _init(nodes: Array[VirtualNode], length: float):
 	self.nodes = nodes
 	self.length = length
 	self.create_track_segments()
-	
+
+func get_first_stop() -> VirtualNode:
+	if nodes.size() == 0:
+		assert(false, "How did we get here")
+	return nodes[0]
+
+func get_last_stop() -> VirtualNode:
+	if nodes.size() == 0:
+		assert(false, "How did we get here")
+	return nodes[-1]
 
 class TrackSegment:
 	var track: Track
@@ -20,13 +38,6 @@ class TrackSegment:
 		self.end_point_index = end_point_index
 
 
-var nodes: Array[VirtualNode]  = []
-var track_segments: Array[TrackSegment] = []
-
-var start_node
-var goal_node
-
-var length: float
 
 # Junction to Junction(still on the same track) # care
 # Junction to Junction(different tracks) # don't care

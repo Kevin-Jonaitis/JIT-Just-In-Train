@@ -17,6 +17,8 @@ func _init(track_: Track, point_index_: int, forward_: bool, train_: Train):
 func get_position() -> Vector2:
 	return track.dubins_path.shortest_path.get_point_at_index(point_index)
 
+func is_forward() -> bool:
+	return name.ends_with("forward")
 
 static func generate_name(track: Track, index: int, forward: bool, train: Train):
 	var direction_str = "forward" if forward else "backward"

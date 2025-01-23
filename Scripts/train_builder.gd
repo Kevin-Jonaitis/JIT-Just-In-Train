@@ -32,7 +32,7 @@ func _ready():
 func create_new_train(visible_: bool):
 	train = trainScene.instantiate()
 	train.visible = visible_
-	train.is_placed = true
+	# train.is_placed = true
 	valid_train_placement = false
 	add_new_train.emit(train)
 
@@ -55,4 +55,5 @@ func handle_input(event: InputEvent) -> void:
 func place_train():
 	train.modulate = SOLID
 	train.area2d.collision_layer = Train.TRAIN_COLLISION_LAYER
+	train.is_placed = true
 	create_new_train(true)

@@ -19,11 +19,7 @@ var is_placed = false
 var _stop_options: Array[StopOption] = []
 
 # Generated schedule from stops
-# Only generated once the 'x' button is pressed on the schedule
-var schedule: Schedule = Schedule.new()
-	# set(value):
-	# 	schedule = value
-	# 	#assert(schedule.stops.size() == _stops.size(), "These got out of sync some how")
+var schedule: Schedule
 		
 
 
@@ -34,19 +30,17 @@ func create_stop_option(stop_point: TrackPointInfo) -> StopOption:
 func add_stop_option(stop_point: TrackPointInfo) -> void:
 	_stop_options.append(create_stop_option(stop_point))
 	calculate_schedule()
-	# emit_signal("stops_changed", stops)
 
 func remove_stop_option(stop_index: int) -> void:
 	var stop_option = _stop_options[stop_index]
-	var point_index = stop_option.forward_stop.point_index
+	var point_index = stop_option.stop_option[0].point_index
 	# This should remove both temp nodes
 	# Kinda roundabout, but works
-	stop_option.forward_stop.track.remove_stop_from_track(point_index, self)
+	stop_option.stop_option[0].track.remove_stop_from_track(point_index, self)
 	_stop_options.remove_at(stop_index)
 	calculate_schedule()
-	# emit_signal("stops_changed", stops)
 
-func get_stop_options():
+func get_stop_options() -> Array[StopOption]:
 	return _stop_options
 
 func calculate_schedule():

@@ -17,7 +17,7 @@ func _on_train_placed(train: Train) -> void:
 func update_train_stops(old_track: Track, new_track_a: Track, new_track_b: Track):
 	for train in trains:
 		for stop_index in range(train.get_stop_options().size()):
-			var virtual_node : StopNode = train.stops[stop_index].forward_stop
+			var virtual_node : StopNode = train.stops[stop_index].stop_option[0]
 			if (virtual_node.track.uuid == old_track.uuid):
 				var potential_point: TrackPointInfo = get_point_info_on_new_tracks(virtual_node.get_position(), new_track_a, new_track_b)
 				if (potential_point):
