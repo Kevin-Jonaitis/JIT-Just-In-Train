@@ -81,10 +81,19 @@ func build_track(starting_overlay: TrackOrJunctionOverlap, ending_overlay: Track
 @export var bezier_curve: Path2D
 var dubins_path: DubinPath2D
 
+
+# Exposed so I can view the property in the debugger
+var length:
+	get:
+		if (dubins_path && dubins_path.shortest_path):
+			return get_length()
+	set(value):
+		assert(false, "This is for viewing in the editor only!")
+
 func get_length():
 	if (bezier_curve):
 		assert(false, "Unimplemented code path!")
-	elif (dubins_path):
+	elif (dubins_path && dubins_path.shortest_path):
 		return dubins_path.shortest_path.length
 	else:
 		assert(false, "Unimplemented code path!")
@@ -297,16 +306,6 @@ func get_distance_to_point(point_index: int) -> float:
 		return 0
 	elif (dubins_path):
 		return dubins_path.shortest_path.get_distance_to_point(point_index)
-	else:
-		assert(false, "We haven't defined a curve for this track yet!")
-		return 0
-
-
-func length():
-	if (bezier_curve):
-		assert(false, "Unimplemented code path!")
-	elif (dubins_path):
-		return dubins_path.shortest_path.length
 	else:
 		assert(false, "We haven't defined a curve for this track yet!")
 		return 0

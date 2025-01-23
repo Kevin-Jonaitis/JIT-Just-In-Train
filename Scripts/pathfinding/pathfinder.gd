@@ -24,23 +24,25 @@ func _init():
 # We can't know what the "forward" and "backward" direction is of any intermediate stops
 static func find_path_with_movement(train: Train, can_move_forward: bool, can_move_backwards: bool, connect_to_start: bool) -> Schedule:
 	var stop_options: Array[StopOption] = train.get_stop_options()
+	if (stop_options.size() == 0):
+		return null
 	if (can_move_forward && can_move_backwards):
 		if (connect_to_start):
 			stop_options.append(stop_options[0])
-		return find_path(train.uuid, stop_options)
+		return find_path(train.name, stop_options)
 	elif (can_move_forward):
 		# only allow the forward node as the first stop
 		stop_options[0] = StopOption.new([stop_options[0].get_forward_node()])
 		# If we want to connect it back to the start, we add the first node and 
 		if (connect_to_start):
 			stop_options.append(stop_options[0]) # This will automatically already have only the forward node
-		return find_path(train.uuid, stop_options)
+		return find_path(train.name, stop_options)
 	elif (can_move_backwards):
 		# only allow the backward node as the first and last stop
 		stop_options[0] = StopOption.new([stop_options[0].get_backward_node()])
 		if (connect_to_start):
 			stop_options.append(stop_options[0]) # This will automatically already have only the backward node
-		return find_path(train.uuid, stop_options)
+		return find_path(train.name, stop_options)
 	else:
 		assert(false, "We should never get here")
 		return null
@@ -54,47 +56,63 @@ static func find_path(train_uuid: String, stop_options: Array[StopOption]) -> Sc
 
 		for start_node: StopNode in current_stop_options.stop_option:
 				for end_node: StopNode in next_stop_options.stop_option:
-					var path = find_path_between_nodes(start_node, end_node, train_uuid)
-					add_to_dp_map(end_node, dynamnic_programming, path)
+					var path : Path = find_path_between_nodes(start_node, end_node, train_uuid)
+					if (path != null):
+						add_to_dp_map(end_node, dynamnic_programming, RunningPath.new([path]))
 	var schedule = calculate_running_best_path(dynamnic_programming, stop_options)
 	return schedule
 
 #dynamnic_programming is a dictionary with key: StopNode, value: <Path or RunningPath, depending on caller>
-static func add_to_dp_map(end_node: StopNode, dynamnic_programming: Dictionary, path):
-	if (dynamnic_programming.has(end_node)):
-		var current_path = dynamnic_programming[end_node]
+
+# First the map will be dp<StopNode, Path> then it'll transform into dp<StopNode, RunningPath>
+static func add_to_dp_map(end_node: StopNode, dynamnic_programming: Dictionary, path: RunningPath):
+	if (path == null):
+		return
+	if (dynamnic_programming.has(end_node.name)):
+		var current_path = dynamnic_programming[end_node.name]
 		if (current_path.length > path.length):
-			dynamnic_programming[end_node] = path
+			dynamnic_programming[end_node.name] = path
 	else:
-		dynamnic_programming[end_node] = path
+		dynamnic_programming[end_node.name] = path
 
 	return dynamnic_programming
 
 static func calculate_running_best_path(dynamnic_programming: Dictionary, stop_options: Array[StopOption]) -> Schedule:
+	var running_map = {}
 	# Map<StopNode, Array<Path>>
-	var running_best = {}
 	for i in range(stop_options.size() - 1):
-		if (i == 0): ## The first path has already been calculated
+		# Initalize the map
+		if (i == 0): ## The first path has already been calculated, add it directly to the map
+			for next_stop_option in stop_options[1].stop_option:
+				var next_stop_path = dynamnic_programming.get(next_stop_option.name)
+				if (next_stop_path != null):
+					add_to_dp_map(next_stop_path.get_last_stop(), running_map, next_stop_path)
 			continue
-
-
-
-		## Ned to stop using two maps, this is incorrect. Use one map 
-		# and store the updated path, keeping the update of RunningPath all the way through
 		
 		for current_stop_option in stop_options[i].stop_option:
 			for next_stop_option in stop_options[i + 1].stop_option:
-				var current_stop_path = dynamnic_programming[current_stop_option]
-				var next_stop_path = dynamnic_programming[next_stop_option]
-				check_if_overlap_and_add_to_map(running_best, current_stop_path, next_stop_path)
+				# Types could be RunningPath | Path | null
+				var current_stop_path = running_map.get(current_stop_option.name)
+				var next_stop_path = dynamnic_programming.get(next_stop_option.name)
+				check_if_overlap_and_add_to_map(running_map, current_stop_path, next_stop_path)
 
 	var best_length : float = INF
 	var best_path : RunningPath = null
 
-	for path in running_best.values():
+	var final_paths: Array = \
+	stop_options[-1].stop_option \
+	.map(func(x): return x.name) \
+	.map(func(name): return running_map.get(name)) \
+	.filter(func(x): return x != null)
+	for path in final_paths:
 		if (path.length < best_length):
 			best_length = path.length
 			best_path = path
+	if (best_path == null):
+		return null
+	#var take_one = (best_path.paths.size()
+	#var take_two = 
+	assert(best_path.paths.size() == max(1, stop_options.size() - 1), "We should have as many paths as we have stops")
 	return Schedule.new(best_path.paths)
 
 
@@ -102,15 +120,27 @@ class RunningPath:
 	var paths: Array[Path]
 	var length: float
 
-	func _init(paths: Array[Path]):
-		self.paths = paths
+	func _init(paths_: Array[Path]):
+		self.paths = paths_
 		for path in paths:
 			self.length += path.length
+	
+	func get_first_stop() -> VirtualNode:
+		return paths[0].get_first_stop()
+
+	func get_last_stop() -> VirtualNode:
+		return paths[-1].get_last_stop()
 		
 
-static func check_if_overlap_and_add_to_map(dynamnic_programming: Dictionary, start_path, end_path):
+static func check_if_overlap_and_add_to_map(dynamnic_programming: Dictionary, start_path: RunningPath, end_path: RunningPath):
+	if (start_path == null or end_path == null):
+		return
 	if (start_path.get_last_stop().name == end_path.get_first_stop().name):
-		var running_path_list = RunningPath.new([start_path, end_path])
+		# Can run twice for each end_path
+		var combined_array: Array[Path] = []
+		combined_array.append_array(start_path.paths)
+		combined_array.append_array(end_path.paths)
+		var running_path_list = RunningPath.new(combined_array)
 		add_to_dp_map(end_path.get_last_stop(), dynamnic_programming, running_path_list)
 
 static func combine_paths(first_half: Path, second_half: Path):
@@ -167,8 +197,7 @@ static func find_path_between_nodes(start: VirtualNode, end: VirtualNode, train_
 				f_score[neighbor.name] = tentative_g + heuristic(neighbor, end)
 				open_set.insert(neighbor, f_score[neighbor.name])
 
-	# No path found
-	return Path.new([], INF)
+	return null
 
 static func reconstruct_path(came_from: Dictionary, current: VirtualNode) -> Path:
 	var length: float = 0

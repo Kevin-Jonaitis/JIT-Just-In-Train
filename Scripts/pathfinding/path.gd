@@ -7,6 +7,8 @@ class_name Path
 var nodes: Array[VirtualNode]  = []
 var track_segments: Array[TrackSegment] = []
 
+var uuid = Utils.generate_uuid()
+
 var start_node
 var goal_node
 

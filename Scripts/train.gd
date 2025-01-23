@@ -6,7 +6,7 @@ class_name Train
 
 signal stops_changed(stops: Array[StopOption])
 
-var uuid = Utils.generate_uuid()
+# var uuid = Utils.generate_uuid()
 
 @onready var area2d : Area2D = $Area2D
 
@@ -21,7 +21,32 @@ var _stop_options: Array[StopOption] = []
 
 # Generated schedule from stops
 var schedule: Schedule
+
+var on_ready_callables: Array[Callable]
+
+
+# USE THIS TO SET THE NAME! No way to override native functions, unfortunately
+# We use name rather than UUID because UUID is way too long and makes it harder when we're debugging
+# isues in the editor
+
+func _ready() -> void:
+	for callable in on_ready_callables:
+		callable.call()
 	
+func set_name_user(name_: String):
+	# Need to do this on-ready since we can't access parents until then
+	on_ready_callables.append(
+		func():
+			verify_name_unique(name_)
+			name = name_
+	)
+	
+
+
+func verify_name_unique(name: String):
+	for train in get_parent().get_children():
+		if train != self and train.name == name:
+			assert(	false, "Train name	 must 	be unique! We use them as identifiers")
 
 func create_stop_option(stop_point: TrackPointInfo) -> StopOption:
 	var stop = StopOption.new(stop_point.track.add_stops_to_track(stop_point.point_index, self))

@@ -8,6 +8,8 @@ signal add_new_train(train: Node2D)
 var trainScene: PackedScene = preload("res://Scenes/train.tscn")
 var train: Node2D
 
+static var train_counter : int = 1
+
 var enabled = false
 
 const TRANSPARENT_RED = Color(1, 0, 0, 0.5)  # Half-transparent red	
@@ -31,6 +33,8 @@ func _ready():
 
 func create_new_train(visible_: bool):
 	train = trainScene.instantiate()
+	train.set_name_user("Train-" + str(train_counter))
+	train_counter += 1
 	train.visible = visible_
 	# train.is_placed = true
 	valid_train_placement = false

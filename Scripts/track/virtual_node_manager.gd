@@ -15,8 +15,8 @@ func setup_interjunction_virtual_nodes():
 	var end_entry_node = track.end_junction.get_virtual_node(track, true)
 	var end_exit_node = track.end_junction.get_virtual_node(track, false)
 
-	start_exit_node.add_connected_node(end_entry_node, track.length())
-	end_exit_node.add_connected_node(start_entry_node, track.length())
+	start_exit_node.add_connected_node(end_entry_node, track.get_length())
+	end_exit_node.add_connected_node(start_entry_node, track.get_length())
 	pass
 
 # We need to do this, otherwise, we'll have a memory leak, because of cyclic references
@@ -93,13 +93,21 @@ func delete_stop_between_junctions(start_node: JunctionNode, end_node: JunctionN
 
 # Always returns a positive value
 static func cost_between_nodes(node1: VirtualNode, node2: VirtualNode) -> float:
+	assert(node1.track.uuid == node2.track.uuid, "Nodes should always
+	be on the same track. This code assumes we're not finding the cost
+	between internal junction nodes within the same junction")
 	if (node1 is JunctionNode and node2 is JunctionNode):
-		assert(node1.track.uuid == node2.track.uuid, "Junction nodes should be on the same track")
 		return node1.track.get_length()
 	elif (node1 is JunctionNode and node2 is StopNode):
-		return abs(node2.track.get_distance_to_point(node2.point_index))
+		if (node1.connected_at_start_of_track):
+			return abs(node1.track.get_distance_to_point(node2.point_index))
+		else:
+			return abs(node1.track.get_length() - node2.track.get_distance_to_point(node2.point_index))
 	elif (node1 is StopNode and node2 is JunctionNode):
-		return abs(node1.track.get_distance_to_point(node1.point_index))
+		if (node2.connected_at_start_of_track):
+			return abs(node1.track.get_distance_to_point(node1.point_index))
+		else:
+			return abs(node1.track.get_length() - node1.track.get_distance_to_point(node1.point_index))
 	elif (node1 is StopNode and node2 is StopNode):
 		var distance_to_node_1 = node1.track.get_distance_to_point(node1.point_index)
 		var distance_to_node_2 = node2.track.get_distance_to_point(node2.point_index)

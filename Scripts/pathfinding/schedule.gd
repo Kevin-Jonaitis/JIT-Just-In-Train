@@ -7,15 +7,15 @@ var stops_path: Array[Path]
 
 func _init(stops_path: Array[Path]):
 	self.stops_path = stops_path
-
 var stops: Array[VirtualNode]:
+
 	get:
-		var stops_temp = []
+		var stops_temp : Array[VirtualNode] = []
 		for path in stops_path:
-			stops.append(path.nodes[0])
+			stops_temp.append(path.nodes[0])
 		# Append last stop of last node
 		stops_temp.append(stops_path[-1].nodes[-1])
-		return stops
+		return stops_temp
 	set(value):
 		assert(false, "Cannot set stops") 
 
