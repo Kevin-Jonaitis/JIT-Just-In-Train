@@ -24,7 +24,7 @@ func _init():
 # Add the shortest path to the schedule for that segment
 # Arugments allow optionally setting the direction of the first stop option
 static func find_path(train: Train, start_forward: bool, start_backwards: bool) -> Schedule:
-	var stop_options = train.stops
+	var stop_options = train.get_stop_options()
 	# key: virtual node, value: shortest path there
 	#map nodea, nodeb, path
 
@@ -65,8 +65,8 @@ static func find_path(train: Train, start_forward: bool, start_backwards: bool) 
 					schedule.add_path(path)
 					schedule.stops.append(start_node)
 					last_end_node = end_node
-
-	schedule.stops.append(last_end_node)
+	if (last_end_node):
+		schedule.stops.append(last_end_node)
 	return schedule
 
 static func get_node_position(node: VirtualNode) -> Vector2:

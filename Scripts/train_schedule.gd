@@ -16,8 +16,6 @@ func _on_request_train_ui_show(show_or_hide: bool) -> void:
 		self.show()
 	else:
 		self.hide()
-		var schedule = Pathfinder.find_path(current_train, true, true)
-		current_train.schedule = schedule
 
 func reset_state():
 	selecting_station_mode = false
@@ -45,7 +43,7 @@ func handle_input(event: InputEvent, global_mouse_position: Vector2) -> void:
 		elif (selecting_station_mode):
 			var track_point_info : TrackPointInfo = track_intersection_searcher.check_for_overlaps_at_position(global_mouse_position)
 			if (track_point_info):
-				current_train.add_stop(track_point_info)
+				current_train.add_stop_option(track_point_info)
 				selecting_station_mode = false
 				re_render()
 
@@ -62,8 +60,8 @@ func re_render():
 	clear_children()
 	if (current_train):
 		train_name.text = current_train.name
-		for stop_index in range(current_train.stops.size()):
-			var stop: StopOption = current_train.stops[stop_index]
+		for stop_index in range(current_train.get_stop_options().size()):
+			var stop: StopOption = current_train.get_stop_options()[stop_index]
 			var stop_element = StopElement.new_stop_element(stop.forward_stop.get_track_name() + "-" + str(stop.forward_stop.get_point_index()), current_train, stop_index)
 			stop_element.connect("on_station_removed", _on_station_removed)
 			vBox.add_child(stop_element)
@@ -71,7 +69,7 @@ func re_render():
 
 # Should this really be here? Do we need to centralize the code here?
 func _on_station_removed(train: Train, stop_index: int) -> void:
-	train.remove_stop(stop_index)
+	train.remove_stop_option(stop_index)
 	re_render()
 	pass
 

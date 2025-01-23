@@ -12,6 +12,3 @@ var stops: Array[VirtualNode]
 
 func add_path(path: Path):
 	stops_path.append(path)
-	
-func set_stops(stops: Array[VirtualNode]):
-	self.stops = stops
