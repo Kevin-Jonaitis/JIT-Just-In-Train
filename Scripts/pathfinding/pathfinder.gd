@@ -20,37 +20,46 @@ func _init():
 	assert(false, "This class only has static functions, don't instantiate it!")
 
 
-# For every pair of StopOptions, find the shortest path between them in either direction(forward or backward)
-# Add the shortest path to the schedule for that segment
-# Arugments allow optionally setting the direction of the first stop option
-static func find_path(train: Train, start_forward: bool, start_backwards: bool) -> Schedule:
+# Note that "forward" and "backward" only really apply to the starting position of the train
+# We can't know what the "forward" and "backward" direction is of any intermediate stops
+static func find_path_with_movement(train: Train, can_move_forward: bool, can_move_backwards: bool, connect_to_start: bool) -> Schedule:
 	var stop_options: Array[StopOption] = train.get_stop_options()
-	# Map<Last node in path(StopNode), Path>
+	if (can_move_forward && can_move_backwards):
+		if (connect_to_start):
+			stop_options.append(stop_options[0])
+		return find_path(train.uuid, stop_options)
+	elif (can_move_forward):
+		# only allow the forward node as the first stop
+		stop_options[0] = StopOption.new([stop_options[0].get_forward_node()])
+		# If we want to connect it back to the start, we add the first node and 
+		if (connect_to_start):
+			stop_options.append(stop_options[0]) # This will automatically already have only the forward node
+		return find_path(train.uuid, stop_options)
+	elif (can_move_backwards):
+		# only allow the backward node as the first and last stop
+		stop_options[0] = StopOption.new([stop_options[0].get_backward_node()])
+		if (connect_to_start):
+			stop_options.append(stop_options[0]) # This will automatically already have only the backward node
+		return find_path(train.uuid, stop_options)
+	else:
+		assert(false, "We should never get here")
+		return null
+
+static func find_path(train_uuid: String, stop_options: Array[StopOption]) -> Schedule:
 	var dynamnic_programming = {}
+	# var stop_options: Array[StopOption] = train.get_stop_options()
 	for i in range(stop_options.size() - 1):
-		var start_nodes : Array[StopNode] = []
-		var end_nodes : Array[StopNode] = []
 		var current_stop_options : StopOption = stop_options[i]
 		var next_stop_options : StopOption = stop_options[i + 1]
-		if (i == 0):
-			if (start_forward):
-				start_nodes.append(stop_options[0].get_forward_node())
-			if (start_backwards):
-				start_nodes.append(stop_options[0].get_backward_node())
-		else:
-			start_nodes.append_array(current_stop_options.stop_option)
 
-		end_nodes.append_array(next_stop_options.stop_option)
-
-		for start_node: StopNode in start_nodes:
-			for end_node: StopNode in end_nodes:
-				var path = find_path_between_nodes(start_node, end_node, train)
-				add_to_dp_map(end_node, dynamnic_programming, path)
+		for start_node: StopNode in current_stop_options.stop_option:
+				for end_node: StopNode in next_stop_options.stop_option:
+					var path = find_path_between_nodes(start_node, end_node, train_uuid)
+					add_to_dp_map(end_node, dynamnic_programming, path)
 	var schedule = calculate_running_best_path(dynamnic_programming, stop_options)
 	return schedule
 
-
-#dynamnic_programming is a dictionary with key: StopNode, value: <Path or RunningPath>
+#dynamnic_programming is a dictionary with key: StopNode, value: <Path or RunningPath, depending on caller>
 static func add_to_dp_map(end_node: StopNode, dynamnic_programming: Dictionary, path):
 	if (dynamnic_programming.has(end_node)):
 		var current_path = dynamnic_programming[end_node]
@@ -67,13 +76,11 @@ static func calculate_running_best_path(dynamnic_programming: Dictionary, stop_o
 	for i in range(stop_options.size() - 1):
 		if (i == 0): ## The first path has already been calculated
 			continue
-		# var current_stop_options : StopOption = stop_options[i]
-		# var next_stop_options : StopOption = stop_options[i + 1]
 
-		# var current_forward_stop_path : Path = dynamnic_programming[current_stop_options.forward_stop]
-		# var current_backward_stop_path : Path = dynamnic_programming[current_stop_options.backward_stop]
-		# var next_forward_stop_path : Path = dynamnic_programming[next_stop_options.forward_stop]
-		# var next_backward_stop_path : Path = dynamnic_programming[next_stop_options.backward_stop]
+
+
+		## Ned to stop using two maps, this is incorrect. Use one map 
+		# and store the updated path, keeping the update of RunningPath all the way through
 		
 		for current_stop_option in stop_options[i].stop_option:
 			for next_stop_option in stop_options[i + 1].stop_option:
@@ -81,18 +88,14 @@ static func calculate_running_best_path(dynamnic_programming: Dictionary, stop_o
 				var next_stop_path = dynamnic_programming[next_stop_option]
 				check_if_overlap_and_add_to_map(running_best, current_stop_path, next_stop_path)
 
-			
-		# check_if_overlap_and_add_to_map(running_best, current_forward_stop_path, next_forward_stop_path)
-		# check_if_overlap_and_add_to_map(running_best, current_backward_stop_path, next_forward_stop_path)
-		# check_if_overlap_and_add_to_map(running_best, current_forward_stop_path, next_backward_stop_path)
-		# check_if_overlap_and_add_to_map(running_best, current_backward_stop_path, next_backward_stop_path)
+	var best_length : float = INF
+	var best_path : RunningPath = null
 
-	var option_one : RunningPath = running_best[stop_options[-1].forward_stop]
-	var option_two : RunningPath = running_best[stop_options[-1].backward_stop]
-	if (option_one.length < option_two.length):
-		return Schedule.new(option_one.paths)
-	else:
-		return Schedule.new(option_two.paths)
+	for path in running_best.values():
+		if (path.length < best_length):
+			best_length = path.length
+			best_path = path
+	return Schedule.new(best_path.paths)
 
 
 class RunningPath:
@@ -132,7 +135,7 @@ static func heuristic(a: VirtualNode, b: VirtualNode) -> float:
 	return get_node_position(a).distance_to(get_node_position(b))
 
 # Copilot generated(it is A* as requested, and looks like code from A* algorithm wiki page)
-static func find_path_between_nodes(start: VirtualNode, end: VirtualNode, train: Train) -> Path:
+static func find_path_between_nodes(start: VirtualNode, end: VirtualNode, train_uuid: String) -> Path:
 	var open_set: PriorityQueue = PriorityQueue.new()
 	var came_from = {}
 	var g_score = {}
@@ -152,7 +155,7 @@ static func find_path_between_nodes(start: VirtualNode, end: VirtualNode, train:
 			continue
 		visited[current.name] = true
 
-		for connected_node in current.get_connected_nodes(train):
+		for connected_node in current.get_connected_nodes(train_uuid):
 			var neighbor = connected_node.virtual_node
 			var cost_to_neighbor = connected_node.cost
 			if visited.has(neighbor.name):

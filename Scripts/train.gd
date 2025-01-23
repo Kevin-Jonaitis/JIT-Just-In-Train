@@ -16,12 +16,12 @@ const TRAIN_COLLISION_LAYER = 8
 var is_placed = false
 
 # Could be tracks, could be Stations
+# Nested Arrays don't work, so this is the best we can do
 var _stop_options: Array[StopOption] = []
 
 # Generated schedule from stops
 var schedule: Schedule
-		
-
+	
 
 func create_stop_option(stop_point: TrackPointInfo) -> StopOption:
 	var stop = StopOption.new(stop_point.track.add_stops_to_track(stop_point.point_index, self))
@@ -44,7 +44,7 @@ func get_stop_options() -> Array[StopOption]:
 	return _stop_options
 
 func calculate_schedule():
-	schedule = Pathfinder.find_path(self, true, true)
+	schedule = Pathfinder.find_path_with_movement(self, true, true, false)
 	queue_redraw()
 
 

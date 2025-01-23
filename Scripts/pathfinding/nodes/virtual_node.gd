@@ -12,7 +12,6 @@ var name: String:
 		name = value
 
 # Map<connected_node_name NodeAndCost>!! (caused at least one bug because it wasn't typed :( )
-
 # DO NOT USE DIRECTLY, use provided functions
 var _connected_nodes: Dictionary
 # All nodes are either entry/exit to a track in a junction, or are ON a track
@@ -26,22 +25,20 @@ func get_node_and_cost(name: String) -> NodeAndCost:
 # Practically, this means that when we construct stops along a track, 
 # each train will have it's own directed graph along that track
 # and when we're pathfinding, we only see that path(by using this function)
-func get_connected_nodes(train: Train) -> Array[NodeAndCost]:
+func get_connected_nodes(train_uuid: String) -> Array[NodeAndCost]:
 	var result : Array[NodeAndCost]
 	# Workaround for https://github.com/godotengine/godot/issues/72566
 	result.assign(_connected_nodes.values().filter(
 		func(node: NodeAndCost): 
-			if node.virtual_node is StopNode && node.virtual_node.train.uuid != train.uuid:
+			if node.virtual_node is StopNode && node.virtual_node.train.uuid != train_uuid:
 				return false
 			else:
 				return true
 			))
 	return result
 
-	# connected_nodes.values().filter(lambda x: x.virtual_node is StopNode && x.virtual_node.train == filter)
-
 func get_stop_for_train_or_junction(train: Train) -> NodeAndCost:
-	var nodes = get_connected_nodes(train)
+	var nodes = get_connected_nodes(train.uuid)
 	assert(nodes.size() <= 2, "There should not be more than 2 connected nodes")
 	# Prefer the stop node
 	for node in nodes:
