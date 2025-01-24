@@ -21,6 +21,11 @@ MapManager="*res://Scripts/map_manager.gd"
 Utils="*res://Scripts/utils.gd"
 EventBus="*res://Scripts/event_bus.gd"
 
+[debug]
+
+gdscript/warnings/untyped_declaration=2
+gdscript/warnings/inferred_declaration=2
+
 [display]
 
 window/size/mode=3
