@@ -2,54 +2,35 @@ extends Node2D
 
 class_name Train
 
-
-
-signal stops_changed(stops: Array[StopOption])
-
-# var uuid = Utils.generate_uuid()
+const TRAIN_COLLISION_LAYER: int = 8
 
 @onready var area2d : Area2D = $Area2D
 
-const TRAIN_COLLISION_LAYER = 8
+var is_placed: bool = false
 
-# Used to differentiate from the "temp" train
-var is_placed = false
-
-# Could be tracks, could be Stations
-# Nested Arrays don't work, so this is the best we can do
 var _stop_options: Array[StopOption] = []
 
-# Generated schedule from stops
 var schedule: Schedule
 
 var on_ready_callables: Array[Callable]
 
-
-# USE THIS TO SET THE NAME! No way to override native functions, unfortunately
-# We use name rather than UUID because UUID is way too long and makes it harder when we're debugging
-# isues in the editor
-
 func _ready() -> void:
-	for callable in on_ready_callables:
+	for callable: Callable in on_ready_callables:
 		callable.call()
-	
-func set_name_user(name_: String):
-	# Need to do this on-ready since we can't access parents until then
-	on_ready_callables.append(
-		func():
-			verify_name_unique(name_)
-			name = name_
+
+func set_name_user(name_: String) -> void:
+	on_ready_callables.append(func() -> void:
+		verify_name_unique(name_)
+		name = name_
 	)
-	
 
-
-func verify_name_unique(name: String):
-	for train in get_parent().get_children():
-		if train != self and train.name == name:
-			assert(	false, "Train name	 must 	be unique! We use them as identifiers")
+func verify_name_unique(name_: String) -> void:
+	for maybe_train: Node in get_parent().get_children():
+		if maybe_train != self and maybe_train.name == name_:
+			assert(false, "Train name must be unique!")
 
 func create_stop_option(stop_point: TrackPointInfo) -> StopOption:
-	var stop = StopOption.new(stop_point.track.add_stops_to_track(stop_point.point_index, self))
+	var stop: StopOption = StopOption.new(stop_point.track.add_stops_to_track(stop_point.point_index, self))
 	return stop
 
 func add_stop_option(stop_point: TrackPointInfo) -> void:
@@ -57,10 +38,8 @@ func add_stop_option(stop_point: TrackPointInfo) -> void:
 	calculate_schedule()
 
 func remove_stop_option(stop_index: int) -> void:
-	var stop_option = _stop_options[stop_index]
-	var point_index = stop_option.stop_option[0].point_index
-	# This should remove both temp nodes
-	# Kinda roundabout, but works
+	var stop_option: StopOption = _stop_options[stop_index]
+	var point_index: int = stop_option.stop_option[0].point_index
 	stop_option.stop_option[0].track.remove_stop_from_track(point_index, self)
 	_stop_options.remove_at(stop_index)
 	calculate_schedule()
@@ -68,23 +47,24 @@ func remove_stop_option(stop_index: int) -> void:
 func get_stop_options() -> Array[StopOption]:
 	return _stop_options
 
-func calculate_schedule():
+func calculate_schedule() -> void:
 	schedule = Pathfinder.find_path_with_movement(self, true, true, false)
 	queue_redraw()
 
+var colors: Array[Color] = [
+	Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.CYAN, Color.MAGENTA, Color.ORANGE, Color.PURPLE, Color.PINK, Color.TEAL, Color.GRAY, Color.LIME, Color.AQUA, Color.OLIVE, Color.MAROON, Color.TEAL, Color.SILVER, Color.WHITE, Color.BLACK
+]
 
-var colors = [Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.CYAN, Color.MAGENTA, Color.ORANGE, Color.PURPLE, Color.PINK, Color.TEAL, Color.GRAY, Color.LIME, Color.AQUA, Color.OLIVE, Color.MAROON, Color.TEAL, Color.SILVER, Color.WHITE, Color.BLACK]
-
-func _draw():
+func _draw() -> void:
 	if not schedule:
 		return
-	for path in schedule.stops_path:
-		var color = colors[randi() % colors.size()]
-		for segment in path.track_segments:
-			var start_index = segment.start_point_index
-			var end_index = segment.end_point_index
-			var step = 1 if start_index < end_index else -1
-			for i in range(start_index, end_index, step):
-				var point_a = segment.track.get_point_at_index(i)
-				var point_b = segment.track.get_point_at_index(i + step)
+	for path: Path in schedule.stops_path:
+		var color: Color = colors[randi() % colors.size()]
+		for segment: Path.TrackSegment in path.track_segments:
+			var start_index: int = segment.start_point_index
+			var end_index: int = segment.end_point_index
+			var step: int = 1 if start_index < end_index else -1
+			for i: int in range(start_index, end_index, step):
+				var point_a: Vector2 = segment.track.get_point_at_index(i)
+				var point_b: Vector2 = segment.track.get_point_at_index(i + step)
 				draw_line(to_local(point_a), to_local(point_b), color, 4)

@@ -6,9 +6,9 @@ class_name InteractiveMode
 var train_schedule_ui: TrainScheduleUI
 
 
-var selecting_station_mode = false
+var selecting_station_mode: bool = false
 
-func hide_UI():
+func hide_UI() -> void:
 	train_schedule_ui.hide()
 
 func handle_input(event: InputEvent) -> void:

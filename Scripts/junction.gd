@@ -4,7 +4,7 @@ class_name Junction
 
 
 var uuid: String = Utils.generate_uuid()
-static var counter = 0
+static var counter: int = 0
 
 # Yeah this could be a map, but really there will be less than 10 connections
 # and an array is so much easier to deal with
@@ -39,7 +39,7 @@ class TrackConnection:
 	var approach_from_angle: bool
 	var connected_at_start: bool
 
-	func _init(track_: Track, approach_from_angle_: float, connected_at_start_: bool):
+	func _init(track_: Track, approach_from_angle_: float, connected_at_start_: bool) -> void:
 		track = track_
 		approach_from_angle = approach_from_angle_
 		connected_at_start = connected_at_start_
@@ -50,7 +50,7 @@ class NewConnection:
 	var angle: float
 	var connected_at_start: bool
 
-	func _init(track_: Track, connected_at_start_: bool):
+	func _init(track_: Track, connected_at_start_: bool) -> void:
 		track = track_
 		connected_at_start = connected_at_start_
 
@@ -60,7 +60,7 @@ class NewConnection:
 			angle = track.get_angle_at_point_index(-1)
 
 func get_virtual_node(track: Track, is_entry: bool) -> VirtualNode:
-	var node_name = JunctionNode.generate_name(self, track, is_entry)
+	var node_name: String = JunctionNode.generate_name(self, track, is_entry)
 	if (virtual_nodes.has(node_name)):
 		return virtual_nodes[node_name]
 	else:
@@ -68,30 +68,30 @@ func get_virtual_node(track: Track, is_entry: bool) -> VirtualNode:
 		return null
 
 func add_vritual_nodes_for_connection(connection_: TrackConnection) -> void:
-	var entry_node = JunctionNode.new(self, connection_.track, true, connection_.connected_at_start)
-	var exit_node = JunctionNode.new(self, connection_.track, false, connection_.connected_at_start)
+	var entry_node: JunctionNode = JunctionNode.new(self, connection_.track, true, connection_.connected_at_start)
+	var exit_node: JunctionNode = JunctionNode.new(self, connection_.track, false, connection_.connected_at_start)
 	
 	virtual_nodes[entry_node.name] =  entry_node
 	virtual_nodes[exit_node.name] =  exit_node
 	
 	# You can only travel to nodes that are the opposite angle
-	var approach_from_angle = connection_.approach_from_angle
-	var approachable_connections = !approach_from_angle
+	var approach_from_angle: float = connection_.approach_from_angle
+	var approachable_connections: bool = !approach_from_angle
 
-	for connection in lines:
+	for connection: TrackConnection in lines:
 		if connection == connection_:
 			continue
 		if connection.approach_from_angle == approachable_connections:
 			 # It's free to travel internally
-			var connected_node_out = get_virtual_node(connection.track, false)
+			var connected_node_out: VirtualNode = get_virtual_node(connection.track, false)
 			entry_node.add_connected_node(connected_node_out, 0)
-			var connected_node_in = get_virtual_node(connection.track, true)
+			var connected_node_in: VirtualNode = get_virtual_node(connection.track, true)
 			connected_node_in.add_connected_node(exit_node, 0)
 
 func add_connection(connection: NewConnection) -> void:
 	# Check if the track is already connected
 	
-	var track_connection = null
+	var track_connection: TrackConnection = null
 
 	if (Utils.check_angle_matches(connection.angle, _angle)):
 		track_connection = TrackConnection.new(connection.track, true, connection.connected_at_start)
@@ -101,7 +101,7 @@ func add_connection(connection: NewConnection) -> void:
 		assert(false, "Connection angle doesn't match junction angle or opposite angle")
 		return
 	
-	for existing in lines:
+	for existing: TrackConnection in lines:
 		if existing.track.uuid == connection.track.uuid and Utils.check_angle_matches(existing.approach_from_angle,track_connection.approach_from_angle):
 				assert(false, "Track is already connected to this junction at the same angle!!")
 	
@@ -115,38 +115,38 @@ func add_connection(connection: NewConnection) -> void:
 
 
 func remove_track_and_nodes(track: Track) -> void:
-	for i in range(lines.size()):
+	for i: int in range(lines.size()):
 		if lines[i].track.uuid == track.uuid:
 			lines.remove_at(i)
 			return
 	remove_virtual_nodes_and_references(track)
 
 # Copilot 90% generated Yehaw
-func remove_virtual_nodes_and_references(track: Track):
-	var entry_node_name = JunctionNode.generate_name(self, track, true)
-	var exit_node_name = JunctionNode.generate_name(self, track, false)
+func remove_virtual_nodes_and_references(track: Track) -> void:
+	var entry_node_name: String = JunctionNode.generate_name(self, track, true)
+	var exit_node_name: String = JunctionNode.generate_name(self, track, false)
 
 	remove_node_and_references(entry_node_name)
 	remove_node_and_references(exit_node_name)
 
-func remove_node_and_references(node_name: String):
+func remove_node_and_references(node_name: String) -> void:
 	if (virtual_nodes.has(node_name)):
 		virtual_nodes.erase(node_name)
 
 	# Remove references to this track in other nodes
-	for node in virtual_nodes.values():
+	for node: VirtualNode in virtual_nodes.values():
 		node.erase_connected_node(node_name)
 
 
-func get_outgoing_connections(track: Track) -> TrackConnection:
-	var outgoing_conenctions = []
-	var angle_dir
+func get_outgoing_connections(track: Track) -> Array[TrackConnection]:
+	var outgoing_conenctions: Array[TrackConnection] = []
+	var angle_dir: bool
 	# TODO: mini-optimization to not iterate over list twice
-	for connection in lines:
+	for connection: TrackConnection in lines:
 		if connection.track.uuid == track.uuid:
 			angle_dir = connection.approach_from_angle
 			break;
-	for connection in lines:
+	for connection: TrackConnection in lines:
 		if connection.approach_from_angle != angle_dir:
 			outgoing_conenctions.append(connection)
 	return outgoing_conenctions	

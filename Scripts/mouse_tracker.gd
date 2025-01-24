@@ -8,16 +8,13 @@ class_name MouseTracker
 
 var drawableFunctionsToCallLater: Array[Callable] = []
 
-
-
-
 # true = place track, false = place train
-var track_or_train = true
+var track_or_train: bool = true
 
 # Interact_or_edit mode
-var interact_or_edit_mode = false
+var interact_or_edit_mode: bool = false
 
-func _ready():
+func _ready() -> void:
 	train_builder.set_train_builder_disabled()
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -34,20 +31,20 @@ func _unhandled_input(event: InputEvent) -> void:
 		handle_edit_mode(event)
 
 # TODO: There's got to be a better way to do this
-func hide_editor_modes():
+func hide_editor_modes() -> void:
 	trackBuilder.visible = false
 	trackBuilder.cancel_track()
 	train_builder.set_train_builder_disabled()
 
-func hide_interact_mode():
+func hide_interact_mode() -> void:
 	interactive_mode.hide_UI()
 	
-func handle_interact_mode(event: InputEvent):
+func handle_interact_mode(event: InputEvent) -> void:
 	hide_editor_modes()
 	interactive_mode.handle_input(event)
 	pass
 
-func handle_edit_mode(event: InputEvent):
+func handle_edit_mode(event: InputEvent) -> void:
 	hide_interact_mode()
 	
 	if (track_or_train):
@@ -65,9 +62,7 @@ func handle_edit_mode(event: InputEvent):
 	else:
 		train_builder.handle_input(event)
 
-
-
-func handle_track_building(event: InputEvent):
+func handle_track_building(event: InputEvent) -> void:
 	if  (not (event is InputEventMouseMotion || event.is_action_type())):
 		return
 	if (event is InputEventMouseMotion):
@@ -96,7 +91,7 @@ func handle_track_building(event: InputEvent):
 	if (trackBuilder.trackStartingPosition):
 		trackBuilder.compute_path()
 	
-func _draw():
-	for function in drawableFunctionsToCallLater:
+func _draw() -> void:
+	for function: Callable in drawableFunctionsToCallLater:
 		function.call()
 	drawableFunctionsToCallLater.clear()

@@ -26,8 +26,8 @@ var segments: Array
 # and snapping points
 static var bake_interval: int = 5
 
-const EPSILON = 1e-4
-var calcualtedPoints = false
+const EPSILON: float = 1e-4
+var calcualtedPoints: bool = false
 # use get_points()
 var _points: Array[Vector2] = []
 # Dumb way to figure out which segment a point is a part of. 
@@ -41,31 +41,31 @@ var segment_index_for_point: Array[int] = []
 var start_theta: float
 var end_theta: float
 
-func _init(name_: String, _segments: Array, start_theta_: float, end_theta_: float):
+func _init(name_: String, _segments: Array, start_theta_: float, end_theta_: float) -> void:
 	self.name = name_
 	self.bake_interval = bake_interval
 	self.segments = filter_segments(_segments)
-	for segment in segments:
+	for segment: Segment in segments:
 		length += segment.length
 	self.start_theta = start_theta_
 	self.end_theta = end_theta_
 	calculate_points()
 	
-func get_points():
+func get_points() -> Array[Vector2]:
 	return _points
 
-func get_endpoints_and_directions():
+func get_endpoints_and_directions() -> Array[Array]:
 	return [[_points[0], start_theta], [_points[-1], end_theta]]
 
-func calculate_points():
-	for segment_index in range(segments.size()):
-			var segment = segments[segment_index]
-			if segment is Line:
-				for point in segment.points:
-					add_point_if_unique(point, segment_index)
-			elif segment is Arc:
-				for point in segment.points:
-					add_point_if_unique(point, segment_index)
+func calculate_points() -> void:
+	for segment_index: int in range(segments.size()):
+		var segment: Segment = segments[segment_index]
+		if segment is Line:
+			for point: Vector2 in segment.points:
+				add_point_if_unique(point, segment_index)
+		elif segment is Arc:
+			for point: Vector2 in segment.points:
+				add_point_if_unique(point, segment_index)
 
 ## Prevents two of the same point from being added to the 
 ## points array. This can happen on the boundary of two segments
@@ -81,7 +81,7 @@ func get_angle_at_point_index(index: int) -> float:
 	var result: Array = find_segment_with_point(index)
 	var seg_idx: int = result[0]
 	var local_idx: int = result[1]
-	var seg = segments[seg_idx]  # Could be either Line or Arc
+	var seg: Segment = segments[seg_idx]  # Could be either Line or Arc
 
 	if seg is Line:
 		# For a straight line, the tangent angle is constant
@@ -113,8 +113,8 @@ func get_angle_at_point_index(index: int) -> float:
 # valid segments left, return null
 func filter_segments(_segments : Array) -> Array:
 
-	var filtered_segments = []
-	for segment in _segments:
+	var filtered_segments: Array = []
+	for segment: Segment in _segments:
 		if segment.length > EPSILON:
 			filtered_segments.append(segment)
 	return filtered_segments
@@ -127,10 +127,10 @@ func get_point_at_offset(offset: float) -> Vector2:
 	if offset >= length:
 		return _points[-1]
 		
-	var current_length = 0
-	for segment in segments:
+	var current_length: float = 0
+	for segment: Segment in segments:
 		if current_length + segment.length >= offset:
-			var segment_offset = offset - current_length
+			var segment_offset: float = offset - current_length
 			if segment is Line:
 				return segment.get_point_at_offset(segment_offset)
 			elif segment is Arc:
@@ -140,12 +140,12 @@ func get_point_at_offset(offset: float) -> Vector2:
 	return _points[-1]
 
 func get_distance_to_point(point_index: int) -> float:
-	var running_distance = 0
-	var segment_index = segment_index_for_point[point_index]
-	for segment in range(segment_index):
+	var running_distance: float = 0
+	var segment_index: int = segment_index_for_point[point_index]
+	for segment: int in range(segment_index):
 		running_distance += segments[segment].length
-	var point = _points[point_index]
-	var segment_distance = segments[segment_index].get_distance_from_start_to_point(point)
+	var point: Vector2 = _points[point_index]
+	var segment_distance: float = segments[segment_index].get_distance_from_start_to_point(point)
 	return segment_distance + running_distance
 
 # Split this path at the given point index into 2 dubin paths
@@ -153,16 +153,16 @@ func split_at_point_index(point_index: int) -> Array[DubinPath]:
 	if point_index < 0 or point_index >= _points.size():
 		return []  # Return an empty array if the index is out of bounds
 
-	var first_segments = []
-	var second_segments = []
+	var first_segments: Array = []
+	var second_segments: Array = []
 	# var accumulated_indexes = 0
 	# # var split_segment_index = 0
 
-	var results = find_segment_with_point(point_index)
-	var split_segment_index = results[0]
-	var segment_point_index = results[1]
+	var results: Array = find_segment_with_point(point_index)
+	var split_segment_index: int = results[0]
+	var segment_point_index: int = results[1]
 
-	var split_segment = segments[split_segment_index]
+	var split_segment: Segment = segments[split_segment_index]
 	# var point_at_index = split_segment.points[split_segment_index]
 
 	# Add the segments up to the split segment
@@ -170,12 +170,12 @@ func split_at_point_index(point_index: int) -> Array[DubinPath]:
 
 	# Split the segment at the point index
 	if split_segment is Line:
-		var split_point = split_segment.points[segment_point_index]
+		var split_point: Vector2 = split_segment.points[segment_point_index]
 		first_segments.append(Line.new(split_segment.start, split_point))
 		second_segments.append(Line.new(split_point, split_segment.end))
 	elif split_segment is Arc:
 		# start angle + the total angle * the propotion of the arch we've traversed
-		var split_angle = split_segment.start_theta + (split_segment.end_theta - split_segment.start_theta) * (segment_point_index / float(split_segment.points.size() - 1))
+		var split_angle: float = split_segment.start_theta + (split_segment.end_theta - split_segment.start_theta) * (segment_point_index / float(split_segment.points.size() - 1))
 		first_segments.append(Arc.new(split_segment.center, split_segment.start_theta, split_angle, split_segment.radius))
 		second_segments.append(Arc.new(split_segment.center, split_angle, split_segment.end_theta, split_segment.radius))
 
@@ -183,20 +183,20 @@ func split_at_point_index(point_index: int) -> Array[DubinPath]:
 
 
 	# Create new DubinPath instances
-	var first_path = DubinPath.new(name + "_first_half_splt", first_segments, start_theta, get_angle_at_point_index(point_index))
-	var second_path = DubinPath.new(name + "_second_half_splt", second_segments, get_angle_at_point_index(point_index), end_theta)
+	var first_path: DubinPath = DubinPath.new(name + "_first_half_splt", first_segments, start_theta, get_angle_at_point_index(point_index))
+	var second_path: DubinPath = DubinPath.new(name + "_second_half_splt", second_segments, get_angle_at_point_index(point_index), end_theta)
 
 	return [first_path, second_path]
 
 
 func find_segment_with_point(point_index: int) -> Array:
-	var point : Vector2 = _points[point_index]
+	var point: Vector2 = _points[point_index]
 
-	var segment_index = 0
-	var split_segment_index = 0
-	for segment in segments:
+	var segment_index: int = 0
+	var split_segment_index: int = 0
+	for segment: Segment in segments:
 		split_segment_index = 0
-		for seg_point : Vector2  in segment.points:
+		for seg_point: Vector2 in segment.points:
 			if seg_point == point: # We can compare Vector2 floats here because the points(should) be taken from the same data structure
 				return [segment_index, split_segment_index]
 			split_segment_index += 1
@@ -205,32 +205,30 @@ func find_segment_with_point(point_index: int) -> Array:
 	assert(false, "Could not find matching point, something's wrong with how we're cosntructing the points for the dubin path from the poitns from the arc/line :(")
 	return []
 
-
-
-class Line:
+class Line extends Segment:
 	var start: Vector2
 	var end: Vector2
 	var length: float
 	var points: PackedVector2Array = []
 
-	func _init(_start: Vector2, _end: Vector2):
+	func _init(_start: Vector2, _end: Vector2) -> void:
 		self.start = _start
 		self.end = _end
 		self.length = (_end - _start).length()
 		calculate_points()
 
-	func calculate_points():
-		var direction = (end - start).normalized()
-		var total_points = max(2, ceil(length / DubinPath.bake_interval))
-		for i in range(total_points):
-			var point = start + direction * (i * DubinPath.bake_interval)
+	func calculate_points() -> void:
+		var direction: Vector2 = (end - start).normalized()
+		var total_points: int = max(2, ceil(length / DubinPath.bake_interval))
+		for i: int in range(total_points):
+			var point: Vector2 = start + direction * (i * DubinPath.bake_interval)
 			points.append(point)
 		points.append(end) # make sure we always have the end point
 		pass
 
 
 	func get_point_at_offset(offset: float) -> Vector2:
-		var t = offset / length
+		var t: float = offset / length
 		return start.lerp(end, t)
 	
 	func get_distance_from_start_to_point(point: Vector2) -> float:
@@ -239,7 +237,7 @@ class Line:
 # All the data needed to construct an arc
 ## We should draw the arc from start_angle towards the value of end_angle in a 
 ## clockwise direction if start_angle < end_angle and counter-clockwise otherwise.
-class Arc:
+class Arc extends Segment:
 	var center: Vector2
 	var start_theta: float
 	var end_theta: float
@@ -247,31 +245,31 @@ class Arc:
 	var length: float
 	var points: PackedVector2Array
 
-	func _init(_center: Vector2, _start_theta: float, _end_theta: float, _radius: float):
+	func _init(_center: Vector2, _start_theta: float, _end_theta: float, _radius: float) -> void:
 		self.center = _center
 		self.start_theta = _start_theta
 		self.end_theta = _end_theta
 		self.radius = _radius
-		var thetaDifference = _end_theta - _start_theta
+		var thetaDifference: float = _end_theta - _start_theta
 		self.length = abs(_radius * thetaDifference)
 		self.points = calculate_points_on_arc()
 		pass
 			
-	func calculate_points_on_arc():
+	func calculate_points_on_arc() -> PackedVector2Array:
 		var temp_points: PackedVector2Array
-		var num_of_points = max(2, ceil(length / DubinPath.bake_interval)) #always have at least 2 points on the arc
-		var total_theta = end_theta - start_theta
-		var theta_slice = total_theta / (num_of_points - 1) # Adjust to ensure the last point is included
-		for i in range(num_of_points):
-			var point_theta = start_theta + theta_slice * i
-			var arc_point = center + Vector2(radius * cos(point_theta), radius * sin(point_theta))
+		var num_of_points: int = max(2, ceil(length / DubinPath.bake_interval)) #always have at least 2 points on the arc
+		var total_theta: float = end_theta - start_theta
+		var theta_slice: float = total_theta / (num_of_points - 1) # Adjust to ensure the last point is included
+		for i: int in range(num_of_points):
+			var point_theta: float = start_theta + theta_slice * i
+			var arc_point: Vector2 = center + Vector2(radius * cos(point_theta), radius * sin(point_theta))
 			temp_points.append(arc_point)
 		return temp_points
 
 	# Given an offset(in pixels), return the point on the arc
 	func get_point_at_offset(offset: float) -> Vector2:
-		var t = offset / length
-		var theta
+		var t: float = offset / length
+		var theta: float
 		if start_theta < end_theta:
 			# Clockwise traversal
 			theta = start_theta + (end_theta - start_theta) * t
@@ -281,8 +279,8 @@ class Arc:
 		return center + Vector2(radius * cos(theta), radius * sin(theta))
 
 	func get_distance_from_start_to_point(point: Vector2) -> float:
-		var angle = (point - center).angle()
-		var angle_diff = angle_difference(start_theta, angle)
+		var angle: float = (point - center).angle()
+		var angle_diff: float = angle_difference(start_theta, angle)
 		return abs(radius * angle_diff)
 
 func get_point_at_index(index: int) -> Vector2:

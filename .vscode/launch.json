@@ -7,6 +7,6 @@
             "type": "godot",
             "request": "launch",
             "additional_options": "--screen 1",
-        }, 
+		}, 
     ]
 }

@@ -7,7 +7,7 @@ var heap: Array = []
 
 # Returns the index of the parent node
 func parent(index: int) -> int:
-	return (index - 1) / 2
+	return floori((index - 1) / 2.0)
 	
 # Returns the index of the left child
 func left_child(index: int) -> int:
@@ -19,15 +19,15 @@ func right_child(index: int) -> int:
 	
 # Swaps two elements in the heap
 func swap(i: int, j: int) -> void:
-	var temp = heap[i]
+	var temp: Dictionary = heap[i]
 	heap[i] = heap[j]
 	heap[j] = temp
 
 # Moves the element at index up to maintain heap property
 func bubble_up(index: int) -> void:
-	var current = index
+	var current: int = index
 	while current > 0:
-		var p = parent(current)
+		var p: int = parent(current)
 		if heap[current]["cost"] < heap[p]["cost"]:
 			swap(current, p)
 			current = p
@@ -36,11 +36,11 @@ func bubble_up(index: int) -> void:
 
 # Moves the element at index down to maintain heap property
 func bubble_down(index: int) -> void:
-	var current = index
+	var current: int = index
 	while true:
-		var l = left_child(current)
-		var r = right_child(current)
-		var smallest = current
+		var l: int = left_child(current)
+		var r: int = right_child(current)
+		var smallest: int = current
 		
 		if l < heap.size() and heap[l]["cost"] < heap[smallest]["cost"]:
 			smallest = l
@@ -54,7 +54,7 @@ func bubble_down(index: int) -> void:
 
 # Inserts a VirtualNode with associated cost into the priority queue
 func insert(node: VirtualNode, cost: float) -> void:
-	var element = {"node": node, "cost": cost}
+	var element: Dictionary = {"node": node, "cost": cost}
 	heap.append(element)
 	bubble_up(heap.size() - 1)
 
@@ -64,7 +64,7 @@ func extract_min() -> VirtualNode:
 		push_error("PriorityQueue is empty. Cannot extract_min.")
 		return null
 	
-	var min_node = heap[0]["node"]
+	var min_node: VirtualNode = heap[0]["node"]
 	heap[0] = heap[heap.size() - 1]
 	heap.pop_back()
 	if not is_empty():

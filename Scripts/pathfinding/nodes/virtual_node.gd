@@ -17,8 +17,8 @@ var _connected_nodes: Dictionary
 # All nodes are either entry/exit to a track in a junction, or are ON a track
 var track: Track
 
-func get_node_and_cost(name: String) -> NodeAndCost:
-	return _connected_nodes[name]
+func get_node_and_cost(name_: String) -> NodeAndCost:
+	return _connected_nodes[name_]
 
 # Only get connected nodes on the same trainlines. This only applies to stop nodes
 # This allows each train to "see" it's own graph
@@ -26,10 +26,10 @@ func get_node_and_cost(name: String) -> NodeAndCost:
 # each train will have it's own directed graph along that track
 # and when we're pathfinding, we only see that path(by using this function)
 func get_connected_nodes(train_uuid: String) -> Array[NodeAndCost]:
-	var result : Array[NodeAndCost]
+	var result: Array[NodeAndCost] = []
 	# Workaround for https://github.com/godotengine/godot/issues/72566
 	result.assign(_connected_nodes.values().filter(
-		func(node: NodeAndCost): 
+		func(node: NodeAndCost) -> bool: 
 			if node.virtual_node is StopNode && node.virtual_node.train.name != train_uuid:
 				return false
 			else:
@@ -38,27 +38,27 @@ func get_connected_nodes(train_uuid: String) -> Array[NodeAndCost]:
 	return result
 
 func get_stop_for_train_or_junction(train: Train) -> NodeAndCost:
-	var nodes = get_connected_nodes(train.name)
+	var nodes: Array[NodeAndCost] = get_connected_nodes(train.name)
 	assert(nodes.size() <= 2, "There should not be more than 2 connected nodes")
 	# Prefer the stop node
-	for node in nodes:
+	for node: NodeAndCost in nodes:
 		if node.virtual_node is StopNode && node.virtual_node.train == train:
 			return node
 
 	# Go through again and return junction node
-	for node in nodes:
+	for node: NodeAndCost in nodes:
 		if node.virtual_node is JunctionNode:
 			return node
 
 	assert(false, "Should never get here")
 	return null
 
-func erase_connected_node(name: String):
-	return _connected_nodes.erase(name)
+func erase_connected_node(name_: String) -> void:
+	return _connected_nodes.erase(name_)
 
 
-func clear():
+func clear() -> void:
 	_connected_nodes.clear()
 	
-func add_connected_node(node: VirtualNode, cost: float):
+func add_connected_node(node: VirtualNode, cost: float) -> void:
 	_connected_nodes[node.name] = NodeAndCost.new(node, cost)

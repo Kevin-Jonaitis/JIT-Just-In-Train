@@ -6,10 +6,10 @@ var track: Track
 var point_index: int
 var angle: float # radians
 
-func _init(p_track: Track, p_point_index: int, p_angle: float):
-		track = p_track
-		point_index = p_point_index
-		angle = p_angle
+func _init(p_track: Track, p_point_index: int, p_angle: float) -> void:
+	track = p_track
+	point_index = p_point_index
+	angle = p_angle
 
 func get_point() -> Vector2:
 	if (track.dubins_path):

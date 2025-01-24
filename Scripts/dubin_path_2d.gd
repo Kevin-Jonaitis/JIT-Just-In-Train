@@ -11,13 +11,13 @@ var paths: Array[DubinPath] = []
 ## Use images here point names and thetas refererd to:
 ## https://www.habrador.com/tutorials/unity-dubins-paths/2-basic-dubins-paths/
 
-func compute_dubin_paths(start_pos, start_angle: float, end_pos, end_angle: float, min_turn_radius) -> Array[DubinPath]:
+func compute_dubin_paths(start_pos: Vector2, start_angle: float, end_pos: Vector2, end_angle: float, min_turn_radius: float) -> Array[DubinPath]:
 	if start_pos == end_pos and Utils.check_angle_matches(start_angle,end_angle):
 		return []
 	return DubinsPathMath.compute_dubins_paths(start_pos, start_angle, end_pos, end_angle, min_turn_radius)
 
 ## Maybe should store passed in variables?
-func calculate_and_draw_paths(start_pos, start_angle: float, end_pos, end_angle: float, min_turn_radius, draw_paths: bool) -> bool:
+func calculate_and_draw_paths(start_pos: Vector2, start_angle: float, end_pos: Vector2, end_angle: float, min_turn_radius: float, draw_paths: bool) -> bool:
 	# If the start and end are the same, we don't need to move at all. Short-circuit everything. The shortest
 	# path is standing still. If you really want to calculate this path, just draw a circle(in your perferred direction)
 	# ending at this point. The below code freaks out because of direction of rotation and floating point precision
@@ -46,13 +46,13 @@ func calculate_and_draw_paths(start_pos, start_angle: float, end_pos, end_angle:
 
 
 func draw_dubin_paths() -> void:
-	var path_colors = [Color.PURPLE, Color.AQUA, Color.BLACK, Color.YELLOW, Color.ORANGE, Color.GREEN]
+	var path_colors: Array[Color] = [Color.PURPLE, Color.AQUA, Color.BLACK, Color.YELLOW, Color.ORANGE, Color.GREEN]
 	var color_index: int = 0;
-	for path in paths:
+	for path: DubinPath in paths:
 		draw_path(path, path_colors[color_index])
 		color_index += 1
 
-func clear_drawables():
+func clear_drawables() -> void:
 	drawableFunctionsToCallLater.clear()
 	queue_redraw()
 
@@ -60,21 +60,25 @@ func draw_path(path: DubinPath, color: Color) -> void:
 	if (path.get_points().size() < 2):
 		print("WE HAVE TOO SHORT OF A PATH")
 	drawableFunctionsToCallLater.append(
-				func(): draw_polyline(PackedVector2Array(path.get_points()), color, 3))
+				func() -> void: draw_polyline(PackedVector2Array(path.get_points()), color, 3))
 
 # Function to draw two circles based on tangent, radius, and point
-func draw_tangent_circles(start_pos, start_angle: float, end_pos, end_angle: float, radius):
+func draw_tangent_circles(start_pos: Vector2, start_angle: float, end_pos: Vector2, end_angle: float, radius: float) -> void:
 
-	var circles_start = DubinsPathMath.get_perpendicular_circle_centers(start_pos, start_angle, radius)
-	var circles_end = DubinsPathMath.get_perpendicular_circle_centers(end_pos, end_angle, radius)
+	var circles_start: DubinsPathMath.TangentCircles = DubinsPathMath.get_perpendicular_circle_centers(start_pos, start_angle, radius)
+	var circles_end: DubinsPathMath.TangentCircles = DubinsPathMath.get_perpendicular_circle_centers(end_pos, end_angle, radius)
 
 	# Draw the circles
-	drawableFunctionsToCallLater.append(func(): draw_circle(circles_start.left.center, radius, Color.RED, false, 2))
-	drawableFunctionsToCallLater.append(func(): draw_circle(circles_start.right.center, radius, Color.BLUE, false, 2))
-	drawableFunctionsToCallLater.append(func(): draw_circle(circles_end.left.center, radius, Color.RED, false, 2))
-	drawableFunctionsToCallLater.append(func(): draw_circle(circles_end.right.center, radius, Color.BLUE, false, 2))
+	drawableFunctionsToCallLater.append(
+		func() -> void: draw_circle(circles_start.left.center, radius, Color.RED, false, 2))
+	drawableFunctionsToCallLater.append(
+		func() -> void: draw_circle(circles_start.right.center, radius, Color.BLUE, false, 2))
+	drawableFunctionsToCallLater.append(
+		func() -> void: draw_circle(circles_end.left.center, radius, Color.RED, false, 2))
+	drawableFunctionsToCallLater.append(
+		func() -> void: draw_circle(circles_end.right.center, radius, Color.BLUE, false, 2))
 
-func _draw():
-	for function in drawableFunctionsToCallLater:
+func _draw() -> void:
+	for function: Callable in drawableFunctionsToCallLater:
 		function.call()
 	drawableFunctionsToCallLater.clear()

@@ -23,8 +23,9 @@ EventBus="*res://Scripts/event_bus.gd"
 
 [debug]
 
-gdscript/warnings/untyped_declaration=2
-gdscript/warnings/inferred_declaration=2
+file_logging/log_path="user://logs/godot_kevin.log"
+gdscript/warnings/untyped_declaration=1
+gdscript/warnings/inferred_declaration=1
 
 [display]
 

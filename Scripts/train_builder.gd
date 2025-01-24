@@ -10,28 +10,27 @@ var train: Node2D
 
 static var train_counter : int = 1
 
-var enabled = false
+var enabled: bool = false  # Added type annotation
 
-const TRANSPARENT_RED = Color(1, 0, 0, 0.5)  # Half-transparent red	
-const SOLID = Color(1,1,1,1)
-
+const TRANSPARENT_RED: Color = Color(1, 0, 0, 0.5)  # Half-transparent red	
+const SOLID: Color = Color(1,1,1,1)  # Added type annotation
 
 const TRACK_COLLISION_LAYER: int = 1
 @onready var track_intersection_searcher: TrackIntersectionSearcher = TrackIntersectionSearcher.new(self)
 
-var valid_train_placement = false
+var valid_train_placement: bool = false  # Added type annotation
 
-func set_train_builder_enabled():
+func set_train_builder_enabled() -> void:  # Added return type
 	train.visible = true
 
-func set_train_builder_disabled():
+func set_train_builder_disabled() -> void:  # Added return type
 	train.visible = false
 
-func _ready():
+func _ready() -> void:  # Added return type
 	create_new_train(false)
 	train.modulate = TRANSPARENT_RED
 
-func create_new_train(visible_: bool):
+func create_new_train(visible_: bool) -> void:  # Added return type
 	train = trainScene.instantiate()
 	train.set_name_user("Train-" + str(train_counter))
 	train_counter += 1
@@ -56,7 +55,7 @@ func handle_input(event: InputEvent) -> void:
 		valid_train_placement = false
 		train.position = get_global_mouse_position()
 	
-func place_train():
+func place_train() -> void:  # Added return type
 	train.modulate = SOLID
 	train.area2d.collision_layer = Train.TRAIN_COLLISION_LAYER
 	train.is_placed = true
