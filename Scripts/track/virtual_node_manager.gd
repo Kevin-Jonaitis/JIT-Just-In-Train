@@ -10,10 +10,10 @@ func _init(track_: Track) -> void:
 # Nodes that connect across a track
 func setup_interjunction_virtual_nodes() -> void:
 	assert(track.start_junction and track.end_junction, "We should have junctions by now! Can't construct pathfinding nodes without them!")
-	var start_entry_node: VirtualNode = track.start_junction.get_virtual_node(track, true)
-	var start_exit_node: VirtualNode = track.start_junction.get_virtual_node(track, false)
-	var end_entry_node: VirtualNode = track.end_junction.get_virtual_node(track, true)
-	var end_exit_node: VirtualNode = track.end_junction.get_virtual_node(track, false)
+	var start_entry_node: VirtualNode = track.start_junction.get_junction_node(track, true)
+	var start_exit_node: VirtualNode = track.start_junction.get_junction_node(track, false)
+	var end_entry_node: VirtualNode = track.end_junction.get_junction_node(track, true)
+	var end_exit_node: VirtualNode = track.end_junction.get_junction_node(track, false)
 
 	start_exit_node.add_connected_node(end_entry_node, track.get_length())
 	end_exit_node.add_connected_node(start_entry_node, track.get_length())
@@ -26,24 +26,24 @@ func delete_interjunction_virtual_nodes() -> void:
 	track.end_junction.remove_virtual_nodes_and_references(track)
 
 func add_stops_to_track(point_index: int, train: Train) -> Array[StopNode]:
-	var start_entry_node: VirtualNode = track.start_junction.get_virtual_node(track, true)
-	var start_exit_node: VirtualNode = track.start_junction.get_virtual_node(track, false)
-	var end_entry_node: VirtualNode = track.end_junction.get_virtual_node(track, true)
-	var end_exit_node: VirtualNode = track.end_junction.get_virtual_node(track, false)
+	var start_entry_node: JunctionNode = track.start_junction.get_junction_node(track, true)
+	var start_exit_node: JunctionNode = track.start_junction.get_junction_node(track, false)
+	var end_entry_node: JunctionNode = track.end_junction.get_junction_node(track, true)
+	var end_exit_node: JunctionNode = track.end_junction.get_junction_node(track, false)
 
 	var temp_node_start_junc_end_junc: StopNode = StopNode.new(track, point_index, true, train)
 	var temp_node_end_junc_start_junc: StopNode = StopNode.new(track, point_index, false, train)
 
-	insert_stop_between_junctions(start_exit_node, end_entry_node, temp_node_start_junc_end_junc, train, Callable(self, "compare_forward"))
 	insert_stop_between_junctions(end_exit_node, start_entry_node, temp_node_end_junc_start_junc, train, Callable(self, "compare_backward"))
+	insert_stop_between_junctions(start_exit_node, end_entry_node, temp_node_start_junc_end_junc, train, Callable(self, "compare_forward"))
 
 	return [temp_node_end_junc_start_junc, temp_node_start_junc_end_junc]
 
 func remove_stop_from_track(point_index: int, train: Train) -> void:
-	var start_entry_node: VirtualNode = track.start_junction.get_virtual_node(track, true)
-	var start_exit_node: VirtualNode = track.start_junction.get_virtual_node(track, false)
-	var end_entry_node: VirtualNode = track.end_junction.get_virtual_node(track, true)
-	var end_exit_node: VirtualNode = track.end_junction.get_virtual_node(track, false)
+	var start_entry_node: JunctionNode = track.start_junction.get_junction_node(track, true)
+	var start_exit_node: JunctionNode = track.start_junction.get_junction_node(track, false)
+	var end_entry_node: JunctionNode = track.end_junction.get_junction_node(track, true)
+	var end_exit_node: JunctionNode = track.end_junction.get_junction_node(track, false)
 
 	var node_forward_name: String = StopNode.generate_name(track, point_index, true, train)
 	var node_backward_name: String = StopNode.generate_name(track, point_index, false, train)
@@ -55,22 +55,22 @@ func remove_stop_from_track(point_index: int, train: Train) -> void:
 # These are used as comprators in insert_stop_between_junctions 
 func compare_forward(
 	current_node: VirtualNode, 
-	next_node: VirtualNode, 
+	next_node: StopNode, 
 	start_node: VirtualNode, 
 	node_of_interest: StopNode
 ) -> bool:
-	if ((current_node == start_node or current_node.point_index <= node_of_interest.point_index) and
+	if ((current_node == start_node or (current_node as StopNode).point_index <= node_of_interest.point_index) and
 		next_node.point_index >= node_of_interest.point_index):
 			return true
 	return false
 
 func compare_backward(
 	current_node: VirtualNode, 
-	next_node: VirtualNode, 
+	next_node: StopNode, 
 	start_node: VirtualNode, 
 	node_of_interest: StopNode
 ) -> bool:
-	if ((current_node == start_node or current_node.point_index >= node_of_interest.point_index) and
+	if ((current_node == start_node or (current_node as StopNode).point_index >= node_of_interest.point_index) and
 		next_node.point_index <= node_of_interest.point_index):
 			return true
 	return false
@@ -120,18 +120,24 @@ static func cost_between_nodes(node1: VirtualNode, node2: VirtualNode) -> float:
 	if (node1 is JunctionNode and node2 is JunctionNode):
 		return node1.track.get_length()
 	elif (node1 is JunctionNode and node2 is StopNode):
-		if (node1.connected_at_start_of_track):
-			return abs(node1.track.get_distance_to_point(node2.point_index))
+		var node1_cast: JunctionNode = node1
+		var node2_cast: StopNode = node2
+		if (node1_cast.connected_at_start_of_track):
+			return abs(node1_cast.track.get_distance_to_point(node2_cast.point_index))
 		else:
-			return abs(node1.track.get_length() - node2.track.get_distance_to_point(node2.point_index))
+			return abs(node1_cast.track.get_length() - node2_cast.track.get_distance_to_point(node2_cast.point_index))
 	elif (node1 is StopNode and node2 is JunctionNode):
-		if (node2.connected_at_start_of_track):
-			return abs(node1.track.get_distance_to_point(node1.point_index))
+		var node1_cast: StopNode = node1
+		var node2_cast: JunctionNode = node2
+		if (node2_cast.connected_at_start_of_track):
+			return abs(node1_cast.track.get_distance_to_point(node1_cast.point_index))
 		else:
-			return abs(node1.track.get_length() - node1.track.get_distance_to_point(node1.point_index))
+			return abs(node1_cast.track.get_length() - node1_cast.track.get_distance_to_point(node1_cast.point_index))
 	elif (node1 is StopNode and node2 is StopNode):
-		var distance_to_node_1: float = node1.track.get_distance_to_point(node1.point_index)
-		var distance_to_node_2: float = node2.track.get_distance_to_point(node2.point_index)
+		var node1_cast: StopNode = node1
+		var node2_cast: StopNode = node2
+		var distance_to_node_1: float = node1.track.get_distance_to_point(node1_cast.point_index)
+		var distance_to_node_2: float = node2.track.get_distance_to_point(node2_cast.point_index)
 		return abs(distance_to_node_2 - distance_to_node_1)
 	else:
 		assert(false, "We should never get here")

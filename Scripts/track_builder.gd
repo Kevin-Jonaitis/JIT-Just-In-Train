@@ -72,7 +72,7 @@ func _draw() -> void:
 
 # Preloaded assets
 const trackPreloaded: PackedScene = preload("res://Scenes/track.tscn")
-const track_direction_arrow: Texture = preload("res://Assets/arrow_single.png")
+const track_direction_arrow: Texture2D = preload("res://Assets/arrow_single.png")
 const scene: PackedScene = preload("res://Scenes/track_builder.tscn")
 
 
@@ -249,17 +249,17 @@ func draw_walls_and_centerpoint(point_position: Vector2, theta: float) -> void:
 
 func draw_wall_and_calculate_centerpoint_and_tangent(mousePos: Vector2) -> Array:
 	var track_position: Variant = null 
-	var wallToHighlight: Array = []
+	var wallToHighlight: Array[Vector2] = []
 	var tileGridPosition: Vector2 = MapManager.getGround().local_to_map(mousePos)
 	var _tileCenterLocalPosition: Vector2 = MapManager.getGround().map_to_local((tileGridPosition))
 
 	var _halfDistance: float = MapManager.cellSize / 2.0
 	var closetWallAndMidpoint: Array = get_closest_wall_and_midpoint(mousePos)	
-	wallToHighlight = closetWallAndMidpoint[0];
+	wallToHighlight = Array(closetWallAndMidpoint[0] as Array, TYPE_VECTOR2, "", "")
 	track_position = closetWallAndMidpoint[1];
 
 	drawableFunctionsToCallLater.append(func() -> void: draw_line(wallToHighlight[0], wallToHighlight[1], highlightColor, 3))
-	drawableFunctionsToCallLater.append(func() -> void: draw_circle(track_position, 4, highlightColor, false, 4))
+	drawableFunctionsToCallLater.append(func() -> void: draw_circle(track_position as Vector2, 4, highlightColor, false, 4))
 	var tangents: Array = calculate_tangents(wallToHighlight[0], wallToHighlight[1])
 
 	return [track_position, tangents]
@@ -319,9 +319,9 @@ func compute_path() -> void:
 	update_arrow_end()
 
 	var valid: bool = track.compute_track(
-		trackStartingPosition, 
+		trackStartingPosition as Vector2, 
 		trackStartAngle, 
-		trackEndingPosition, 
+		trackEndingPosition as Vector2, 
 		trackEndingAngle, 
 		minAllowedRadius,
 		track_mode_flag,

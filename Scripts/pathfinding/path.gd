@@ -14,6 +14,8 @@ var goal_node: VirtualNode
 var length: float
 
 func _init(new_nodes: Array[VirtualNode], new_length: float) -> void:
+	assert(new_nodes[0] is StopNode, "The first node should always be a stop node")
+	assert(new_nodes[-1] is StopNode, "The last node should always be a stop node")
 	self.nodes = new_nodes
 	self.length = new_length
 	self.create_track_segments()
@@ -58,7 +60,7 @@ func create_track_segments() -> void:
 		return
 
 	var current_track: Track = nodes[0].track
-	var start_index: int = nodes[0].get_point_index()
+	var start_index: int = (nodes[0] as StopNode).get_point_index()
 
 	for i: int in range(1, nodes.size()):
 		var node: VirtualNode = nodes[i]

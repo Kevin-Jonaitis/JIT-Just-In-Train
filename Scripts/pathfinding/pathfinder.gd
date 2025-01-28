@@ -138,10 +138,12 @@ class RunningPath:
 		for path: Path in paths:
 			self.length += path.length
 	
-	func get_first_stop() -> VirtualNode:
+	# The first and last nodes should be actual stops(so not junctions)
+
+	func get_first_stop() -> StopNode:
 		return paths[0].get_first_stop()
 
-	func get_last_stop() -> VirtualNode:
+	func get_last_stop() -> StopNode:
 		return paths[-1].get_last_stop()
 		
 
@@ -171,9 +173,11 @@ static func combine_paths(first_half: Path, second_half: Path) -> Path:
 
 static func get_node_position(node: VirtualNode) -> Vector2:
 	if (node is StopNode):
-		return node.get_position()
+		var node_cast : StopNode = node
+		return node_cast.get_position()
 	elif (node is JunctionNode):
-		return node.junction.position
+		var node_cast : JunctionNode = node
+		return node_cast.junction.position
 
 	assert(false, "We should never get here")
 	return Vector2.ZERO
@@ -195,7 +199,7 @@ static func find_path_between_nodes(
 
 	g_score[start.name] = 0.0
 	f_score[start.name] = heuristic(start, end)
-	open_set.insert(start, f_score[start.name])
+	open_set.insert(start, f_score[start.name] as float)
 
 	while not open_set.is_empty():
 		var current: VirtualNode = open_set.extract_min()
@@ -216,7 +220,7 @@ static func find_path_between_nodes(
 				came_from[neighbor.name] = current
 				g_score[neighbor.name] = tentative_g
 				f_score[neighbor.name] = tentative_g + heuristic(neighbor, end)
-				open_set.insert(neighbor, f_score[neighbor.name])
+				open_set.insert(neighbor, f_score[neighbor.name] as float)
 
 	return null
 

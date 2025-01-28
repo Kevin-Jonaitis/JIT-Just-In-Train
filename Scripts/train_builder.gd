@@ -6,7 +6,7 @@ class_name TrainBuilder
 signal add_new_train(train: Node2D)
 
 var trainScene: PackedScene = preload("res://Scenes/train.tscn")
-var train: Node2D
+var train: Train
 
 static var train_counter : int = 1
 

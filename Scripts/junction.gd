@@ -21,7 +21,7 @@ var _angle: float
 var _opposite_angle: float
 
 
-#Map<internal_node_id, internal_node_object>
+#Map<internal_node_id, JunctionNode>
 var virtual_nodes: Dictionary = {}
 
 const scene: PackedScene = preload("res://Scenes/junction.tscn")
@@ -59,7 +59,7 @@ class NewConnection:
 		else:
 			angle = track.get_angle_at_point_index(-1)
 
-func get_virtual_node(track: Track, is_entry: bool) -> VirtualNode:
+func get_junction_node(track: Track, is_entry: bool) -> JunctionNode:
 	var node_name: String = JunctionNode.generate_name(self, track, is_entry)
 	if (virtual_nodes.has(node_name)):
 		return virtual_nodes[node_name]
@@ -83,9 +83,9 @@ func add_vritual_nodes_for_connection(connection_: TrackConnection) -> void:
 			continue
 		if connection.approach_from_angle == approachable_connections:
 			 # It's free to travel internally
-			var connected_node_out: VirtualNode = get_virtual_node(connection.track, false)
+			var connected_node_out: VirtualNode = get_junction_node(connection.track, false)
 			entry_node.add_connected_node(connected_node_out, 0)
-			var connected_node_in: VirtualNode = get_virtual_node(connection.track, true)
+			var connected_node_in: VirtualNode = get_junction_node(connection.track, true)
 			connected_node_in.add_connected_node(exit_node, 0)
 
 func add_connection(connection: NewConnection) -> void:

@@ -1,10 +1,7 @@
-[gd_scene load_steps=4 format=3 uid="uid://cr5xyl54nbt3h"]
+[gd_scene load_steps=3 format=3 uid="uid://cr5xyl54nbt3h"]
 
 [ext_resource type="Script" path="res://Scripts/junction.gd" id="1_ax2dl"]
 [ext_resource type="Script" path="res://Scripts/collision_shape_2d.gd" id="2_v1awx"]
-
-[sub_resource type="CircleShape2D" id="CircleShape2D_sdfeb"]
-radius = 1.0
 
 [node name="Junction" type="Node2D"]
 script = ExtResource("1_ax2dl")
@@ -14,5 +11,4 @@ collision_layer = 4
 collision_mask = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
-shape = SubResource("CircleShape2D_sdfeb")
 script = ExtResource("2_v1awx")

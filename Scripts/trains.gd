@@ -6,7 +6,7 @@ var trains : Array[Train]:
 	get:
 		var result : Array[Train] = []
 		for child: Node in get_children():
-			if (child.is_placed):
+			if (child is Train and (child as Train).is_placed):
 				result.append(child)
 		return result			
 

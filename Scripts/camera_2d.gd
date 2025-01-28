@@ -23,7 +23,7 @@ func _input(event: InputEvent) -> void:
 		panning = true
 		viewport.set_input_as_handled()
 	if event is InputEventMouseMotion and panning:
-		pan_camera(event)
+		pan_camera(event as InputEventMouseMotion)
 		viewport.set_input_as_handled()
 
 #https://forum.godotengine.org/t/how-to-zoom-camera-to-mouse/37348/3
@@ -32,8 +32,8 @@ func zoom_in() -> void:
 	var mouse_pos : Vector2 = get_global_mouse_position()
 	var new_zoom: Vector2 = zoom + Vector2(zoom_speed, zoom_speed)
 	zoom = Vector2(
-		clamp(new_zoom.x, zoom_min, zoom_max),
-		clamp(new_zoom.y, zoom_min, zoom_max)
+		clampf(new_zoom.x, zoom_min, zoom_max),
+		clampf(new_zoom.y, zoom_min, zoom_max)
 	)
 	
 	var new_mouse_pos : Vector2 = get_global_mouse_position()
@@ -43,8 +43,8 @@ func zoom_out() -> void:
 	#var mouse_pos := get_global_mouse_position()
 	var new_zoom: Vector2 = zoom - Vector2(zoom_speed, zoom_speed)
 	zoom = Vector2(
-		clamp(new_zoom.x, zoom_min, zoom_max),
-		clamp(new_zoom.y, zoom_min, zoom_max)
+		clampf(new_zoom.x, zoom_min, zoom_max),
+		clampf(new_zoom.y, zoom_min, zoom_max)
 	)
 
 func pan_camera(event: InputEventMouseMotion) -> void:

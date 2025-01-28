@@ -43,7 +43,7 @@ func check_for_junction_at_position(position: Vector2) -> Junction:
 	var results: Array[Dictionary] = check_for_collision(position, 4) # value 4 = bitmask 3
 	for item: Dictionary in results:
 		if item.size() > 0:
-			var junction: Junction = item["collider"].get_parent()
+			var junction: Junction = (item["collider"] as Area2D).get_parent()
 			junctions_found.append(junction)
 		
 	if (junctions_found.size() > 0):
@@ -64,7 +64,7 @@ func check_for_overlaps_at_position(position: Vector2, bit_mask: int = 1) -> Tra
 	# Gather all points (plus any extra info) into an array
 	for item: Dictionary in results:
 		if item.size() > 0:
-			var track: Track = item["collider"].get_parent()
+			var track: Track = (item["collider"] as Area2D).get_parent()
 			var point_index: int = item["shape"]
 			#if (point_index == 0 || point_index == track.dubins_path.shortest_path.get_points().size() - 1):
 					#assert(false, "We shouldn't select a point at either end here, that should be a junction!!")
@@ -88,12 +88,12 @@ func check_for_overlaps_at_position(position: Vector2, bit_mask: int = 1) -> Tra
 	return track_intersection
 
 
-func get_train_collision_info(position: Vector2) -> Array[Node2D]:
-	var trains: Array[Node2D] = []
+func get_train_collision_info(position: Vector2) -> Array[Train]:
+	var trains: Array[Train] = []
 	var results: Array[Dictionary] = check_for_collision(position, Train.TRAIN_COLLISION_LAYER)
 	for item: Dictionary in results:
 		if item.size() > 0:
-			var train: Node2D = item["collider"].get_parent()
+			var train: Train = (item["collider"] as Area2D).get_parent()
 			trains.append(train)
 
 	return trains

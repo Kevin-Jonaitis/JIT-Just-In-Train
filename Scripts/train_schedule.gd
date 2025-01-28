@@ -32,7 +32,7 @@ func handle_input(event: InputEvent, global_mouse_position: Vector2) -> void:
 	if (event.is_action_pressed("left_click")):
 		
 		if (!selecting_station_mode):
-			var trains: Array[Node2D] = track_intersection_searcher.get_train_collision_info(global_mouse_position)
+			var trains: Array[Train] = track_intersection_searcher.get_train_collision_info(global_mouse_position)
 			if (trains):
 				if (trains.size() > 1):
 					assert(false, "We have more than one train that we clicked on! This isn't great")

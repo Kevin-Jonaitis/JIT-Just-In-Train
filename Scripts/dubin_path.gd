@@ -11,7 +11,7 @@ class_name DubinPath
 
 var name: String
 var length: float = 0
-var segments: Array
+var segments: Array[Segment]
 ## Points to draw the path. Note that they are evenly spaced on
 ## arcs, but there are only 2 points for straight lines. So this should be used
 ## in drawing functions only, not for progress capture. To get progress, use
@@ -41,7 +41,7 @@ var segment_index_for_point: Array[int] = []
 var start_theta: float
 var end_theta: float
 
-func _init(name_: String, _segments: Array, start_theta_: float, end_theta_: float) -> void:
+func _init(name_: String, _segments: Array[Segment], start_theta_: float, end_theta_: float) -> void:
 	self.name = name_
 	self.bake_interval = bake_interval
 	self.segments = filter_segments(_segments)
@@ -111,9 +111,9 @@ func get_angle_at_point_index(index: int) -> float:
 ## happens when it's a straight line
 # Filter out segments that are of 0 length, or if after filtering there are no
 # valid segments left, return null
-func filter_segments(_segments : Array) -> Array:
+func filter_segments(_segments : Array[Segment]) -> Array[Segment]:
 
-	var filtered_segments: Array = []
+	var filtered_segments: Array[Segment] = []
 	for segment: Segment in _segments:
 		if segment.length > EPSILON:
 			filtered_segments.append(segment)
@@ -153,8 +153,8 @@ func split_at_point_index(point_index: int) -> Array[DubinPath]:
 	if point_index < 0 or point_index >= _points.size():
 		return []  # Return an empty array if the index is out of bounds
 
-	var first_segments: Array = []
-	var second_segments: Array = []
+	var first_segments: Array[Segment] = []
+	var second_segments: Array[Segment] = []
 	# var accumulated_indexes = 0
 	# # var split_segment_index = 0
 
@@ -170,14 +170,17 @@ func split_at_point_index(point_index: int) -> Array[DubinPath]:
 
 	# Split the segment at the point index
 	if split_segment is Line:
-		var split_point: Vector2 = split_segment.points[segment_point_index]
-		first_segments.append(Line.new(split_segment.start, split_point))
-		second_segments.append(Line.new(split_point, split_segment.end))
+		var line : Line = split_segment
+		var split_point: Vector2 = line.points[segment_point_index]
+		first_segments.append(Line.new(line.start, split_point))
+		second_segments.append(Line.new(split_point, line.end))
 	elif split_segment is Arc:
+		var arc : Arc = split_segment
+		#split_segment = split_segment as Arc
 		# start angle + the total angle * the propotion of the arch we've traversed
-		var split_angle: float = split_segment.start_theta + (split_segment.end_theta - split_segment.start_theta) * (segment_point_index / float(split_segment.points.size() - 1))
-		first_segments.append(Arc.new(split_segment.center, split_segment.start_theta, split_angle, split_segment.radius))
-		second_segments.append(Arc.new(split_segment.center, split_angle, split_segment.end_theta, split_segment.radius))
+		var split_angle: float = arc.start_theta + (arc.end_theta - arc.start_theta) * (segment_point_index / float(arc.points.size() - 1))
+		first_segments.append(Arc.new(arc.center, arc.start_theta, split_angle, arc.radius))
+		second_segments.append(Arc.new(arc.center, split_angle, arc.end_theta, arc.radius))
 
 	second_segments += segments.slice(split_segment_index + 1, segments.size())
 
@@ -208,8 +211,6 @@ func find_segment_with_point(point_index: int) -> Array:
 class Line extends Segment:
 	var start: Vector2
 	var end: Vector2
-	var length: float
-	var points: PackedVector2Array = []
 
 	func _init(_start: Vector2, _end: Vector2) -> void:
 		self.start = _start
@@ -242,8 +243,6 @@ class Arc extends Segment:
 	var start_theta: float
 	var end_theta: float
 	var radius: float
-	var length: float
-	var points: PackedVector2Array
 
 	func _init(_center: Vector2, _start_theta: float, _end_theta: float, _radius: float) -> void:
 		self.center = _center

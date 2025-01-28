@@ -4,8 +4,8 @@ class_name Train
 
 const TRAIN_COLLISION_LAYER: int = 8
 
-@onready var area2d : Area2D = $Area2D
 
+@onready var area2d : Area2D = $Area2D
 var is_placed: bool = false
 
 var _stop_options: Array[StopOption] = []

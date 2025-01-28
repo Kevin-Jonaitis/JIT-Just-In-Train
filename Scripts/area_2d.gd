@@ -1,5 +1,7 @@
 extends Area2D
 
+class_name Area
+
 var uuid: String = Utils.generate_uuid()
 @onready var space_state: PhysicsDirectSpaceState2D = get_world_2d().direct_space_state
 
@@ -18,8 +20,9 @@ func solidify_collision_area() -> void:
 	# print("Solidify Track: ", Time.get_ticks_usec() - time_before)
 
 func add_shapes_to_current_area() -> void:
-	var polygons: Array[PackedVector2Array] = calculate_rectangles(get_parent().dubins_path.shortest_path.get_points(), \
-	get_parent().track_visual_component.backing.width)
+	var track: Track = get_parent()
+	var polygons: Array[PackedVector2Array] = calculate_rectangles(track.dubins_path.shortest_path.get_points(), \
+	track.track_visual_component.backing.width)
 	collision_layer = 1
 	collision_mask = 0
 

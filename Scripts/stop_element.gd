@@ -6,6 +6,8 @@ class_name StopElement
 @onready var pane : Panel = $Panel
 @onready var remove : Button = $Remove
 
+signal on_station_removed(train: Train, stop_index: int)
+
 var train_name: String
 var train: Train
 var stop_index: int

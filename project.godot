@@ -18,14 +18,18 @@ config/icon="res://icon.png"
 [autoload]
 
 MapManager="*res://Scripts/map_manager.gd"
-Utils="*res://Scripts/utils.gd"
+Utils="*res://Scripts/utils/utils.gd"
 EventBus="*res://Scripts/event_bus.gd"
 
 [debug]
 
 file_logging/log_path="user://logs/godot_kevin.log"
+gdscript/warnings/unused_signal=0
 gdscript/warnings/untyped_declaration=2
 gdscript/warnings/inferred_declaration=2
+gdscript/warnings/unsafe_property_access=2
+gdscript/warnings/unsafe_method_access=2
+gdscript/warnings/unsafe_call_argument=1
 
 [display]
 

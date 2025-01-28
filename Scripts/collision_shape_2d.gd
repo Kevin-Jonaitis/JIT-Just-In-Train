@@ -6,4 +6,6 @@ class_name Junction_Collison_Shape
 const JUNCTION_RADIUS: int = 14
 
 func _ready() -> void:
-	shape.radius = JUNCTION_RADIUS
+	var circle : CircleShape2D = CircleShape2D.new()
+	circle.radius = JUNCTION_RADIUS
+	shape = circle

@@ -30,7 +30,7 @@ func get_connected_nodes(train_uuid: String) -> Array[NodeAndCost]:
 	# Workaround for https://github.com/godotengine/godot/issues/72566
 	result.assign(_connected_nodes.values().filter(
 		func(node: NodeAndCost) -> bool: 
-			if node.virtual_node is StopNode && node.virtual_node.train.name != train_uuid:
+			if node.virtual_node is StopNode && (node.virtual_node as StopNode).train.name != train_uuid:
 				return false
 			else:
 				return true
@@ -42,7 +42,7 @@ func get_stop_for_train_or_junction(train: Train) -> NodeAndCost:
 	assert(nodes.size() <= 2, "There should not be more than 2 connected nodes")
 	# Prefer the stop node
 	for node: NodeAndCost in nodes:
-		if node.virtual_node is StopNode && node.virtual_node.train == train:
+		if node.virtual_node is StopNode && (node.virtual_node as StopNode).train == train:
 			return node
 
 	# Go through again and return junction node
@@ -62,3 +62,7 @@ func clear() -> void:
 	
 func add_connected_node(node: VirtualNode, cost: float) -> void:
 	_connected_nodes[node.name] = NodeAndCost.new(node, cost)
+
+func get_point_index() -> int:
+	assert(false, "This should be implemented in the subclasses")
+	return 0

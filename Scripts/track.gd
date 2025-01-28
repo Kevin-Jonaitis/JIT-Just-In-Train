@@ -5,11 +5,11 @@ extends Node2D
 
 var uuid: String = Utils.generate_uuid()
 static var counter: int = 0
-@onready var track_visual_component: Node2D = $TrackVisualComponent
+@onready var track_visual_component: TrackVisualComponent = $TrackVisualComponent
 ## Used to keep track of last changes in the editor, and if changed, to re-render the points
 var baked_points_editor_checker: PackedVector2Array = []
 
-@onready var area2d: Area2D = $Area2D
+@onready var area: Area = $Area
 var junction_manager: JunctionManager = JunctionManager.new(self)
 var virtual_node_manager: VirtualNodeManager = VirtualNodeManager.new(self)
 
@@ -53,8 +53,8 @@ func build_track(starting_overlay: TrackOrJunctionOverlap, ending_overlay: Track
 	junction_manager.setup_junctions(starting_overlay, ending_overlay)
 
 	virtual_node_manager.setup_interjunction_virtual_nodes()
-	area2d.solidify_collision_area()
 	temp = false
+	area.solidify_collision_area()
 
 @export_category("Curve Builder")
 @export var edit_curve: bool = false:
@@ -255,11 +255,9 @@ func compute_track(trackStartingPosition: Vector2,
 			minAllowedRadius,
 			track_mode_flag
 		)
-
 		# Update track curve with the computed points
-		bezier_curve.curve.clear_points()
-		bezier_curve.curve.add_point(curve_result.start_position, Vector2.ZERO, curve_result.start_control_point)
-		bezier_curve.curve.add_point(curve_result.end_position, curve_result.end_control_point)
+		bezier_curve.curve.add_point(curve_result.start_position as Vector2, Vector2.ZERO, curve_result.start_control_point as Vector2)
+		bezier_curve.curve.add_point(curve_result.end_position as Vector2, curve_result.end_control_point as Vector2)
 
 		validTrack = curve_result.validTrack
 		update_visual_with_bezier_points()
