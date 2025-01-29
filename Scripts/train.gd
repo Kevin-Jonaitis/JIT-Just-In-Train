@@ -7,12 +7,12 @@ const TRAIN_COLLISION_LAYER: int = 8
 
 @onready var area2d : Area2D = $Area2D
 var is_placed: bool = false
-
 var _stop_options: Array[StopOption] = []
-
 var schedule: Schedule
-
 var on_ready_callables: Array[Callable]
+@onready var schedule_follower: ScheduleFollower = $ScheduleFollower
+
+@onready var trains: Trains = get_parent()
 
 func _ready() -> void:
 	for callable: Callable in on_ready_callables:
@@ -49,16 +49,18 @@ func get_stop_options() -> Array[StopOption]:
 
 func calculate_schedule() -> void:
 	schedule = Pathfinder.find_path_with_movement(self, true, true, false)
-	queue_redraw()
+	schedule_follower.reset()
+	calculate_path_draw()
 
 var colors: Array[Color] = [
 	Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.CYAN, Color.MAGENTA, Color.ORANGE, Color.PURPLE, Color.PINK, Color.TEAL, Color.GRAY, Color.LIME, Color.AQUA, Color.OLIVE, Color.MAROON, Color.TEAL, Color.SILVER, Color.WHITE, Color.BLACK
 ]
 
-func _draw() -> void:
+func calculate_path_draw() -> void:
+	trains.queue_redraw()
 	if not schedule:
 		return
-	for path: Path in schedule.stops_path:
+	for path: Path in schedule.paths:
 		var color: Color = colors[randi() % colors.size()]
 		for segment: Path.TrackSegment in path.track_segments:
 			var start_index: int = segment.start_point_index
@@ -67,4 +69,9 @@ func _draw() -> void:
 			for i: int in range(start_index, end_index, step):
 				var point_a: Vector2 = segment.track.get_point_at_index(i)
 				var point_b: Vector2 = segment.track.get_point_at_index(i + step)
-				draw_line(to_local(point_a), to_local(point_b), color, 4)
+				print("POINT A", point_a)
+				var test: Vector2 = to_local(point_a)
+				var the_global_position: Vector2 = global_position 
+				pass
+				trains.drawableFunctionsToCallLater.append(func() -> void: trains.draw_line(point_a, point_b, color, 4))
+				pass

@@ -272,6 +272,16 @@ func update_visual_for_dubin_path() -> void:
 	Vector2.from_angle(dubins_path.shortest_path.end_theta)
 	)
 
+func get_point_at_offset(offset: float) -> Vector2:
+	if bezier_curve:
+		assert(false, "Unimplemented code path!")
+		return Vector2.ZERO
+	elif dubins_path:
+		return dubins_path.shortest_path.get_point_at_offset(offset)
+	else:
+		assert(false, "We haven't defined a curve for this track yet!")
+		return Vector2.ZERO
+
 func get_angle_at_point_index(index: int) -> float:
 	if bezier_curve:
 		assert(false, "Unimplemented code path!")

@@ -30,16 +30,84 @@ func get_last_stop() -> VirtualNode:
 		assert(false, "How did we get here")
 	return nodes[-1]
 
+class PathLocation:
+	var position: Vector2
+	var track_segment_index: int
+	var track_segment_progress: float
+	var overshoot: float
+
+# func get_position_at_progress(progress: float) -> Location:
+# 	var total_length: float = 0
+# 	for segment: TrackSegment in track_segments:
+# 		var segment_length: float = segment.track.get_length()
+# 		if total_length + segment_length >= progress:
+# 			var progress_in_segment: float = progress - total_length
+# 			var location: Location = Location.new()
+# 			location.position = segment.track.get_position_at_progress(progress_in_segment)
+# 			location.overshoot = 0
+# 			return location
+# 		total_length += segment_length
+
+# 	assert(false, "We should have found the position by now")
+# 	return Location.new()
+
+func get_new_position(track_segment_index: int, previous_track_segment_progress: float, new_progress: float) -> PathLocation:
+	# var total_length: float = 0
+	# for i: int in range(0, track_segment_index):
+	# 	total_length += track_segments[i].track.get_length()
+
+	var segment: TrackSegment = track_segments[track_segment_index]
+	var segment_length: float = segment.get_length()
+	while (previous_track_segment_progress + new_progress) > segment_length:
+		track_segment_index += 1
+		new_progress = new_progress - (segment_length - previous_track_segment_progress)
+		previous_track_segment_progress = 0
+		
+		
+		if track_segment_index == track_segments.size():
+			# We've reached the end of the path
+			var overshot_path: PathLocation = PathLocation.new()
+			overshot_path.overshoot = new_progress
+			return overshot_path
+			
+		segment = track_segments[track_segment_index]
+		segment_length = segment.get_length()
+	
+	var new_progress_for_track_segment: float = new_progress + previous_track_segment_progress
+
+	var location: PathLocation = PathLocation.new()
+	location.position = segment.get_position_at_progress(new_progress_for_track_segment)
+	location.track_segment_index = track_segment_index
+	location.track_segment_progress = new_progress_for_track_segment
+	return location
+
+
 class TrackSegment:
 	var track: Track
 	var start_point_index: int
 	var end_point_index: int
+	var length: float
+	var starting_progress: float
 	
 	func _init(track_: Track, start_point_index_: int, end_point_index_: int) -> void:
 		self.track = track_
 		self.start_point_index = start_point_index_
 		self.end_point_index = end_point_index_
+		self.starting_progress = track.get_distance_to_point(start_point_index)
+		self.length = calculate_length()
+		
+	func get_position_at_progress(progress: float) -> Vector2:
+		#TODO: Reverse these values
+		return track.get_point_at_offset(starting_progress + progress)
+	
+	func calculate_length() -> float:
+		var start_point: float = track.get_distance_to_point(start_point_index)
+		var end_point: float = track.get_distance_to_point(end_point_index)
+		return abs(end_point - start_point)
 
+	# TODO: make ABSOLUTE
+	func get_length() -> float:
+		return length
 
 
 # Junction to Junction(still on the same track) # care

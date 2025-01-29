@@ -10,6 +10,8 @@ var trains : Array[Train]:
 				result.append(child)
 		return result			
 
+var drawableFunctionsToCallLater: Array[Callable] = []
+
 func _on_train_placed(train: Train) -> void:
 	add_child(train)
 
@@ -35,3 +37,8 @@ func get_point_info_on_new_tracks(old_point: Vector2, new_track_a: Track, new_tr
 			return new_track_b.get_point_info_at_index(point_index)
 		
 	return null
+
+func _draw() -> void:
+	for callable: Callable in drawableFunctionsToCallLater:
+		callable.call()
+	drawableFunctionsToCallLater.clear()
