@@ -33,7 +33,7 @@ gdscript/warnings/unsafe_call_argument=1
 
 [display]
 
-window/size/mode=3
+window/size/mode=4
 window/stretch/mode="canvas_items"
 
 [dotnet]
@@ -124,3 +124,8 @@ interact_mode={
 2d_physics/layer_2="newTrack"
 2d_physics/layer_3="junction"
 2d_physics/layer_4="trains"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"

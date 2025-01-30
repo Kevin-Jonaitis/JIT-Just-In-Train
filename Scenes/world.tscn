@@ -106,7 +106,7 @@ offset_left = 1087.0
 offset_top = 4.0
 offset_right = 1141.0
 offset_bottom = 27.0
-text = "FPS: 60"
+text = "FPS: -99"
 vertical_alignment = 1
 script = ExtResource("1_brhbh")
 

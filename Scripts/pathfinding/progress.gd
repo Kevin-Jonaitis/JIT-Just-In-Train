@@ -1,15 +1,13 @@
 extends RefCounted
 
-## TODO: rename to Progress
-class_name Location
+class_name Progress
 
 
 var position: Vector2
 var overshoot: float # Total overshoot of whole schedule
-var path_index: int = 0
+var path_index: int = 0 # index in the schedule
 var track_segment_index: int = 0
 var track_segment_progress: float = 0
-var stop_index: int = 0
 var overshoot_set: bool = false
 
 func _init() -> void:
@@ -18,7 +16,6 @@ func _init() -> void:
 	path_index = 0
 	track_segment_index = 0
 	track_segment_progress = 0
-	stop_index = 0
 
 func set_overshoot(overshoot_: float) -> void:
 	overshoot = overshoot_
@@ -45,8 +42,6 @@ class LocationBuilder:
 	var overshoot_set: bool = false
 	var path_index_set: bool = false
 	var track_segment_index_set: bool = false
-	var stop_index: int
-	var stop_index_set: bool = false
 
 	func set_position(position_: Vector2) -> LocationBuilder:
 		self.position = position_
@@ -67,10 +62,3 @@ class LocationBuilder:
 		self.track_segment_index = track_segment_index_
 		self.track_segment_index_set = true
 		return self
-	
-	func set_stop_index(stop_index_: int) -> LocationBuilder:
-		self.stop_index = stop_index_
-		self.stop_index_set = true
-		return self
-	
-	

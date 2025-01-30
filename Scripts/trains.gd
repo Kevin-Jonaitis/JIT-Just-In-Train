@@ -15,6 +15,7 @@ var drawableFunctionsToCallLater: Array[Callable] = []
 func _on_train_placed(train: Train) -> void:
 	add_child(train)
 
+# TODO: Put this somewhere more appropriate
 # Given an old track that's being split into 2 new tracks, update the train stops on the old track
 func update_train_stops(old_track: Track, new_track_a: Track, new_track_b: Track) -> void:
 	for train: Train in trains:
@@ -25,7 +26,11 @@ func update_train_stops(old_track: Track, new_track_a: Track, new_track_b: Track
 				if (potential_point):
 					train.get_stop_options()[stop_index] = train.create_stop_option(potential_point)
 
-			
+func update_schedules() -> void:
+	for train: Train in trains:
+		train.calculate_schedule()
+
+# TODO: Put this somewhere more appropriate
 func get_point_info_on_new_tracks(old_point: Vector2, new_track_a: Track, new_track_b: Track) -> TrackPointInfo:
 	var track_a_points: Array[Vector2] = new_track_a.dubins_path.shortest_path.get_points()
 	var track_b_points: Array[Vector2] = new_track_b.dubins_path.shortest_path.get_points()

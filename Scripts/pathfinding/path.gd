@@ -36,20 +36,20 @@ class PathLocation:
 	var track_segment_progress: float
 	var overshoot: float
 
-# func get_position_at_progress(progress: float) -> Location:
+# func get_position_at_progress(progress: float) -> Progress:
 # 	var total_length: float = 0
 # 	for segment: TrackSegment in track_segments:
 # 		var segment_length: float = segment.track.get_length()
 # 		if total_length + segment_length >= progress:
 # 			var progress_in_segment: float = progress - total_length
-# 			var location: Location = Location.new()
+# 			var location: Progress = Progress.new()
 # 			location.position = segment.track.get_position_at_progress(progress_in_segment)
 # 			location.overshoot = 0
 # 			return location
 # 		total_length += segment_length
 
 # 	assert(false, "We should have found the position by now")
-# 	return Location.new()
+# 	return Progress.new()
 
 func get_new_position(track_segment_index: int, previous_track_segment_progress: float, new_progress: float) -> PathLocation:
 	# var total_length: float = 0
@@ -93,11 +93,12 @@ class TrackSegment:
 		self.track = track_
 		self.start_point_index = start_point_index_
 		self.end_point_index = end_point_index_
-		self.starting_progress = track.get_distance_to_point(start_point_index)
 		self.length = calculate_length()
-		
+		self.starting_progress = track.get_distance_to_point(start_point_index)
+
 	func get_position_at_progress(progress: float) -> Vector2:
-		#TODO: Reverse these values
+		if (end_point_index < start_point_index):
+			progress = -progress
 		return track.get_point_at_offset(starting_progress + progress)
 	
 	func calculate_length() -> float:

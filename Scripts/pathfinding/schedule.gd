@@ -24,25 +24,28 @@ func get_path(stop_index: int) -> Path:
 	return paths[stop_index]
 
 
-func get_new_location(location: Location, new_progress: float) -> Location:
-	var current_stop_index: int = location.stop_index
-	var path: Path = paths[current_stop_index]
-	var results: Path.PathLocation = path.get_new_position(location.track_segment_index, location.track_segment_progress, new_progress)
+func get_updated_progress(progress: Progress, new_progress: float) -> Progress:
+	var current_path_index: int = progress.path_index
+	var path: Path = paths[current_path_index]
+	var results: Path.PathLocation = path.get_new_position(progress.track_segment_index, progress.track_segment_progress, new_progress)
 
 	while (results.overshoot):
-		current_stop_index += 1
-		if (current_stop_index == paths.size()): # We overshot the whole schedule
-			var overshoot_location: Location = Location.new()
-			overshoot_location.set_overshoot(results.overshoot)
-			return overshoot_location
-		path = paths[current_stop_index]
-		results = path.get_new_position(location.track_segment_index, location.track_segment_progress, new_progress)
+		current_path_index += 1
+		if (current_path_index == paths.size()): # We overshot the whole schedule
+			var overshoot_progress: Progress = Progress.new()
+			overshoot_progress.set_overshoot(results.overshoot)
+			return overshoot_progress
+		path = paths[current_path_index]
+		progress = Progress.new()
+		progress.path_index = current_path_index
+		new_progress = results.overshoot
+		results = path.get_new_position(progress.track_segment_index, progress.track_segment_progress, new_progress)
 
-	assert(location.overshoot == 0, "Overshoot should be 0")
+	assert(progress.overshoot == 0, "Overshoot should be 0")
 
-	var new_location: Location = Location.new()
+	var new_location: Progress = Progress.new()
 	new_location.position = results.position
-	new_location.path_index = current_stop_index
+	new_location.path_index = current_path_index
 	new_location.track_segment_index = results.track_segment_index
 	new_location.track_segment_progress = results.track_segment_progress
 	return new_location

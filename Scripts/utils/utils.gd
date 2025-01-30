@@ -31,6 +31,31 @@ func normalize_angle_0_to_2_pi(angle: float) -> float:
 		normalized += 2 * PI
 	return normalized
 
+# Used to place this angle between other angles. Normalizing allows us to compare between angles
+func normalize_between_angles(start: float, end: float, angle: float) -> float:
+	var normalized: float = angle
+	if (start < end):
+		while(normalized < start && !check_angle_matches(normalized, start)):
+			normalized += TAU
+		while(normalized > end && !check_angle_matches(normalized, end)):
+			normalized -= TAU
+	elif(start > end): # start : 5 end : 0
+		while(normalized < end && !check_angle_matches(normalized, end)):
+			normalized += TAU
+		while(normalized > start && !check_angle_matches(normalized, start)):
+			normalized -= TAU	
+	else:
+		assert(false, "This is weird, we should not be normalizing an angle between two values that are the same")
+		return angle
+	
+	var test_angles_almost_match : bool = check_angle_matches(normalized, start) || check_angle_matches(normalized, end)
+	assert(test_angles_almost_match ||  (start < normalized && normalized < end) || (end < normalized && normalized < start), \
+	"The angle should be between start and end, getting to this state means there was a bug somewhere")
+	
+	return normalized
+
+	
+
 # Check if angle matches a within EPSILON.
 func check_angle_matches(angle_a: float, angle_b: float) -> bool:
 	if abs(angle_difference(angle_a, angle_b)) <= EPSILON:
