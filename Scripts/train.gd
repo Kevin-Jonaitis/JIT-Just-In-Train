@@ -10,6 +10,7 @@ var is_placed: bool = false
 var _stop_options: Array[StopOption] = []
 var schedule: Schedule
 var on_ready_callables: Array[Callable]
+var should_loop: bool = true
 @onready var schedule_follower: ScheduleFollower = $ScheduleFollower
 
 @onready var trains: Trains = get_parent()
@@ -48,7 +49,7 @@ func get_stop_options() -> Array[StopOption]:
 	return _stop_options
 
 func calculate_schedule() -> void:
-	schedule = Pathfinder.find_path_with_movement(self, true, true, false)
+	schedule = Pathfinder.find_path_with_movement(self, true, true, true)
 	schedule_follower.reset()
 	calculate_path_draw()
 
@@ -69,9 +70,4 @@ func calculate_path_draw() -> void:
 			for i: int in range(start_index, end_index, step):
 				var point_a: Vector2 = segment.track.get_point_at_index(i)
 				var point_b: Vector2 = segment.track.get_point_at_index(i + step)
-				print("POINT A", point_a)
-				var test: Vector2 = to_local(point_a)
-				var the_global_position: Vector2 = global_position 
-				pass
 				trains.drawableFunctionsToCallLater.append(func() -> void: trains.draw_line(point_a, point_b, color, 4))
-				pass

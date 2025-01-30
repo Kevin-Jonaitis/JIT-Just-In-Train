@@ -243,14 +243,12 @@ class Arc extends Segment:
 	var start_theta: float
 	var end_theta: float
 	var radius: float
-	var clockwise: bool
 
 	func _init(_center: Vector2, _start_theta: float, _end_theta: float, _radius: float) -> void:
 		self.center = _center
 		self.start_theta = _start_theta
 		self.end_theta = _end_theta
 		self.radius = _radius
-		self.clockwise = start_theta < end_theta
 		var thetaDifference: float = _end_theta - _start_theta
 		self.length = abs(_radius * thetaDifference)
 		self.points = calculate_points_on_arc()
@@ -278,13 +276,13 @@ class Arc extends Segment:
 			# Counterclockwise traversal
 			theta = start_theta - (start_theta - end_theta) * t
 		return center + Vector2(radius * cos(theta), radius * sin(theta))
+
 	#TODO: Clean this up somehow, it's much too complicated
 	func get_distance_from_start_to_point(point: Vector2) -> float:
 		var angle: float = (point - center).angle()
 		var normalized_angle: float = Utils.normalize_between_angles(start_theta, end_theta, angle)
 		var angle_diff: float = normalized_angle - start_theta
 		return abs(radius * angle_diff)
-	
 
 func get_point_at_index(index: int) -> Vector2:
 	return _points[index]

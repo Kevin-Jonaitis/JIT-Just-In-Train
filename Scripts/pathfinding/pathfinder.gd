@@ -31,33 +31,33 @@ static func find_path_with_movement(
 	train: Train, 
 	can_move_forward: bool, 
 	can_move_backwards: bool, 
-	connect_to_start: bool
+	should_loop: bool
 ) -> Schedule:
-	var stop_options: Array[StopOption] = train.get_stop_options()
-	if (stop_options.size() == 0):
+	var stop_options: Array[StopOption] = train.get_stop_options().duplicate() # Duplicate since we don't want to affect the underlying object
+	if (stop_options.size() <= 1):
 		return null
 	if (can_move_forward and can_move_backwards):
-		if (connect_to_start):
+		if (should_loop):
 			stop_options.append(stop_options[0])
-		return find_path(train.name, stop_options)
+		return find_path(train.name, stop_options, should_loop)
 	elif (can_move_forward):
 		# only allow the forward node as the first stop
 		stop_options[0] = StopOption.new([stop_options[0].get_forward_node()])
-		# If we want to connect it back to the start, we add the first node and 
-		if (connect_to_start):
+		# If we want to connect it back to the start, we add the first node
+		if (should_loop):
 			stop_options.append(stop_options[0]) # This will automatically already have only the forward node
-		return find_path(train.name, stop_options)
+		return find_path(train.name, stop_options, should_loop)
 	elif (can_move_backwards):
 		# only allow the backward node as the first and last stop
 		stop_options[0] = StopOption.new([stop_options[0].get_backward_node()])
-		if (connect_to_start):
+		if (should_loop):
 			stop_options.append(stop_options[0]) # This will automatically already have only the backward node
-		return find_path(train.name, stop_options)
+		return find_path(train.name, stop_options, should_loop)
 	else:
 		assert(false, "We should never get here")
 		return null
 
-static func find_path(train_uuid: String, stop_options: Array[StopOption]) -> Schedule:
+static func find_path(train_uuid: String, stop_options: Array[StopOption], is_loop: bool) -> Schedule:
 	var dynamnic_programming: Dictionary = {}
 	for i: int in range(stop_options.size() - 1):
 		var current_stop_options: StopOption = stop_options[i]
@@ -68,7 +68,7 @@ static func find_path(train_uuid: String, stop_options: Array[StopOption]) -> Sc
 				var path: Path = find_path_between_nodes(start_node, end_node, train_uuid)
 				if (path != null):
 					add_to_dp_map(end_node, dynamnic_programming, RunningPath.new([path]))
-	var schedule: Schedule = calculate_running_best_path(dynamnic_programming, stop_options)
+	var schedule: Schedule = calculate_running_best_path(dynamnic_programming, stop_options, is_loop)
 	return schedule
 
 #dynamnic_programming is a dictionary with key: StopNode, value: <Path or RunningPath, depending on caller>
@@ -89,7 +89,8 @@ static func add_to_dp_map(
 
 static func calculate_running_best_path(
 	dynamnic_programming: Dictionary, 
-	stop_options: Array[StopOption]
+	stop_options: Array[StopOption],
+	is_loop: bool
 ) -> Schedule:
 	var running_map: Dictionary = {}
 	# Map<StopNode, Array<Path>>
@@ -123,10 +124,9 @@ static func calculate_running_best_path(
 			best_path = path
 	if (best_path == null):
 		return null
-	#var take_one = (best_path.paths.size()
-	#var take_two = 
-	assert(best_path.paths.size() == max(1, stop_options.size() - 1), "We should have as many paths as we have stops")
-	return Schedule.new(best_path.paths)
+			
+	assert(best_path.paths.size() == max(1, stop_options.size() - 1), "We should have as many paths as we have stops -1")
+	return Schedule.new(best_path.paths, is_loop)
 
 
 class RunningPath:

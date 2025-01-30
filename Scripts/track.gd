@@ -55,6 +55,7 @@ func build_track(starting_overlay: TrackOrJunctionOverlap, ending_overlay: Track
 	virtual_node_manager.setup_interjunction_virtual_nodes()
 	temp = false
 	area.solidify_collision_area()
+	trains.update_schedules() # Recalcualte all train schedules. # Could probably emit here
 
 @export_category("Curve Builder")
 @export var edit_curve: bool = false:

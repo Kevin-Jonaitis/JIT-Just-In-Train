@@ -145,7 +145,6 @@ func solidifyTrack() -> void:
 
 	reset_track_builder()
 	create_track_node_tree()
-	trains.update_schedules()
 
 # We want to reset most things, but leave things like
 # arrow direction and track type intack for next track placement
