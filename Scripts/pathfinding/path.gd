@@ -13,12 +13,29 @@ var goal_node: VirtualNode
 
 var length: float
 
-func _init(new_nodes: Array[VirtualNode], new_length: float) -> void:
-	assert(new_nodes[0] is StopNode, "The first node should always be a stop node")
+func _init(new_nodes: Array[VirtualNode]) -> void:
+	# assert(new_nodes[0] is StopNode, "The first node should always be a stop node")
 	assert(new_nodes[-1] is StopNode, "The last node should always be a stop node")
 	self.nodes = new_nodes
-	self.length = new_length
+	self.length = calculate_length(nodes)
 	self.create_track_segments()
+
+func calculate_length(nodes_param: Array[VirtualNode]) -> float:
+	var length_sum: float = 0
+	for i: int in range(1, nodes_param.size()):
+		var previous_node: VirtualNode = nodes_param[i - 1]
+		var current_node: VirtualNode = nodes_param[i]
+		var edge: Edge = previous_node.get_node_and_cost(current_node.name)
+		assert(edge != null, "We should always have an edge between nodes_param in a path!")
+		length_sum += edge.cost
+	return length_sum
+
+
+static func join_seperate_path_arrays(path_one: Path, path_two: Path) -> Path:
+	assert(path_one.nodes[0].name == path_two.nodes[-1].name, "The last stop of the first path and first stop of the second path should be the same")
+	path_one.nodes.pop_back()
+	path_two.nodes.pop_back()
+	return Path.new(path_one.nodes + path_two.nodes)
 
 func get_first_stop() -> VirtualNode:
 	if nodes.size() == 0:
@@ -111,7 +128,7 @@ func create_track_segments() -> void:
 		return
 
 	var current_track: Track = nodes[0].track
-	var start_index: int = (nodes[0] as StopNode).get_point_index()
+	var start_index: int = nodes[0].get_point_index()
 
 	for i: int in range(1, nodes.size()):
 		var node: VirtualNode = nodes[i]

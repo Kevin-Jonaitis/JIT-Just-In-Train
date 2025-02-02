@@ -5,6 +5,7 @@ class_name Train
 const TRAIN_COLLISION_LAYER: int = 8
 
 
+var length : float = 109 #TODO: Set this to a a real value based on the train sprites
 @onready var area2d : Area2D = $Area2D
 var is_placed: bool = false
 var _stop_options: Array[StopOption] = []
@@ -31,7 +32,7 @@ func verify_name_unique(name_: String) -> void:
 			assert(false, "Train name must be unique!")
 
 func create_stop_option(stop_point: TrackPointInfo) -> StopOption:
-	var stop: StopOption = StopOption.new(stop_point.track.add_stops_to_track(stop_point.point_index, self))
+	var stop: StopOption = StopOption.new(StopNode.create_forward_and_backward_stops(stop_point.track, stop_point.point_index, self))
 	return stop
 
 func add_stop_option(stop_point: TrackPointInfo) -> void:
@@ -41,7 +42,7 @@ func add_stop_option(stop_point: TrackPointInfo) -> void:
 func remove_stop_option(stop_index: int) -> void:
 	var stop_option: StopOption = _stop_options[stop_index]
 	var point_index: int = stop_option.stop_option[0].point_index
-	stop_option.stop_option[0].track.remove_stop_from_track(point_index, self)
+	# stop_option.stop_option[0].track.remove_stop_from_track(point_index, self)
 	_stop_options.remove_at(stop_index)
 	calculate_schedule()
 

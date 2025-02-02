@@ -11,13 +11,13 @@ var name: String:
 		assert(name == "", "Name cannot be changed")
 		name = value
 
-# Map<connected_node_name NodeAndCost>!! (caused at least one bug because it wasn't typed :( )
+# Map<connected_node_name Edge>!! (caused at least one bug because it wasn't typed :( )
 # DO NOT USE DIRECTLY, use provided functions
 var _connected_nodes: Dictionary
 # All nodes are either entry/exit to a track in a junction, or are ON a track
 var track: Track
 
-func get_node_and_cost(name_: String) -> NodeAndCost:
+func get_node_and_cost(name_: String) -> Edge:
 	return _connected_nodes[name_]
 
 # Only get connected nodes on the same trainlines. This only applies to stop nodes
@@ -25,11 +25,11 @@ func get_node_and_cost(name_: String) -> NodeAndCost:
 # Practically, this means that when we construct stops along a track, 
 # each train will have it's own directed graph along that track
 # and when we're pathfinding, we only see that path(by using this function)
-func get_connected_nodes(train_uuid: String) -> Array[NodeAndCost]:
-	var result: Array[NodeAndCost] = []
+func get_connected_nodes(train_uuid: String) -> Array[Edge]:
+	var result: Array[Edge] = []
 	# Workaround for https://github.com/godotengine/godot/issues/72566
 	result.assign(_connected_nodes.values().filter(
-		func(node: NodeAndCost) -> bool: 
+		func(node: Edge) -> bool: 
 			if node.virtual_node is StopNode && (node.virtual_node as StopNode).train.name != train_uuid:
 				return false
 			else:
@@ -37,16 +37,60 @@ func get_connected_nodes(train_uuid: String) -> Array[NodeAndCost]:
 			))
 	return result
 
-func get_stop_for_train_or_junction(train: Train) -> NodeAndCost:
-	var nodes: Array[NodeAndCost] = get_connected_nodes(train.name)
+
+func get_connected_new(train_uuid: String) -> Array[Edge]:
+	return _connected_nodes.values()
+
+
+
+
+func get_connected_nodes_or_goal(train_uuid: String, end_node: StopNode) -> Array[Edge]:
+	var this_point: int = get_point_index()
+
+	var goal_point: int = end_node.get_point_index()
+	
+	if (track.uuid == end_node.track.uuid):
+		for edge: Edge in _connected_nodes.values():
+			if (track.uuid == edge.virtual_node.track.uuid): 
+				var next_point: float = edge.virtual_node.get_point_index()
+				if (next_point != this_point): # This means we are not on nodes in the same junction
+					if (this_point < goal_point && goal_point < next_point) or (next_point < goal_point && goal_point < this_point):
+						var cost: float = abs(goal_point - this_point)
+						return [Edge.new(end_node, cost)]
+
+	return _connected_nodes.values()
+
+func get_connected_nodes_without_reverse_edge(train_uuid: String) -> Array[Edge]:
+	return get_connected_nodes(train_uuid).filter(
+		func(edge: Edge) -> bool: 
+			return not edge.is_reverse_edge()
+			)
+
+
+
+# func get_connected_nodes_not_reverse(train_uuid: String) -> Array[Edge]:
+# 	var result: Array[Edge] = []
+# 	# Workaround for https://github.com/godotengine/godot/issues/72566
+# 	result.assign(_connected_nodes.values().filter(
+# 		func(node: Edge) -> bool: 
+# 			if node.virtual_node is StopNode && (node.virtual_node as StopNode).train.name != train_uuid:
+# 				return false
+# 			elsif()
+# 				return true
+# 			))
+# 	return result
+
+
+func get_stop_for_train_or_junction(train: Train) -> Edge:
+	var nodes: Array[Edge] = get_connected_nodes(train.name)
 	assert(nodes.size() <= 2, "There should not be more than 2 connected nodes")
 	# Prefer the stop node
-	for node: NodeAndCost in nodes:
+	for node: Edge in nodes:
 		if node.virtual_node is StopNode && (node.virtual_node as StopNode).train == train:
 			return node
 
 	# Go through again and return junction node
-	for node: NodeAndCost in nodes:
+	for node: Edge in nodes:
 		if node.virtual_node is JunctionNode:
 			return node
 
@@ -61,7 +105,11 @@ func clear() -> void:
 	_connected_nodes.clear()
 	
 func add_connected_node(node: VirtualNode, cost: float) -> void:
-	_connected_nodes[node.name] = NodeAndCost.new(node, cost)
+	_connected_nodes[node.name] = Edge.new(node, cost)
+
+func add_connected_reverse_node(node: VirtualNode, edge: Edge) -> void:
+	_connected_nodes[node.name] = edge
+
 
 func get_point_index() -> int:
 	assert(false, "This should be implemented in the subclasses")

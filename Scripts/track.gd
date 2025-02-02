@@ -283,6 +283,16 @@ func get_point_at_offset(offset: float) -> Vector2:
 		assert(false, "We haven't defined a curve for this track yet!")
 		return Vector2.ZERO
 
+func get_approx_point_index_at_offset(offset: float) -> int:
+	if bezier_curve:
+		assert(false, "Unimplemented code path!")
+		return 0
+	elif dubins_path:
+		return dubins_path.shortest_path.get_approx_point_index_at_offset(offset)
+	else:
+		assert(false, "We haven't defined a curve for this track yet!")
+		return 0
+
 func get_angle_at_point_index(index: int) -> float:
 	if bezier_curve:
 		assert(false, "Unimplemented code path!")
@@ -309,11 +319,11 @@ func get_distance_to_point(point_index: int) -> float:
 		assert(false, "We haven't defined a curve for this track yet!")
 		return 0
 
-func add_stops_to_track(point_index: int, train: Train) -> Array[StopNode]:
-	return virtual_node_manager.add_stops_to_track(point_index, train)
+# func add_stops_to_track(point_index: int, train: Train) -> Array[StopNode]:
+# 	return virtual_node_manager.add_stops_to_track(point_index, train)
 
-func remove_stop_from_track(point_index: int, train: Train) -> void:
-	virtual_node_manager.remove_stop_from_track(point_index, train)
+# func remove_stop_from_track(point_index: int, train: Train) -> void:
+# 	virtual_node_manager.remove_stop_from_track(point_index, train)
 
 func get_point_at_index(index: int) -> Vector2:
 	if dubins_path:

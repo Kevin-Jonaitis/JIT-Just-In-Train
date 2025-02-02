@@ -8,11 +8,22 @@ class_name StopNode
 var point_index: int
 var train: Train
 
+# Train should reverse after reaching this node
+var is_reverse_node: bool = false
+
+#TODO: add track direction for points that need to be different depending on which side of the track trains are coming from
+#(Example, a station where you want a long train to stop at a different spot depending on which way it's facing)
+
 func _init(track_: Track, point_index_: int, forward_: bool, train_: Train) -> void:
 	self.name = generate_name(track_, point_index_, forward_, train_)
 	self.track = track_
 	self.point_index = point_index_
 	self.train = train_
+
+static func create_forward_and_backward_stops(track_: Track, point_index_: int, train_: Train) -> Array[StopNode]:
+	var forward_stop: StopNode = StopNode.new(track_, point_index_, true, train_)
+	var backward_stop: StopNode = StopNode.new(track_, point_index_, false, train_)
+	return [forward_stop, backward_stop]
 
 func get_position() -> Vector2:
 	return track.dubins_path.shortest_path.get_point_at_index(point_index)

@@ -139,6 +139,24 @@ func get_point_at_offset(offset: float) -> Vector2:
 	
 	return _points[-1]
 
+func get_approx_point_index_at_offset(offset: float) -> int:
+	if offset <= 0:
+		return 0
+	if offset >= length:
+		return _points.size() - 1
+		
+	var current_length: float = 0
+	for segment: Segment in segments:
+		if current_length + segment.length >= offset:
+			var segment_offset: float = offset - current_length
+			if segment is Line:
+				return segment.get_approx_point_index_at_offset(segment_offset)
+			elif segment is Arc:
+				return segment.get_approx_point_index_at_offset(segment_offset)
+		current_length += segment.length
+	
+	return _points.size() - 1
+
 func get_distance_to_point(point_index: int) -> float:
 	var running_distance: float = 0
 	var segment_index: int = segment_index_for_point[point_index]
@@ -231,6 +249,10 @@ class Line extends Segment:
 	func get_point_at_offset(offset: float) -> Vector2:
 		var t: float = offset / length
 		return start.lerp(end, t)
+
+	func get_approx_point_index_at_offset(offset: float) -> int:
+		var t: float = offset / length
+		return int(t * points.size())
 	
 	func get_distance_from_start_to_point(point: Vector2) -> float:
 		return (point - start).length()
@@ -276,6 +298,10 @@ class Arc extends Segment:
 			# Counterclockwise traversal
 			theta = start_theta - (start_theta - end_theta) * t
 		return center + Vector2(radius * cos(theta), radius * sin(theta))
+
+	func get_approx_point_index_at_offset(offset: float) -> int:
+		var t: float = offset / length
+		return int(t * points.size())
 
 	#TODO: Clean this up somehow, it's much too complicated
 	func get_distance_from_start_to_point(point: Vector2) -> float:

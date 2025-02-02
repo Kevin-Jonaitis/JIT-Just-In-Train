@@ -2,22 +2,22 @@ extends Object
 
 class_name Pathfinder
 
-class PathfindingPreference:
-	var choose_start_stop: bool
-	var chose_end_stop: bool
-	var start_forward: bool
-	var end_forward: bool
+# class PathfindingPreference:
+# 	var choose_start_stop: bool
+# 	var chose_end_stop: bool
+# 	var start_forward: bool
+# 	var end_forward: bool
 
-	func _init(
-		p_choose_start_stop: bool, 
-		p_chose_end_stop: bool, 
-		p_start_forward: bool, 
-		p_end_forward: bool
-	) -> void:
-		self.choose_start_stop = p_choose_start_stop
-		self.chose_end_stop = p_chose_end_stop
-		self.start_forward = p_start_forward
-		self.end_forward = p_end_forward
+# 	func _init(
+# 		p_choose_start_stop: bool, 
+# 		p_chose_end_stop: bool, 
+# 		p_start_forward: bool, 
+# 		p_end_forward: bool
+# 	) -> void:
+# 		self.choose_start_stop = p_choose_start_stop
+# 		self.chose_end_stop = p_chose_end_stop
+# 		self.start_forward = p_start_forward
+# 		self.end_forward = p_end_forward
 		
 
 
@@ -162,14 +162,14 @@ static func check_if_overlap_and_add_to_map(
 		var running_path_list: RunningPath = RunningPath.new(combined_array)
 		add_to_dp_map(end_path.get_last_stop(), dynamnic_programming, running_path_list)
 
-static func combine_paths(first_half: Path, second_half: Path) -> Path:
-	var first_half_nodes: Array[VirtualNode] = first_half.nodes
-	var second_half_nodes: Array[VirtualNode] = second_half.nodes
-	assert(first_half_nodes[-1].name == second_half.nodes[0].name, "Nodes should overlap")
-	first_half_nodes.pop_back()	
-	var combined_nodes: Array[VirtualNode] = first_half_nodes + second_half_nodes
-	var length: float = first_half.length + second_half.length
-	return Path.new(combined_nodes, length)
+# static func combine_paths(first_half: Path, second_half: Path) -> Path:
+# 	var first_half_nodes: Array[VirtualNode] = first_half.nodes
+# 	var second_half_nodes: Array[VirtualNode] = second_half.nodes
+# 	assert(first_half_nodes[-1].name == second_half.nodes[0].name, "Nodes should overlap")
+# 	first_half_nodes.pop_back()	
+# 	var combined_nodes: Array[VirtualNode] = first_half_nodes + second_half_nodes
+# 	var length: float = first_half.length + second_half.length
+# 	return Path.new(combined_nodes)
 
 static func get_node_position(node: VirtualNode) -> Vector2:
 	if (node is StopNode):
@@ -187,8 +187,8 @@ static func heuristic(a: VirtualNode, b: VirtualNode) -> float:
 
 # Copilot generated(it is A* as requested, and looks like code from A* algorithm wiki page)
 static func find_path_between_nodes(
-	start: VirtualNode, 
-	end: VirtualNode, 
+	start: StopNode, 
+	end: StopNode, 
 	train_uuid: String
 ) -> Path:
 	var open_set: PriorityQueue = PriorityQueue.new()
@@ -210,14 +210,14 @@ static func find_path_between_nodes(
 			continue
 		visited[current.name] = true
 
-		for connected_node: NodeAndCost in current.get_connected_nodes(train_uuid):
-			var neighbor: VirtualNode = connected_node.virtual_node
-			var cost_to_neighbor: float = connected_node.cost
+		for edge: Edge in current.get_connected_nodes_or_goal(train_uuid, end):
+			var neighbor: VirtualNode = edge.virtual_node
+			var cost_to_neighbor: float = edge.cost
 			if visited.has(neighbor.name):
 				continue
 			var tentative_g: float = g_score[current.name] + cost_to_neighbor
 			if tentative_g < g_score.get(neighbor.name, INF):
-				came_from[neighbor.name] = current
+				came_from[neighbor.name] = { "node": current, "path": edge.intermediate_nodes }
 				g_score[neighbor.name] = tentative_g
 				f_score[neighbor.name] = tentative_g + heuristic(neighbor, end)
 				open_set.insert(neighbor, f_score[neighbor.name] as float)
@@ -228,12 +228,15 @@ static func reconstruct_path(
 	came_from: Dictionary, 
 	current: VirtualNode
 ) -> Path:
-	var length: float = 0.0
 	var path_nodes: Array[VirtualNode] = [current]
 	while came_from.has(current.name):
-		var prev: VirtualNode = came_from[current.name]
-		var cost_segment: float = prev.get_node_and_cost(current.name).cost
-		length += cost_segment
-		path_nodes.insert(0, prev)
-		current = prev
-	return Path.new(path_nodes, length)
+		var prev: Dictionary = came_from[current.name]
+		var prev_node: VirtualNode = prev.node
+		var prev_path: Array[VirtualNode] = prev.path
+		if (prev_path != null):
+			for node : VirtualNode in prev_path:
+				path_nodes.insert(0, node)
+		else:
+			path_nodes.insert(0, prev_node)
+		current = prev_node
+	return Path.new(path_nodes)
