@@ -124,15 +124,30 @@ func add_reverse_nodes_for_connection(connection: TrackConnection) -> void:
 		var out_node: JunctionNode = get_junction_node(connection.track, false)
 		var in_node: JunctionNode = get_junction_node(connection.track, false)
 		var results : Array = generate_path_of_length_from_start(out_node, train, length)
+
 		if (results.size() == 0):
 			print("No reverse path found for connection: " + connection.track.name + " at junction: " + name)
 			return
 		for path : Path in results:
 			assert(path.nodes.size() > 2, "Path should have at least 2 nodes: starting node and turnaround node")
-			var nodes_without_start : Array[VirtualNode] = path.nodes.duplicate()
+			assert(path.nodes[-1] is StopNode, "Last node should be a stop node that's a returnaround node")
+			assert(path.nodes[0] is JunctionNode, "First node should be our junction node")
+			var full_path: Path = generate_path_with_reverse_nodes_added(path)
+
+			var nodes_without_start : Array[VirtualNode] = full_path.nodes.duplicate()
 			nodes_without_start.erase(0)
+			# Use the OLD path length, because we don't use the turn-around length
 			var edge: Edge = Edge.new(in_node, path.length, nodes_without_start)
 			in_node.add_connected_reverse_node(out_node, edge)
+
+func generate_path_with_reverse_nodes_added(path: Path) -> Path:
+	var nodes: Array[VirtualNode] = path.nodes
+	var new_nodes_to_add: Array[VirtualNode] = []
+	for i: int in range(path.nodes.size() - 1, 0, -1):
+		var node: VirtualNode = nodes[i]
+		var newNode : VirtualNode = node.create_node_in_opposite_direction()
+		new_nodes_to_add.append(newNode)
+	return Path.new(path.nodes + new_nodes_to_add)
 
 # Return type Array[Array[VirtuaNode]]
 func generate_path_of_length_from_start(start_node: VirtualNode, train: Train, remaining_length: float) -> Array[Path]:
@@ -183,7 +198,7 @@ func generate_path_of_length_from_start(start_node: VirtualNode, train: Train, r
 				var track_length: float = start_node.track.get_length()
 				goal_point = start_node.track.get_approx_point_index_at_offset(track_length - remaining_length) - 1
 
-			var end_node: StopNode = StopNode.new(start_node.track, goal_point, is_increasing, train)
+			var end_node: StopNode = StopNode.new(start_node.track, goal_point, is_increasing, train, true)
 
 			paths_to_return.append([start_node, end_node])
 	return paths_to_return

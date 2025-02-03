@@ -21,6 +21,9 @@ static func generate_name(junction_: Junction, track_: Track, is_entry: bool) ->
 	else:
 		return str(junction_.name, "-", track_.name, "-exit")
 
+func create_node_in_opposite_direction() -> JunctionNode:
+	var opposite_node: JunctionNode = JunctionNode.new(junction, track, not is_entry_node(), connected_at_start_of_track)
+	return opposite_node
 
 func get_point_index() -> int:
 	if connected_at_start_of_track:

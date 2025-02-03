@@ -114,3 +114,7 @@ func add_connected_reverse_node(node: VirtualNode, edge: Edge) -> void:
 func get_point_index() -> int:
 	assert(false, "This should be implemented in the subclasses")
 	return 0
+
+func create_node_in_opposite_direction() -> VirtualNode:
+	assert(false, "This should be implemented in the subclasses")
+	return null

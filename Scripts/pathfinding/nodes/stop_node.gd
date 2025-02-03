@@ -14,11 +14,12 @@ var is_reverse_node: bool = false
 #TODO: add track direction for points that need to be different depending on which side of the track trains are coming from
 #(Example, a station where you want a long train to stop at a different spot depending on which way it's facing)
 
-func _init(track_: Track, point_index_: int, forward_: bool, train_: Train) -> void:
+func _init(track_: Track, point_index_: int, forward_: bool, train_: Train, is_reverse_node: bool = false) -> void:
 	self.name = generate_name(track_, point_index_, forward_, train_)
 	self.track = track_
 	self.point_index = point_index_
 	self.train = train_
+	self.is_reverse_node = is_reverse_node
 
 static func create_forward_and_backward_stops(track_: Track, point_index_: int, train_: Train) -> Array[StopNode]:
 	var forward_stop: StopNode = StopNode.new(track_, point_index_, true, train_)
@@ -35,6 +36,10 @@ static func generate_name(track_: Track, index_: int, forward: bool, train_: Tra
 	var direction_str: String = "forward" if forward else "backward"
 	return str("stop-", track_.name, "-", index_, "-", train_.name, "-", direction_str)
 
+
+func create_node_in_opposite_direction() -> StopNode:
+	var opposite_node: StopNode = StopNode.new(track, point_index, not is_forward(), train)
+	return opposite_node
 
 # I know, holding data in the string name is not the fastest or most secure, 
 # but string parsing is a well-explored area and makes the code simpiler/more flexible
