@@ -8,10 +8,12 @@ var nodes: Array[VirtualNode]  = []
 var track_segments: Array[TrackSegment] = []
 
 var uuid: String = Utils.generate_uuid()
-var start_node: VirtualNode
-var goal_node: VirtualNode
+# var start_node: VirtualNode
+# var goal_node: VirtualNode
 
 var length: float
+
+var reverse_nodes: Array[VirtualNode] = []
 
 func _init(new_nodes: Array[VirtualNode]) -> void:
 	# assert(new_nodes[0] is StopNode, "The first node should always be a stop node")
@@ -19,6 +21,16 @@ func _init(new_nodes: Array[VirtualNode]) -> void:
 	self.nodes = new_nodes
 	self.length = calculate_length(nodes)
 	self.create_track_segments()
+	self.reverse_nodes = parse_reverse_nodes()
+
+
+func parse_reverse_nodes() -> Array[VirtualNode]:
+	var reversed_nodes: Array[VirtualNode] = []
+	for node: VirtualNode in nodes:
+		if (node is StopNode and (node as StopNode).is_reverse_node):
+			reversed_nodes.append(node)
+	return reversed_nodes
+
 
 func calculate_length(nodes_param: Array[VirtualNode]) -> float:
 	var length_sum: float = 0
@@ -53,32 +65,46 @@ class PathLocation:
 	var track_segment_progress: float
 	var overshoot: float
 
+func check_if_track_segment_starts_with_reverse_node(track_segment_index: int) -> bool:
+	for node : StopNode in reverse_nodes:
+		if (node.track.uuid == track_segments[track_segment_index].track.uuid
+		&& node.get_point_index() == track_segments[track_segment_index].start_point_index):
+			return true
+	return false
 
-func get_new_position(track_segment_index: int, previous_track_segment_progress: float, new_progress: float) -> PathLocation:
+func update_progress(progress: Progress, new_progress: float, train_length: float) -> void:
+	var track_segment_index: int = progress.track_segment_index
+	var previous_track_segment_progress: float = progress.track_segment_progress
 	var segment: TrackSegment = track_segments[track_segment_index]
 	var segment_length: float = segment.get_length()
+
 	while (previous_track_segment_progress + new_progress) > segment_length:
 		track_segment_index += 1
+		if(check_if_track_segment_starts_with_reverse_node(track_segment_index)):
+			new_progress = new_progress + train_length ## We assume here that we've built the paths to take the full reversal path into account
+			progress.reverse()
+
 		new_progress = new_progress - (segment_length - previous_track_segment_progress)
 		previous_track_segment_progress = 0
 		
 		
 		if track_segment_index == track_segments.size():
 			# We've reached the end of the path
-			var overshot_path: PathLocation = PathLocation.new()
-			overshot_path.overshoot = new_progress
-			return overshot_path
+			# var overshot_path: PathLocation = PathLocation.new()
+			# overshot_path.overshoot = new_progress
+			progress.path_overshoot = new_progress
+			return 
 			
 		segment = track_segments[track_segment_index]
 		segment_length = segment.get_length()
 	
 	var new_progress_for_track_segment: float = new_progress + previous_track_segment_progress
 
-	var location: PathLocation = PathLocation.new()
-	location.position = segment.get_position_at_progress(new_progress_for_track_segment)
-	location.track_segment_index = track_segment_index
-	location.track_segment_progress = new_progress_for_track_segment
-	return location
+	# var location: PathLocation = PathLocation.new()
+	progress.position = segment.get_position_at_progress(new_progress_for_track_segment)
+	progress.track_segment_index = track_segment_index
+	progress.track_segment_progress = new_progress_for_track_segment
+	return
 
 
 class TrackSegment:
@@ -132,7 +158,7 @@ func create_track_segments() -> void:
 
 	for i: int in range(1, nodes.size()):
 		var node: VirtualNode = nodes[i]
-		if node.track != current_track:
+		if node.track.uuid != current_track.uuid:
 			var end_index: int = nodes[i - 1].get_point_index()
 			var segment: TrackSegment = TrackSegment.new(current_track, start_index, end_index)
 			track_segments.append(segment)

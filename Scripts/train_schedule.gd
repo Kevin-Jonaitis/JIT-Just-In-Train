@@ -5,7 +5,7 @@ var current_train: Train:
 	set(value):
 		current_train = value
 
-# Which way the train is facing when placing a new stop
+# Which way the train is facing when placing with respect to the direction of _track_ point index
 var train_placed_forward: bool = true
 
 @onready var add_station_button: Button = $"VBoxContainer/Add Station"

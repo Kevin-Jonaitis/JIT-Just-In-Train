@@ -1,6 +1,6 @@
 extends RefCounted
 
-class_name Schedule
+class_name  Schedule
 
 # path between each pair of stops
 var paths: Array[Path]
@@ -15,7 +15,7 @@ var stops: Array[StopNode]:
 		return stops_temp
 	set(value):
 		assert(false, "Cannot set stops")
-
+		
 func _init(stops_path_: Array[Path], is_loop_: bool) -> void:
 	self.paths = stops_path_
 	self.is_loop = is_loop_

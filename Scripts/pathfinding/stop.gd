@@ -8,14 +8,9 @@ class_name Stop
 var stop_option: Array[TrainPosition]
 
 
-
-# # When the front of a train stops at a location, it's length can wind across different tracks and intersections
-# # where the butt ends up can influence where it can go if it decides to reverse out of this position.
-# # We use this to determine the collections of junctions the train will be across when it's stopped at it's stopNode
 class TrainPosition:
 	var front_of_train: StopNode
 	var back_of_train: StopNode # Where the front of the train stops for the stop point
-# var junction_nodes_train_is_across: Array[Stop] # From where the "front" of the train is at the further junction to the stop point
 
 	func _init(front: StopNode, back: StopNode) -> void:
 		self.front_of_train = front

@@ -12,6 +12,8 @@ var _stops: Array[Stop] = []
 var schedule: Schedule
 var on_ready_callables: Array[Callable]
 var should_loop: bool = true
+# whether the train's "back"(the last-added car) is starting direction of travel or not
+var train_flipped_at_start: bool = false
 @onready var schedule_follower: ScheduleFollower = $ScheduleFollower
 
 @onready var trains: Trains = get_parent()

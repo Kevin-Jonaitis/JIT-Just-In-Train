@@ -5,17 +5,41 @@ class_name Progress
 
 var position: Vector2
 var overshoot: float # Total overshoot of whole schedule
+var path_overshoot: float # How much we overshot a path(between two stops)
 var path_index: int = 0 # index in the schedule
 var track_segment_index: int = 0
 var track_segment_progress: float = 0
 var overshoot_set: bool = false
 
-func _init() -> void:
+var train_offset: float = 0
+var facing_forward: bool = true
+
+func _init(train: Train) -> void:
 	position = Vector2.ZERO
 	overshoot = 0
 	path_index = 0
 	track_segment_index = 0
 	track_segment_progress = 0
+	# self.train = train
+	if (!train.train_flipped_at_start):
+		train_offset = -train.length / 2
+	else:
+		train_offset = train.length / 2
+
+# func from_progress(progress: Progress): Progress
+# 	position = progress.position
+# 	overshoot = progress.overshoot
+# 	path_index = progress.path_index
+# 	track_segment_index = progress.track_segment_index
+# 	track_segment_progress = progress.track_segment_progress
+# 	overshoot_set = progress.overshoot_set
+# 	train_offset = progress.train_offset
+# 	facing_forward = progress.facing_forward
+
+func reverse() -> void:
+	facing_forward = !facing_forward
+	train_offset = -train_offset
+
 
 func set_overshoot(overshoot_: float) -> void:
 	overshoot = overshoot_

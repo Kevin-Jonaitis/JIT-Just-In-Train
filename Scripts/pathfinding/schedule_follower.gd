@@ -10,7 +10,7 @@ class_name ScheduleFollower
 # Pixels per second
 var velocity : float = 100
 
-var progress: Progress = Progress.new()
+var progress: Progress
 
 @onready var train: Train = get_parent()
 
@@ -22,7 +22,10 @@ func _physics_process(delta: float) -> void:
 	# train.queue_redraw()
 
 func reset() -> void:
-	progress = Progress.new()
+	progress = Progress.new(train)
+
+func ready() -> void:
+	progress = Progress.new(train)
 
 func update_train_position(delta: float) -> void:
 	var schedule: Schedule  = train.schedule
@@ -32,38 +35,38 @@ func update_train_position(delta: float) -> void:
 	if (progress.overshoot && !train.schedule.is_loop):
 		return
 
-	progress = update_progress(schedule, progress, position_change)
+	update_progress(schedule, position_change)
 	# Check again incase we overshot the schedule
 	if (progress.overshoot && !train.schedule.is_loop): 
 		return
 	while (progress.overshoot && train.schedule.is_loop):
-		progress = Progress.new()
-		progress = update_progress(schedule, progress, progress.overshoot)
+		progress = Progress.new(train)
+		update_progress(schedule, progress.overshoot)
 
 	assert(progress.overshoot == 0, "Overshoot should be 0")
 	train.position = progress.position
 
-func update_progress(schedule: Schedule, old_progress: Progress, progress_px: float) -> Progress:
-	var new_progress: Progress = Progress.new()
-	var current_path_index: int = old_progress.path_index
+func update_progress(schedule: Schedule, progress_px: float) -> void:
+	# var new_progress: Progress = Progress.new(train)
+	var current_path_index: int = progress.path_index
 	var path: Path = schedule.paths[current_path_index]
-	var results: Path.PathLocation = path.get_new_position(old_progress.track_segment_index, old_progress.track_segment_progress, progress_px)
+	path.update_progress(progress, progress_px, train.length)
 
-	while (results.overshoot):
+	while (progress.path_overshoot):
 		current_path_index += 1
 		if (current_path_index == schedule.paths.size()): # We overshot the whole schedule
-			var overshoot_progress: Progress = Progress.new()
-			overshoot_progress.set_overshoot(results.overshoot)
-			return overshoot_progress
+			progress = Progress.new(train)
+			progress.set_overshoot(progress.overshoot)
+			# overshoot_progress.set_overshoot(progress.overshoot)
+			return
 		path = schedule.paths[current_path_index]
-		new_progress.path_index = current_path_index
-		progress_px = results.overshoot
-		results = path.get_new_position(new_progress.track_segment_index, new_progress.track_segment_progress, progress_px)
+		progress.path_index = current_path_index
+		progress_px = progress.overshoot
+		path.update_progress(progress, progress_px, train.length)
 
-	assert(old_progress.overshoot == 0, "Overshoot should be 0")
+	assert(progress.overshoot == 0, "Overshoot should be 0")
 
-	new_progress.position = results.position
-	new_progress.path_index = current_path_index
-	new_progress.track_segment_index = results.track_segment_index
-	new_progress.track_segment_progress = results.track_segment_progress
-	return new_progress
+	# new_progress.position = results.position
+	# new_progress.path_index = current_path_index
+	# new_progress.track_segment_index = results.track_segment_index
+	# new_progress.track_segment_progress = results.track_segment_progress
