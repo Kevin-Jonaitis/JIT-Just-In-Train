@@ -5,6 +5,9 @@ var current_train: Train:
 	set(value):
 		current_train = value
 
+# Which way the train is facing when placing a new stop
+var train_placed_forward: bool = true
+
 @onready var add_station_button: Button = $"VBoxContainer/Add Station"
 @onready var train_name : Label = $VBoxContainer/TrainName
 @onready var vBox : VBoxContainer = $VBoxContainer/Stops
@@ -43,7 +46,7 @@ func handle_input(event: InputEvent, global_mouse_position: Vector2) -> void:
 		elif (selecting_station_mode):
 			var track_point_info : TrackPointInfo = track_intersection_searcher.check_for_overlaps_at_position(global_mouse_position)
 			if (track_point_info):
-				current_train.add_stop_option(track_point_info)
+				current_train.add_stop_option(track_point_info, train_placed_forward)
 				selecting_station_mode = false
 				re_render()
 
@@ -60,16 +63,16 @@ func re_render() -> void:
 	clear_children()
 	if (current_train):
 		train_name.text = current_train.name
-		for stop_index: int in range(current_train.get_stop_options().size()):
-			var stop: StopOption = current_train.get_stop_options()[stop_index]
-			var stop_element: StopElement = StopElement.new_stop_element(stop.stop_option[0].get_track_name() + "-" + str(stop.stop_option[0].get_point_index()), current_train, stop_index)
+		for stop_index: int in range(current_train.get_stops().size()):
+			var stop: Stop = current_train.get_stops()[stop_index]
+			var stop_element: StopElement = StopElement.new_stop_element(stop.stop_option[0].front_of_train.get_track_name() + "-" + str(stop.stop_option[0].front_of_train.get_point_index()), current_train, stop_index)
 			stop_element.connect("on_station_removed", _on_station_removed)
 			vBox.add_child(stop_element)
 			pass
 
 # Should this really be here? Do we need to centralize the code here?
 func _on_station_removed(train: Train, stop_index: int) -> void:
-	train.remove_stop_option(stop_index)
+	train.remove_stop(stop_index)
 	re_render()
 	pass
 

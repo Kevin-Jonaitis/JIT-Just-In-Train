@@ -44,8 +44,14 @@ func get_connected_new(train_uuid: String) -> Array[Edge]:
 
 
 
-func get_connected_nodes_or_goal(train_uuid: String, end_node: StopNode) -> Array[Edge]:
+func get_connected_nodes_or_goal(train: Train, train_position: Stop.TrainPosition, end_node: StopNode) -> Array[Edge]:
 	var this_point: int = get_point_index()
+	var edges_to_return: Array[Edge] = _connected_nodes.values()
+
+	# If we're at the start of pathfinding, we should be able to reverse the train
+	if (self == train_position.front_of_train):
+		assert(train_position.back_of_train.is_reverse_node, "Back of train should be a reverse node!!")
+		edges_to_return.append(Edge.new(train_position.back_of_train, 0))
 
 	var goal_point: int = end_node.get_point_index()
 	
@@ -57,8 +63,10 @@ func get_connected_nodes_or_goal(train_uuid: String, end_node: StopNode) -> Arra
 					if (this_point < goal_point && goal_point < next_point) or (next_point < goal_point && goal_point < this_point):
 						var cost: float = abs(goal_point - this_point)
 						return [Edge.new(end_node, cost)]
-
-	return _connected_nodes.values()
+	if (self is JunctionNode):
+		edges_to_return.append_array((self as JunctionNode).get_reverse_edges(train))
+	
+	return edges_to_return
 
 func get_connected_nodes_without_reverse_edge(train_uuid: String) -> Array[Edge]:
 	return get_connected_nodes(train_uuid).filter(
@@ -66,6 +74,11 @@ func get_connected_nodes_without_reverse_edge(train_uuid: String) -> Array[Edge]
 			return not edge.is_reverse_edge()
 			)
 
+func get_connected_nodes_and_reverse_edge(train: Train) -> Array[Edge]:
+	var result: Array[Edge] = get_connected_nodes(train.name)
+	if (self is JunctionNode):
+		result.append_array((self as JunctionNode).get_reverse_edges(train))
+	return result
 
 
 # func get_connected_nodes_not_reverse(train_uuid: String) -> Array[Edge]:

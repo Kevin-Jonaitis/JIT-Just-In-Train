@@ -10,6 +10,7 @@ var train: Train
 
 # Train should reverse after reaching this node
 var is_reverse_node: bool = false
+var forward : bool
 
 #TODO: add track direction for points that need to be different depending on which side of the track trains are coming from
 #(Example, a station where you want a long train to stop at a different spot depending on which way it's facing)
@@ -19,18 +20,19 @@ func _init(track_: Track, point_index_: int, forward_: bool, train_: Train, is_r
 	self.track = track_
 	self.point_index = point_index_
 	self.train = train_
+	self.forward = forward_
 	self.is_reverse_node = is_reverse_node
 
-static func create_forward_and_backward_stops(track_: Track, point_index_: int, train_: Train) -> Array[StopNode]:
-	var forward_stop: StopNode = StopNode.new(track_, point_index_, true, train_)
-	var backward_stop: StopNode = StopNode.new(track_, point_index_, false, train_)
-	return [forward_stop, backward_stop]
+# static func create_forward_and_backward_stops(track_: Track, point_index_: int, train_: Train) -> Array[StopNode]:
+# 	var forward_stop: StopNode = StopNode.new(track_, point_index_, true, train_)
+# 	var backward_stop: StopNode = StopNode.new(track_, point_index_, false, train_)
+# 	return [forward_stop, backward_stop]
 
 func get_position() -> Vector2:
 	return track.dubins_path.shortest_path.get_point_at_index(point_index)
 
 func is_forward() -> bool:
-	return name.ends_with("forward")
+	return forward
 
 static func generate_name(track_: Track, index_: int, forward: bool, train_: Train) -> String:
 	var direction_str: String = "forward" if forward else "backward"

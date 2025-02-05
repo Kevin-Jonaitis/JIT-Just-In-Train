@@ -33,42 +33,41 @@ static func find_path_with_movement(
 	can_move_backwards: bool, 
 	should_loop: bool
 ) -> Schedule:
-	var stop_options: Array[StopOption] = train.get_stop_options().duplicate() # Duplicate since we don't want to affect the underlying object
-	if (stop_options.size() <= 1):
+	var stops: Array[Stop] = train.get_stops().duplicate() # Duplicate since we don't want to affect the underlying object
+	if (stops.size() <= 1):
 		return null
 	if (can_move_forward and can_move_backwards):
 		if (should_loop):
-			stop_options.append(stop_options[0])
-		return find_path(train.name, stop_options, should_loop)
+			stops.append(stops[0])
+		return find_path(train, stops, should_loop)
 	elif (can_move_forward):
-		# only allow the forward node as the first stop
-		stop_options[0] = StopOption.new([stop_options[0].get_forward_node()])
+		# only allow the forward node as the first stopz
+		stops[0] = Stop.new([stops[0].get_forward_positions()])
 		# If we want to connect it back to the start, we add the first node
 		if (should_loop):
-			stop_options.append(stop_options[0]) # This will automatically already have only the forward node
-		return find_path(train.name, stop_options, should_loop)
+			stops.append(stops[0]) # This will automatically already have only the forward node
+		return find_path(train, stops, should_loop)
 	elif (can_move_backwards):
 		# only allow the backward node as the first and last stop
-		stop_options[0] = StopOption.new([stop_options[0].get_backward_node()])
+		stops[0] = Stop.new([stops[0].get_backward_positions()])
 		if (should_loop):
-			stop_options.append(stop_options[0]) # This will automatically already have only the backward node
-		return find_path(train.name, stop_options, should_loop)
+			stops.append(stops[0]) # This will automatically already have only the backward node
+		return find_path(train, stops, should_loop)
 	else:
 		assert(false, "We should never get here")
 		return null
 
-static func find_path(train_uuid: String, stop_options: Array[StopOption], is_loop: bool) -> Schedule:
+static func find_path(train: Train, stops: Array[Stop], is_loop: bool) -> Schedule:
 	var dynamnic_programming: Dictionary = {}
-	for i: int in range(stop_options.size() - 1):
-		var current_stop_options: StopOption = stop_options[i]
-		var next_stop_options: StopOption = stop_options[i + 1]
-
-		for start_node: StopNode in current_stop_options.stop_option:
-			for end_node: StopNode in next_stop_options.stop_option:
-				var path: Path = find_path_between_nodes(start_node, end_node, train_uuid)
+	for i: int in range(stops.size() - 1):
+		var current_stop: Stop = stops[i]
+		var next_stop: Stop = stops[i + 1]
+		for start_position: Stop.TrainPosition in current_stop.stop_option:
+			for end_node: StopNode in next_stop.get_front_stops():
+				var path: Path = find_path_between_nodes(start_position, end_node, train)
 				if (path != null):
 					add_to_dp_map(end_node, dynamnic_programming, RunningPath.new([path]))
-	var schedule: Schedule = calculate_running_best_path(dynamnic_programming, stop_options, is_loop)
+	var schedule: Schedule = calculate_running_best_path(dynamnic_programming, stops, is_loop)
 	return schedule
 
 #dynamnic_programming is a dictionary with key: StopNode, value: <Path or RunningPath, depending on caller>
@@ -89,22 +88,24 @@ static func add_to_dp_map(
 
 static func calculate_running_best_path(
 	dynamnic_programming: Dictionary, 
-	stop_options: Array[StopOption],
+	stops: Array[Stop],
 	is_loop: bool
 ) -> Schedule:
+	# Map<StopNode, RunningPath<Path>>
+	# We use a _different_ map here to keep the best running path
 	var running_map: Dictionary = {}
-	# Map<StopNode, Array<Path>>
-	for i: int in range(stop_options.size() - 1):
+	
+	for i: int in range(stops.size() - 1):
 		# Initalize the map
 		if (i == 0): ## The first path has already been calculated, add it directly to the map
-			for next_stop_option: StopNode in stop_options[1].stop_option:
+			for next_stop_option: StopNode in stops[1].get_front_stops():
 				var next_stop_path: RunningPath = dynamnic_programming.get(next_stop_option.name)
 				if (next_stop_path != null):
 					add_to_dp_map(next_stop_path.get_last_stop(), running_map, next_stop_path)
 			continue
 		
-		for current_stop_option: StopNode in stop_options[i].stop_option:
-			for next_stop_option: StopNode in stop_options[i + 1].stop_option:
+		for current_stop_option: StopNode in stops[i].get_front_stops():
+			for next_stop_option: StopNode in stops[i + 1].get_front_stops():
 				# Types could be RunningPath | Path | null
 				var current_stop_path: RunningPath = running_map.get(current_stop_option.name)
 				var next_stop_path: RunningPath = dynamnic_programming.get(next_stop_option.name)
@@ -114,7 +115,7 @@ static func calculate_running_best_path(
 	var best_path: RunningPath = null
 
 	var final_paths: Array = \
-	stop_options[-1].stop_option \
+	stops[-1].stop_option \
 	.map(func(x: StopNode) -> String: return x.name) \
 	.map(func(name: String) -> RunningPath: return running_map.get(name)) \
 	.filter(func(x: RunningPath) -> bool: return x != null)
@@ -125,7 +126,7 @@ static func calculate_running_best_path(
 	if (best_path == null):
 		return null
 			
-	assert(best_path.paths.size() == max(1, stop_options.size() - 1), "We should have as many paths as we have stops -1")
+	assert(best_path.paths.size() == max(1, stops.size() - 1), "We should have as many paths as we have stops -1")
 	return Schedule.new(best_path.paths, is_loop)
 
 
@@ -187,10 +188,11 @@ static func heuristic(a: VirtualNode, b: VirtualNode) -> float:
 
 # Copilot generated(it is A* as requested, and looks like code from A* algorithm wiki page)
 static func find_path_between_nodes(
-	start: StopNode, 
+	start_position: Stop.TrainPosition, 
 	end: StopNode, 
-	train_uuid: String
+	train: Train
 ) -> Path:
+	var start: StopNode = start_position.front_of_train
 	var open_set: PriorityQueue = PriorityQueue.new()
 	var came_from: Dictionary = {}
 	var g_score: Dictionary = {}
@@ -210,7 +212,7 @@ static func find_path_between_nodes(
 			continue
 		visited[current.name] = true
 
-		for edge: Edge in current.get_connected_nodes_or_goal(train_uuid, end):
+		for edge: Edge in current.get_connected_nodes_or_goal(train, start_position, end):
 			var neighbor: VirtualNode = edge.virtual_node
 			var cost_to_neighbor: float = edge.cost
 			if visited.has(neighbor.name):

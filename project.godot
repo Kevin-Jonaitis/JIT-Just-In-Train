@@ -20,6 +20,7 @@ config/icon="res://icon.png"
 MapManager="*res://Scripts/map_manager.gd"
 Utils="*res://Scripts/utils/utils.gd"
 EventBus="*res://Scripts/event_bus.gd"
+ObjectFetcher="*res://Scripts/object_fetcher.gd"
 
 [debug]
 

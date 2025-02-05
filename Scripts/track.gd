@@ -308,6 +308,7 @@ func delete_track() -> void:
 	end_junction.remove_track_and_nodes(self)
 	virtual_node_manager.delete_interjunction_virtual_nodes()
 	self.queue_free()
+	trains.update_schedules()
 
 func get_distance_to_point(point_index: int) -> float:
 	if bezier_curve:

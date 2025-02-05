@@ -19,12 +19,12 @@ func _on_train_placed(train: Train) -> void:
 # Given an old track that's being split into 2 new tracks, update the train stops on the old track
 func update_train_stops(old_track: Track, new_track_a: Track, new_track_b: Track) -> void:
 	for train: Train in trains:
-		for stop_index: int in range(train.get_stop_options().size()):
-			var virtual_node : StopNode = train.get_stop_options()[stop_index].stop_option[0]
+		for stop_index: int in range(train.get_stops().size()):
+			var virtual_node : StopNode = train.get_stops()[stop_index].stop_option[0].front_of_train # Just check one, all stops should be on the same train track
 			if (virtual_node.track.uuid == old_track.uuid):
 				var potential_point: TrackPointInfo = get_point_info_on_new_tracks(virtual_node.get_position(), new_track_a, new_track_b)
 				if (potential_point):
-					train.get_stop_options()[stop_index] = train.create_stop_option(potential_point)
+					train.get_stops()[stop_index] = train.create_stop(potential_point, train.get_stops()[stop_index].is_placed_forward())
 
 func update_schedules() -> void:
 	for train: Train in trains:
