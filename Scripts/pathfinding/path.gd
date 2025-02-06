@@ -72,19 +72,20 @@ func check_if_track_segment_starts_with_reverse_node(track_segment_index: int) -
 			return true
 	return false
 
-func update_progress(progress: Progress, new_progress: float, train_length: float) -> void:
-	var track_segment_index: int = progress.track_segment_index
-	var previous_track_segment_progress: float = progress.track_segment_progress
+func update_progress(old_progress: Progress, new_progress_px: float, train_length: float) -> Progress:
+	var new_progress: Progress = Progress.copy(old_progress)
+	var track_segment_index: int = new_progress.track_segment_index
+	var previous_track_segment_progress: float = new_progress.track_segment_progress
 	var segment: TrackSegment = track_segments[track_segment_index]
 	var segment_length: float = segment.get_length()
 
-	while (previous_track_segment_progress + new_progress) > segment_length:
+	while (previous_track_segment_progress + new_progress_px) > segment_length:
 		track_segment_index += 1
 		if(check_if_track_segment_starts_with_reverse_node(track_segment_index)):
-			new_progress = new_progress + train_length ## We assume here that we've built the paths to take the full reversal path into account
-			progress.reverse()
+			new_progress_px = new_progress_px + train_length ## We assume here that we've built the paths to take the full reversal path into account
+			new_progress.reverse()
 
-		new_progress = new_progress - (segment_length - previous_track_segment_progress)
+		new_progress_px = new_progress_px - (segment_length - previous_track_segment_progress)
 		previous_track_segment_progress = 0
 		
 		
@@ -92,19 +93,19 @@ func update_progress(progress: Progress, new_progress: float, train_length: floa
 			# We've reached the end of the path
 			# var overshot_path: PathLocation = PathLocation.new()
 			# overshot_path.overshoot = new_progress
-			progress.path_overshoot = new_progress
+			new_progress.path_overshoot = new_progress_px
 			return 
 			
 		segment = track_segments[track_segment_index]
 		segment_length = segment.get_length()
 	
-	var new_progress_for_track_segment: float = new_progress + previous_track_segment_progress
+	var new_progress_for_track_segment: float = new_progress_px + previous_track_segment_progress
 
 	# var location: PathLocation = PathLocation.new()
-	progress.position = segment.get_position_at_progress(new_progress_for_track_segment)
-	progress.track_segment_index = track_segment_index
-	progress.track_segment_progress = new_progress_for_track_segment
-	return
+	new_progress.position = segment.get_position_at_progress(new_progress_for_track_segment)
+	new_progress.track_segment_index = track_segment_index
+	new_progress.track_segment_progress = new_progress_for_track_segment
+	return new_progress
 
 
 class TrackSegment:
