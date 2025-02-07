@@ -36,7 +36,7 @@ func get_forward_stop() -> TrainPosition:
 func is_placed_forward() -> bool:
 	return stop_option[0].front_of_train.is_forward()
 
-func get_front_stops() -> Array[StopNode]:
+func get_front_stops() -> Array:
 	return stop_option.map(func(x: TrainPosition) -> StopNode: return x.front_of_train)
 
 func _ready() -> void: # Set the position of the stop when it actually enters the tree

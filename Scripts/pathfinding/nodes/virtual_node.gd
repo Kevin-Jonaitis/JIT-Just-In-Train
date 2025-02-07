@@ -44,14 +44,15 @@ func get_connected_new(train_uuid: String) -> Array[Edge]:
 
 
 
-func get_connected_nodes_or_goal(train: Train, train_position: Stop.TrainPosition, end_node: StopNode) -> Array[Edge]:
+func get_connected_nodes_or_goal(train: Train, start_position: Stop.TrainPosition, end_node: StopNode) -> Array[Edge]:
 	var this_point: int = get_point_index()
-	var edges_to_return: Array[Edge] = _connected_nodes.values()
+	var edges_to_return: Array[Edge]
+	edges_to_return.append_array(_connected_nodes.values() as Array[Edge])
 
 	# If we're at the start of pathfinding, we should be able to reverse the train
-	if (self == train_position.front_of_train):
-		assert(train_position.back_of_train.is_reverse_node, "Back of train should be a reverse node!!")
-		edges_to_return.append(Edge.new(train_position.back_of_train, 0))
+	if (self == start_position.front_of_train):
+		assert(start_position.back_of_train.is_reverse_node, "Back of train should be a reverse node!!")
+		edges_to_return.append(Edge.new(start_position.back_of_train, 0))
 
 	var goal_point: int = end_node.get_point_index()
 	
