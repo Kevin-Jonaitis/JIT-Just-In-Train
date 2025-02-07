@@ -2,25 +2,6 @@ extends Object
 
 class_name Pathfinder
 
-# class PathfindingPreference:
-# 	var choose_start_stop: bool
-# 	var chose_end_stop: bool
-# 	var start_forward: bool
-# 	var end_forward: bool
-
-# 	func _init(
-# 		p_choose_start_stop: bool, 
-# 		p_chose_end_stop: bool, 
-# 		p_start_forward: bool, 
-# 		p_end_forward: bool
-# 	) -> void:
-# 		self.choose_start_stop = p_choose_start_stop
-# 		self.chose_end_stop = p_chose_end_stop
-# 		self.start_forward = p_start_forward
-# 		self.end_forward = p_end_forward
-		
-
-
 func _init() -> void:
 	assert(false, "This class only has static functions, don't instantiate it!")
 
