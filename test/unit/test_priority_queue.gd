@@ -2,7 +2,7 @@
 extends GutTest
 	# Helper function to create VirtualNode instances
 func create_virtual_node(name: String) -> VirtualNode:
-	var node = VirtualNode.new()
+	var node: VirtualNode = VirtualNode.new()
 	node.name = name
 	return node
 

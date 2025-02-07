@@ -1,6 +1,9 @@
-extends RefCounted
+extends Node2D
 
 class_name Stop
+
+const stopPreloaded: PackedScene = preload("res://Scenes/stop.tscn")
+
 
 # Should have a forward and backward node
 #The first positions in the train should be for the "front" of the train, and the other one's should be for the
@@ -16,10 +19,18 @@ class TrainPosition:
 		self.front_of_train = front
 		self.back_of_train = back	
 
-func _init(stop_option_: Array[TrainPosition]) -> void:
-	self.stop_option = stop_option_
-	assert(stop_option_.size() == 2, "We should have two nodes")
+@onready var stop_sprite: Sprite2D = $TrainSprite
 
+
+func set_stop_visible(visible_: bool) -> void:
+	stop_sprite.visible = visible_
+
+# func _init(stop_option_: Array[TrainPosition]) -> void:
+# 	self.stop_option = stop_option_
+# 	assert(stop_option_.size() == 2, "We should have two nodes")
+
+func get_forward_stop() -> TrainPosition:
+	return stop_option[0]
 
 # It's placed forward if it's first stops are forward-facing
 func is_placed_forward() -> bool:
@@ -28,27 +39,42 @@ func is_placed_forward() -> bool:
 func get_front_stops() -> Array[StopNode]:
 	return stop_option.map(func(x: TrainPosition) -> StopNode: return x.front_of_train)
 
-## TODO: Need to fix simple case where train isn't across any junctions
-## TODO: clear out "stop node", and leave only junction nodes.
+func _ready() -> void: # Set the position of the stop when it actually enters the tree
+	stop_sprite.position = stop_option[0].front_of_train.get_position()
+	stop_sprite.rotation = stop_option[0].front_of_train.get_angle_of_point()
+	stop_sprite.modulate = Color(0, 1, 0, 0.5)
+
+static func new_Stop(stop_option_: Array[TrainPosition]) -> Stop:
+	var stop: Stop = stopPreloaded.instantiate()
+	stop.stop_option = stop_option_
+	assert(stop_option_.size() == 2, "We should have two nodes")
+	# The first stop option should always have the train facing forward
+	
+	return stop
 
 # Right now, when placing a train, it'll always face whatever "forward" is on the track(increasing in point index)
 # the train_placed_forward flag says if we are facing opposite that direction
-static func create_stop_for_point(stop_point: TrackPointInfo, train: Train, train_placed_forward: bool) -> Stop:
-	var point_index_one: int  = stop_point.point_index
-	var alternative_starting_position: float
+# Return null if we can't create a stop because the back would go off the track
+static func create_stop_for_point(middle_of_front_car: TrackPointInfo, train: Train, train_placed_forward: bool) -> Stop:
+	var point_index_one: int  = middle_of_front_car.point_index
+	var front_of_front_car: float
+	var back_of_back_car: float
 	var train_length : float = train.length
-	var current_point_distance: float = stop_point.track.get_distance_to_point(stop_point.point_index)
+	var current_point_distance: float = middle_of_front_car.track.get_distance_to_point(middle_of_front_car.point_index)
 	if train_placed_forward:
-		alternative_starting_position = current_point_distance - train_length
+		back_of_back_car = current_point_distance - (train_length / 2)
+		front_of_front_car = current_point_distance + (train_length / 2)
 	else:
-		alternative_starting_position  = current_point_distance + train_length
-	if (alternative_starting_position < 0 || alternative_starting_position > stop_point.track.length):
-		assert(false, "We can't build a stop here")
+		back_of_back_car  = current_point_distance + (train_length / 2)
+		front_of_front_car = current_point_distance - (train_length / 2)
+
+	if (front_of_front_car < 0 || front_of_front_car > middle_of_front_car.track.length ||
+		back_of_back_car < 0 || back_of_back_car > middle_of_front_car.track.length):
 		return null
 
-	var point_index_two : int = stop_point.track.get_approx_point_index_at_offset(alternative_starting_position)
+	var point_index_two : int = middle_of_front_car.track.get_approx_point_index_at_offset(back_of_back_car)
 
-	return Stop.new(generate_train_position(point_index_one, point_index_two, stop_point.track, train, train_placed_forward))
+	return Stop.new_Stop(generate_train_position(point_index_one, point_index_two, middle_of_front_car.track, train, train_placed_forward))
 
 static func generate_train_position(point_index_one: int, point_index_two: int, track: Track, train: Train, train_facing_foward: bool) -> Array[TrainPosition]:
 	var front_of_train: StopNode = StopNode.new(track, point_index_one, train_facing_foward, train)

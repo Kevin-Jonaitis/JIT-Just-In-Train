@@ -21,6 +21,9 @@ MapManager="*res://Scripts/map_manager.gd"
 Utils="*res://Scripts/utils/utils.gd"
 EventBus="*res://Scripts/event_bus.gd"
 ObjectFetcher="*res://Scripts/object_fetcher.gd"
+Trains="*res://Scripts/trains.gd"
+Junctions="*res://Scripts/junctions.gd"
+Stations="*res://Scripts/stations.gd"
 
 [debug]
 
@@ -48,6 +51,7 @@ enabled=PackedStringArray("res://addons/gut/plugin.cfg")
 [global_group]
 
 tracks="the tracks node"
+UIWorldItems=""
 
 [gui]
 

@@ -5,23 +5,55 @@ class_name Train
 const TRAIN_COLLISION_LAYER: int = 8
 
 
-var length : float = 109 #TODO: Set this to a a real value based on the train sprites
-@onready var area2d : Area2D = $Area2D
+var length : float = 80 #TODO: Set this to a a real value based on the train sprites
+
 var is_placed: bool = false
-var _stops: Array[Stop] = []
+@onready var _stops: Array[Stop] :
+	get:
+		var stops_temp : Array[Stop] = []
+		for stop: Stop in $Stops.get_children():
+			stops_temp.append(stop)
+		return stops_temp 
+@onready var _cars: Array[TrainCar]:
+	get:
+		var cars_temp : Array[TrainCar] = []
+		for car: TrainCar in $Cars.get_children():
+			cars_temp.append(car)
+		return cars_temp
 var schedule: Schedule
 var on_ready_callables: Array[Callable]
 var should_loop: bool = true
-# whether the train's "back"(the last-added car) is starting direction of travel or not
-var train_flipped_at_start: bool = false
-@onready var schedule_follower: ScheduleFollower = $ScheduleFollower
 
-@onready var trains: Trains = get_parent()
-@onready var junctions: Junctions = $"../../Junctions"
+var front_car : TrainCar
+
+# whether the train's "back"(the last-added car) is starting direction of travel or not
+var _use_last_car_as_front: bool = false
+@onready var schedule_follower: ScheduleFollower = $ScheduleFollower
+# @onready var front_offset: Node2D = $FrontOffset
+#TODO: cleanup to use global directly
+@onready var trains: Trains = Trains
+@onready var junctions: Junctions = Junctions
+
+
+func flip_front_car() -> void:
+	if (_use_last_car_as_front):
+		_use_last_car_as_front = false
+		front_car = _cars[0]
+	else:
+		_use_last_car_as_front = true
+		front_car = _cars[_cars.size() - 1]
+
+func set_position_and_rotation(position_: Vector2, rotation_: float) -> void:
+	front_car.position = position_
+	front_car.rotation = rotation_
+	#TODO: modify all the following cars
 
 func _ready() -> void:
 	for callable: Callable in on_ready_callables:
 		callable.call()
+	
+	front_car = _cars[0]
+
 
 func set_name_user(name_: String) -> void:
 	on_ready_callables.append(func() -> void:
@@ -29,22 +61,24 @@ func set_name_user(name_: String) -> void:
 		name = name_
 	)
 
+# func get_front_offset() -> Vector2:
+# 	return front_offset.position
+
 func verify_name_unique(name_: String) -> void:
 	for maybe_train: Node in get_parent().get_children():
 		if maybe_train != self and maybe_train.name == name_:
 			assert(false, "Train name must be unique!")
 
-func create_stop(stop_point: TrackPointInfo, train_placed_forward: bool) -> Stop:
-	return Stop.create_stop_for_point(stop_point, self, train_placed_forward)
-
-func add_stop_option(stop_point: TrackPointInfo, train_placed_forward: bool) -> void:
-	_stops.append(create_stop(stop_point, train_placed_forward))
+func add_stop(stop: Stop) -> void:
+	$Stops.add_child(stop)
 	calculate_schedule()
+
 
 func remove_stop(stop_index: int) -> void:
 	# var stop: Stop = _stops[stop_index]
 	# var point_index: int = stop.stop_option[0].point_index
-	_stops.remove_at(stop_index)
+	_stops[stop_index].free()
+	# _stops.remove_at(stop_index)
 	calculate_schedule()
 
 func get_stops() -> Array[Stop]:
@@ -60,9 +94,9 @@ var colors: Array[Color] = [
 ]
 
 func calculate_path_draw() -> void:
-	trains.queue_redraw()
 	if not schedule:
 		return
+	trains.queue_redraw()
 	for path: Path in schedule.paths:
 		var color: Color = colors[randi() % colors.size()]
 		for segment: Path.TrackSegment in path.track_segments:

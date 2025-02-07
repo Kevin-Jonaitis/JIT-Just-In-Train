@@ -11,8 +11,8 @@ var track_segment_index: int = 0
 var track_segment_progress: float = 0
 var overshoot_set: bool = false
 
-var train_offset: float = 0
-var facing_forward: bool = true # Do we even need this?
+# var train_offset: float = 0
+# var facing_forward: bool = true # Do we even need this?
 var train: Train
 
 func _init(train_: Train) -> void:
@@ -23,10 +23,10 @@ func _init(train_: Train) -> void:
 	track_segment_index = 0
 	track_segment_progress = 0
 	# self.train = train
-	if (!train_.train_flipped_at_start):
-		train_offset = -train_.length / 2
-	else:
-		train_offset = train_.length / 2
+	# if (!train_.train_flipped_at_start):
+	# 	train_offset = -train_.length / 2
+	# else:
+	# 	train_offset = train_.length / 2
 
 
 
@@ -39,8 +39,8 @@ static func copy(progress: Progress) -> Progress:
 	new_progress.track_segment_index = progress.track_segment_index
 	new_progress.track_segment_progress = progress.track_segment_progress
 	new_progress.overshoot_set = progress.overshoot_set
-	new_progress.train_offset = progress.train_offset
-	new_progress.facing_forward = progress.facing_forward
+	# new_progress.train_offset = progress.train_offset
+	# new_progress.facing_forward = progress.facing_forward
 	return new_progress
 
 # func from_progress(progress: Progress): Progress
@@ -54,8 +54,8 @@ static func copy(progress: Progress) -> Progress:
 # 	facing_forward = progress.facing_forward
 
 func reverse() -> void:
-	facing_forward = !facing_forward
-	train_offset = -train_offset
+	# facing_forward = !facing_forward
+	train.flip_front_car()
 
 
 func set_overshoot(overshoot_: float) -> void:

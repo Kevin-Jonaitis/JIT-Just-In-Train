@@ -2,31 +2,21 @@
 
 [ext_resource type="Script" path="res://Scripts/pathfinding/schedule_follower.gd" id="1_6okc3"]
 [ext_resource type="Script" path="res://Scripts/train.gd" id="1_d7wio"]
-[ext_resource type="Texture2D" uid="uid://swsml3kqpwau" path="res://Dank.png" id="1_w42ok"]
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_mxkxs"]
-size = Vector2(2020, 1020)
+[ext_resource type="Script" path="res://Scripts/stops.gd" id="4_73r2y"]
+[ext_resource type="PackedScene" uid="uid://b7r520607ib5w" path="res://Scenes/train_car.tscn" id="4_a6eo5"]
 
 [node name="Train" type="Node2D"]
 script = ExtResource("1_d7wio")
 
-[node name="TrainSprite" type="Sprite2D" parent="."]
-z_index = 1
-scale = Vector2(0.05, 0.05)
-texture = ExtResource("1_w42ok")
-centered = false
-offset = Vector2(-1060, -1080)
-metadata/_edit_lock_ = true
-
-[node name="Area2D" type="Area2D" parent="."]
-scale = Vector2(0.05, 0.05)
-collision_layer = 0
-collision_mask = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
-position = Vector2(30, -310)
-scale = Vector2(0.999999, 0.999999)
-shape = SubResource("RectangleShape2D_mxkxs")
+[node name="Stops" type="Node2D" parent="."]
+script = ExtResource("4_73r2y")
 
 [node name="ScheduleFollower" type="Node2D" parent="."]
+top_level = true
 script = ExtResource("1_6okc3")
+
+[node name="Cars" type="Node2D" parent="."]
+
+[node name="TrainCar" parent="Cars" instance=ExtResource("4_a6eo5")]
+
+[editable path="Cars/TrainCar"]

@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3 uid="uid://o671incsty73"]
+[gd_scene load_steps=18 format=3 uid="uid://o671incsty73"]
 
 [ext_resource type="Script" path="res://Scripts/fps.gd" id="1_brhbh"]
 [ext_resource type="Script" path="res://Scripts/world.gd" id="1_l3f68"]
@@ -10,9 +10,11 @@
 [ext_resource type="Script" path="res://Scripts/tracks.gd" id="4_n16fs"]
 [ext_resource type="PackedScene" uid="uid://bi8vdawjywahq" path="res://Scenes/track.tscn" id="5_n4hhv"]
 [ext_resource type="StyleBox" uid="uid://couho1lepf2hq" path="res://Assets/stylebox.tres" id="7_6nbhk"]
-[ext_resource type="Script" path="res://Scripts/train_schedule.gd" id="7_s1rkm"]
+[ext_resource type="Script" path="res://Scripts/ui/train_schedule_ui.gd" id="7_s1rkm"]
 [ext_resource type="Script" path="res://Scripts/trains.gd" id="10_u8kh7"]
 [ext_resource type="Script" path="res://Scripts/junctions.gd" id="12_rdyhv"]
+[ext_resource type="Script" path="res://Scripts/stations.gd" id="14_dgxka"]
+[ext_resource type="PackedScene" uid="uid://bfsvlbfk8q1dq" path="res://Scenes/train_sprite.tscn" id="15_iymaf"]
 
 [sub_resource type="StyleBoxLine" id="StyleBoxLine_xqyh5"]
 color = Color(0, 0, 0, 0)
@@ -126,6 +128,13 @@ script = ExtResource("12_rdyhv")
 
 [node name="Trains" type="Node2D" parent="."]
 script = ExtResource("10_u8kh7")
+
+[node name="Stations" type="Node2D" parent="."]
+script = ExtResource("14_dgxka")
+
+[node name="UIWorldItems" type="Node2D" parent="." groups=["UIWorldItems"]]
+
+[node name="PlacingStationSprite" parent="UIWorldItems" instance=ExtResource("15_iymaf")]
 
 [connection signal="add_new_train" from="MouseTracker/TrainBuilder" to="Trains" method="_on_train_placed"]
 [connection signal="pressed" from="UI/Control/TrainScheduleUI/VBoxContainer/Add Station" to="UI/Control/TrainScheduleUI" method="_on_add_station_pressed"]

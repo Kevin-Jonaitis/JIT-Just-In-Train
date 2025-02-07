@@ -31,6 +31,10 @@ func _init(track_: Track, point_index_: int, forward_: bool, train_: Train, is_r
 func get_position() -> Vector2:
 	return track.dubins_path.shortest_path.get_point_at_index(point_index)
 
+
+func get_angle_of_point() -> float:
+	return track.dubins_path.shortest_path.get_angle_at_point_index(point_index)
+
 func is_forward() -> bool:
 	return forward
 

@@ -44,7 +44,7 @@ func update_train_position(delta: float) -> void:
 		_progress = update_progress(_progress, schedule, _progress.overshoot)
 
 	assert(_progress.overshoot == 0, "Overshoot should be 0")
-	train.position = _progress.position
+	train.set_position_and_rotation(_progress.position, 0) # Should we change this?
 
 func update_progress(old_progress: Progress, schedule: Schedule, progress_px: float) -> Progress:
 	var new_progress: Progress

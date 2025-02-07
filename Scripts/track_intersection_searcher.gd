@@ -93,7 +93,7 @@ func get_train_collision_info(position: Vector2) -> Array[Train]:
 	var results: Array[Dictionary] = check_for_collision(position, Train.TRAIN_COLLISION_LAYER)
 	for item: Dictionary in results:
 		if item.size() > 0:
-			var train: Train = (item["collider"] as Area2D).get_parent()
+			var train: Train = (item["collider"] as Area2D).get_parent().get_parent().get_parent()
 			trains.append(train)
 
 	return trains

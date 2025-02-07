@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://bfsvlbfk8q1dq"]
+
+[ext_resource type="Texture2D" uid="uid://swsml3kqpwau" path="res://Dank.png" id="1_jnbt7"]
+
+[node name="TrainSprite" type="Sprite2D"]
+z_index = 1
+scale = Vector2(0.05, 0.05)
+texture = ExtResource("1_jnbt7")
+centered = false
+offset = Vector2(-1060, -1080)
+metadata/_edit_lock_ = true

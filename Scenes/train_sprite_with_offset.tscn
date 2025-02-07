@@ -1,0 +1,4 @@
+[gd_scene format=3 uid="uid://ubukl2lkc88e"]
+
+[node name="FrontOffset" type="Node2D"]
+position = Vector2(-40, 0)

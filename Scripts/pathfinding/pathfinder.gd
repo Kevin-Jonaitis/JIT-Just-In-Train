@@ -42,14 +42,14 @@ static func find_path_with_movement(
 		return find_path(train, stops, should_loop)
 	elif (can_move_forward):
 		# only allow the forward node as the first stopz
-		stops[0] = Stop.new([stops[0].get_forward_positions()])
+		stops[0] = Stop.new_Stop([stops[0].get_forward_positions()])
 		# If we want to connect it back to the start, we add the first node
 		if (should_loop):
 			stops.append(stops[0]) # This will automatically already have only the forward node
 		return find_path(train, stops, should_loop)
 	elif (can_move_backwards):
 		# only allow the backward node as the first and last stop
-		stops[0] = Stop.new([stops[0].get_backward_positions()])
+		stops[0] = Stop.new_Stop([stops[0].get_backward_positions()])
 		if (should_loop):
 			stops.append(stops[0]) # This will automatically already have only the backward node
 		return find_path(train, stops, should_loop)

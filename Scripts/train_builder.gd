@@ -12,8 +12,9 @@ static var train_counter : int = 1
 
 var enabled: bool = false  # Added type annotation
 
-const TRANSPARENT_RED: Color = Color(1, 0, 0, 0.5)  # Half-transparent red	
-const SOLID: Color = Color(1,1,1,1)  # Added type annotation
+static var TRANSPARENT_RED: Color = Color(1, 0, 0, 0.5)  # Half-transparent red	
+static var SOLID: Color = Color(1,1,1,1)  # Added type annotation
+static var BLUE: Color = Color(0,0,1,0.7)  # Added type annotation
 
 const TRACK_COLLISION_LAYER: int = 1
 @onready var track_intersection_searcher: TrackIntersectionSearcher = TrackIntersectionSearcher.new(self)
@@ -45,18 +46,17 @@ func handle_input(event: InputEvent) -> void:
 
 	var pointInfo: TrackPointInfo = track_intersection_searcher.check_for_overlaps_at_position(get_global_mouse_position())
 	if (pointInfo):
-		train.position = pointInfo.get_point()
-		train.rotation = pointInfo.angle
+		train.set_position_and_rotation(pointInfo.get_point(), pointInfo.angle)
 		train.modulate = SOLID
 		valid_train_placement = true
 	else:
 		train.modulate = TRANSPARENT_RED
 		train.rotation = 0
 		valid_train_placement = false
-		train.position = get_global_mouse_position()
+		train.set_position_and_rotation(get_global_mouse_position(), 0)
 	
 func place_train() -> void:  # Added return type
 	train.modulate = SOLID
-	train.area2d.collision_layer = Train.TRAIN_COLLISION_LAYER
+	train.front_car.area2d.collision_layer = Train.TRAIN_COLLISION_LAYER
 	train.is_placed = true
 	create_new_train(true)
