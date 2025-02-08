@@ -44,7 +44,7 @@ func get_point_index() -> int:
 	else:
 		return track.get_points().size() - 1
 
-func is_connected_at_start_or_end() -> bool:
+func is_connected_at_start() -> bool:
 	return connected_at_start_of_track 
 
 func is_entry_node() -> bool:
@@ -83,6 +83,12 @@ func get_reverse_edges(train: Train) -> Array[Edge]:
 	return edges
 
 
+func get_distance_from_front_track() -> float:
+	if (connected_at_start_of_track):
+		return 0
+	else:
+		return track.get_length()
+
 # Used to construct paths for Stops
 
 # # TODO: finish
@@ -119,8 +125,10 @@ func generate_path_with_reverse_nodes_added(path: Path) -> Path:
 func generate_path_of_length_from_start(start_node: VirtualNode, train: Train, remaining_length: float) -> Array[Path]:
 	assert(remaining_length > 0, "This should never happen, how did we recurse below 0")
 	var paths_to_return : Array[Path] = []
-	# verify length is correct
-	for edge : Edge in start_node.get_connected_nodes_and_reverse_edge(train):
+	# Only get connected nodes; don't bother getting reverse edges for connected
+	# nodes as the train length will go down for each "further" intersection, and therefore
+	# will never be long enough to reverse
+	for edge : Edge in start_node.get_connected_nodes(train):
 		var new_lenth: float = remaining_length - edge.cost
 		if (new_lenth > 0):
 			var further_paths: Array[Path] = generate_path_of_length_from_start(edge.virtual_node, train, new_lenth)
@@ -166,5 +174,5 @@ func generate_path_of_length_from_start(start_node: VirtualNode, train: Train, r
 
 			var end_node: StopNode = StopNode.new(start_node.track, goal_point, is_increasing, train, true)
 
-			paths_to_return.append([start_node, end_node])
+			paths_to_return.append(Path.new([start_node, end_node]))
 	return paths_to_return

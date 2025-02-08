@@ -193,7 +193,7 @@ static func find_path_between_nodes(
 			continue
 		visited[current.name] = true
 
-		for edge: Edge in current.get_connected_nodes_or_goal(train, start_position, end):
+		for edge: Edge in current.get_connected_nodes_including_reverse_start(train, start_position, end):
 			var neighbor: VirtualNode = edge.virtual_node
 			var cost_to_neighbor: float = edge.cost
 			if visited.has(neighbor.name):

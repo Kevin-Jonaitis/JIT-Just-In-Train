@@ -37,7 +37,8 @@ func calculate_length(nodes_param: Array[VirtualNode]) -> float:
 	for i: int in range(1, nodes_param.size()):
 		var previous_node: VirtualNode = nodes_param[i - 1]
 		var current_node: VirtualNode = nodes_param[i]
-		var edge: Edge = previous_node.get_node_and_cost(current_node.name)
+		var distance: float = VirtualNode.calculate_distance_between_two_connectable_nodes(previous_node, current_node)
+		var edge: Edge = Edge.new(current_node, distance)
 		assert(edge != null, "We should always have an edge between nodes_param in a path!")
 		length_sum += edge.cost
 	return length_sum

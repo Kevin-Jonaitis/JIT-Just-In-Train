@@ -31,7 +31,6 @@ func _init(track_: Track, point_index_: int, forward_: bool, train_: Train, is_r
 func get_position() -> Vector2:
 	return track.dubins_path.shortest_path.get_point_at_index(point_index)
 
-
 func get_angle_of_point() -> float:
 	return track.dubins_path.shortest_path.get_angle_at_point_index(point_index)
 
@@ -61,3 +60,22 @@ func get_track_name() -> String:
 	# assert(name.begins_with("stop"), "This isn't a temp node, a bad call was made here")
 	# var split = name.split("-")
 	# return split[1]
+
+
+# Stop nodes should have only one connected node
+func get_connected_edge() -> Edge:
+	var distance_to_point: float = track.get_distance_to_point(get_point_index())
+	var track_length: float = track.length
+	
+	if (is_forward()):
+		return Edge.new(self.track.end_junction.get_junction_node(self.track, true), 
+		track_length - distance_to_point)
+	else:
+		return Edge.new(self.track.start_junction.get_junction_node(self.track, true), 
+		distance_to_point)
+
+func get_distance_from_front_track() -> float:
+	if (forward):
+		return track.get_distance_to_point(point_index)
+	else:
+		return track.length - track.get_distance_to_point(point_index)

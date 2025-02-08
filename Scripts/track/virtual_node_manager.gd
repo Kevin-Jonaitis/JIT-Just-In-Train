@@ -159,12 +159,12 @@ static func insert_stop_between_nodes(
 		return
 	node1.erase_connected_node(node2.name)
 
-static func remove_stop_after_this_node(
-	node_before_delete: VirtualNode, 
-	train: Train
-) -> void:
-	var node_to_delete: StopNode = node_before_delete.get_stop_for_train_or_junction(train).virtual_node
-	node_before_delete.erase_connected_node(node_to_delete.name)
-	var node_and_cost_after_node: Edge = node_to_delete.get_stop_for_train_or_junction(train)
-	node_to_delete.clear()
-	node_before_delete.add_connected_node(node_and_cost_after_node.virtual_node, node_and_cost_after_node.cost)
+# static func remove_stop_after_this_node(
+# 	node_before_delete: VirtualNode, 
+# 	train: Train
+# ) -> void:
+# 	var node_to_delete: StopNode = node_before_delete.get_stop_for_train_or_junction(train).virtual_node
+# 	node_before_delete.erase_connected_node(node_to_delete.name)
+# 	var node_and_cost_after_node: Edge = node_to_delete.get_stop_for_train_or_junction(train)
+# 	node_to_delete.clear()
+# 	node_before_delete.add_connected_node(node_and_cost_after_node.virtual_node, node_and_cost_after_node.cost)

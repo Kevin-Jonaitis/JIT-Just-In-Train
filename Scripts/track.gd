@@ -42,6 +42,7 @@ static func new_Track(name_: String, curve_type_flag_: bool, tracks_: Tracks, vi
 	TrackBuilder.track_counter += 1
 	track.tracks = tracks_
 	tracks_.add_child(track)
+	track.assert_name_unique(name_)
 	return track
 
 func build_track(starting_overlay: TrackOrJunctionOverlap, ending_overlay: TrackOrJunctionOverlap, optional_name: String) -> void:
@@ -56,6 +57,12 @@ func build_track(starting_overlay: TrackOrJunctionOverlap, ending_overlay: Track
 	temp = false
 	area.solidify_collision_area()
 	trains.update_schedules() # Recalcualte all train schedules. # Could probably emit here
+
+# TODO: make this cleaner
+func assert_name_unique(name_: String) -> void:
+	for maybe_track: Node in get_parent().get_children():
+		if maybe_track != self and maybe_track.name == name_:
+			assert(false, "Train name must be unique!")
 
 @export_category("Curve Builder")
 @export var edit_curve: bool = false:

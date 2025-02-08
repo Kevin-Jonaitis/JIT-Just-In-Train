@@ -68,6 +68,9 @@ static func create_stop_for_point(middle_of_front_car: TrackPointInfo, train: Tr
 		back_of_back_car  = current_point_distance + (train_length / 2)
 		front_of_front_car = current_point_distance - (train_length / 2)
 
+	# TODO: allow a stop to cross a track boundry if  there's only 1 "previous" track
+	# Also TODO: we should have a "get_previous_node" function on stopnodes and junctionNodes to faciliate
+	# the above
 	if (front_of_front_car < 0 || front_of_front_car > middle_of_front_car.track.length ||
 		back_of_back_car < 0 || back_of_back_car > middle_of_front_car.track.length):
 		return null
