@@ -51,7 +51,7 @@ func sort_stop_nodes(train: Train) -> Array[StopNode]:
 # These are "runtime" only nodes, so there's not part of the built graph
 # We return the "next" stop node in point index order on the track from this node and the direction 
 # the track is going in
-func get_connected_nodes(train: Train, should_fetch_reverse_edges: bool = true) -> Array[Edge]:
+func get_connected_nodes(train: Train, fetch_junctions_only: bool = false) -> Array[Edge]:
 	assert(false, "This should be implemented in the subclasses")
 	return []
 

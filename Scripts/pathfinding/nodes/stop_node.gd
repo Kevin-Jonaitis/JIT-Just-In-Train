@@ -43,9 +43,21 @@ static func generate_name(track_: Track, index_: int, forward: bool, train_: Tra
 
 # possible connected stop node
 # possible connected junction node
-func get_connected_nodes(train: Train, should_fetch_reverse_edges: bool = true) -> Array[Edge]:
+func get_connected_nodes(train: Train, fetch_junctions_only: bool = false) -> Array[Edge]:
 	var edges_to_return: Array[Edge] = []
 	var sorted_stop_nodes: Array[StopNode] = sort_stop_nodes(train)
+
+	# Get possible connected junctions
+	var distance_to_stop_node: float = track.get_distance_to_point(point_index)
+	if (is_forward()):
+		var junction_node: JunctionNode = track.end_junction.get_junction_node(track, true)
+		edges_to_return.append(Edge.new(junction_node, track.length - distance_to_stop_node))
+	else:
+		var junction_node: JunctionNode = track.start_junction.get_junction_node(track, true)
+		edges_to_return.append(Edge.new(junction_node, distance_to_stop_node))
+
+	if (fetch_junctions_only):
+		return edges_to_return
 
 	# Add all stop nodes that are in the same direction past this point
 	var distance_to_self: float = self.track.get_distance_to_point(self.get_point_index())
@@ -61,15 +73,7 @@ func get_connected_nodes(train: Train, should_fetch_reverse_edges: bool = true) 
 			if (backward_nodes[i].point_index < self.get_point_index()):
 				var distance_to_stopNode: float = self.track.get_distance_to_point(backward_nodes[i].point_index)
 				edges_to_return.append(Edge.new(backward_nodes[i], absf(distance_to_stopNode - distance_to_self)))
-	
-	# Get possible connected junctions
-	var distance_to_stop_node: float = track.get_distance_to_point(point_index)
-	if (is_forward()):
-		var junction_node: JunctionNode = track.end_junction.get_junction_node(track, true)
-		edges_to_return.append(Edge.new(junction_node, track.length - distance_to_stop_node))
-	else:
-		var junction_node: JunctionNode = track.start_junction.get_junction_node(track, true)
-		edges_to_return.append(Edge.new(junction_node, distance_to_stop_node))
+
 	
 	return edges_to_return
 

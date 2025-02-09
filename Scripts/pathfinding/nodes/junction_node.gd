@@ -125,31 +125,33 @@ func generate_path_with_reverse_nodes_added(path: Path) -> Path:
 # possible connected stop node
 # possible connected junction node
 # possible connected reverse node
-func get_connected_nodes(train: Train, should_fetch_reverse_edges: bool = true) -> Array[Edge]:
+func get_connected_nodes(train: Train, fetch_junctions_only: bool = false) -> Array[Edge]:
 	var sorted_stops: Array[StopNode] = sort_stop_nodes(train)
 	var edges_to_return : Array[Edge] = []
-	var self_casted: JunctionNode = (self as JunctionNode)
 
 	# Add all other possible junction nodes(internal and across the track)
-	edges_to_return.append(_connected_nodes.values())
+	edges_to_return.assign(_connected_nodes.values() as Array[Edge])
+
+	if (fetch_junctions_only):
+		return edges_to_return
 
 	# Add possible turnaround point
-	if (should_fetch_reverse_edges):
-		edges_to_return.append_array((self as JunctionNode).get_reverse_edges(train))
+	edges_to_return.append_array(get_reverse_edges(train))
 
 	# Add possible stop nodes
-	if self_casted.is_exit_node():
+	if is_exit_node():
 		if (sorted_stops.size() != 0):
 			# assert(possible_stop_points[0].point_index <= possible_stop_points[-1].point_index, "These should be in ascending order")
-			var distance_from_front: float  = get_distance_from_front_track()
-			if (self_casted.is_connected_at_start()): # We should use the forward nodes
+			if (is_connected_at_start()): # We should use the forward nodes
 				var forward_nodes : Array[StopNode] = sorted_stops.filter(func(node: StopNode) -> bool: return node.is_forward())
 				for node : StopNode in forward_nodes:
-					edges_to_return.append(Edge.new(node, distance_from_front))
+					# Distance from "front" for junction node(self) is 0
+					edges_to_return.append(Edge.new(node, node.get_distance_from_front_track()))
 			else: # We should add the backwards nodes
 				var backward_nodes : Array[StopNode] = sorted_stops.filter(func(node: StopNode) -> bool: return !node.is_forward())
 				for node : StopNode in backward_nodes:
-					edges_to_return.append(Edge.new(node, track.length - distance_from_front))
+					# Distance from "front" for junction node(self) is track length
+					edges_to_return.append(Edge.new(node, track.length - node.get_distance_from_front_track()))
 
 	return edges_to_return
 
@@ -160,7 +162,7 @@ func generate_path_of_length_from_start(start_node: VirtualNode, train: Train, r
 	# Only get connected nodes; don't bother getting reverse edges for connected
 	# nodes as the train length will go down for each "further" intersection, and therefore
 	# will never be long enough to reverse
-	for edge : Edge in start_node.get_connected_nodes(train, false):
+	for edge : Edge in start_node.get_connected_nodes(train, true):
 		var new_lenth: float = remaining_length - edge.cost
 		if (new_lenth > 0):
 			var further_paths: Array[Path] = generate_path_of_length_from_start(edge.virtual_node, train, new_lenth)
