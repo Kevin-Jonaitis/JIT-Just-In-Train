@@ -36,8 +36,10 @@ func get_forward_stop() -> TrainPosition:
 func is_placed_forward() -> bool:
 	return stop_option[0].front_of_train.is_forward()
 
-func get_front_stops() -> Array:
-	return stop_option.map(func(x: TrainPosition) -> StopNode: return x.front_of_train)
+func get_front_stops() -> Array[StopNode]:
+	var array_to_return : Array[StopNode]
+	array_to_return.assign(stop_option.map(func(x: TrainPosition) -> StopNode: return x.front_of_train))
+	return array_to_return
 
 func _ready() -> void: # Set the position of the stop when it actually enters the tree
 	stop_sprite.position = stop_option[0].front_of_train.get_position()
@@ -85,7 +87,9 @@ static func create_stop_for_point(middle_of_front_car: TrackPointInfo, train: Tr
 
 	var point_index_two : int = middle_of_front_car.track.get_approx_point_index_at_offset(middle_of_back_car_distance)
 
-	return Stop.new_Stop(generate_train_position(middle_of_front_car_pt_index, point_index_two, middle_of_front_car.track, train, train_placed_forward))
+	var stop : Stop = Stop.new_Stop(generate_train_position(middle_of_front_car_pt_index, point_index_two, middle_of_front_car.track, train, train_placed_forward))
+	# assert(stop.get_front_stops()[0].get_position() == stop.get_front_stops()[1].get_position(), "Positions should be the same else things will look bad when the train stops at the station")
+	return stop
 
 static func generate_train_position(point_index_one: int, point_index_two: int, track: Track, train: Train, train_facing_foward: bool) -> Array[TrainPosition]:
 	var front_of_train: StopNode = StopNode.new(track, point_index_one, train_facing_foward, train)

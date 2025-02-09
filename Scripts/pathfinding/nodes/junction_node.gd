@@ -74,7 +74,7 @@ func get_reverse_edges(train: Train) -> Array[Edge]:
 		assert(path.nodes[0] is JunctionNode, "First node should be our junction node")
 		var full_path: Path = generate_path_with_reverse_nodes_added(path)
 		var nodes_without_start : Array[VirtualNode] = full_path.nodes.duplicate()
-		nodes_without_start.erase(0)
+		nodes_without_start.remove_at(0)
 		var entry_node: JunctionNode = get_entry_node()
 
 		# Use the OLD path length, because we don't use the turn-around length

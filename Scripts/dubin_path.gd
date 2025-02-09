@@ -252,7 +252,9 @@ class Line extends Segment:
 
 	func get_approx_point_index_at_offset(offset: float) -> int:
 		var t: float = offset / length
-		return int(t * points.size())
+		var test_result: float = t * points.size()
+		var result: int = int(floori(t * points.size()))
+		return result
 	
 	func get_distance_from_start_to_point(point: Vector2) -> float:
 		return (point - start).length()
@@ -301,7 +303,7 @@ class Arc extends Segment:
 
 	func get_approx_point_index_at_offset(offset: float) -> int:
 		var t: float = offset / length
-		return int(t * points.size())
+		return int(floori(t * points.size()))
 
 	#TODO: Clean this up somehow, it's much too complicated
 	func get_distance_from_start_to_point(point: Vector2) -> float:

@@ -20,25 +20,25 @@ static func find_path_with_movement(
 	if (can_move_forward and can_move_backwards):
 		if (should_loop):
 			stops.append(stops[0])
-		return find_path(train, stops, should_loop)
+		return find_path(train, stops, should_loop, can_move_backwards)
 	elif (can_move_forward):
 		# only allow the forward node as the first stopz
 		stops[0] = Stop.new_Stop([stops[0].get_forward_positions()])
 		# If we want to connect it back to the start, we add the first node
 		if (should_loop):
 			stops.append(stops[0]) # This will automatically already have only the forward node
-		return find_path(train, stops, should_loop)
+		return find_path(train, stops, should_loop, can_move_backwards)
 	elif (can_move_backwards):
 		# only allow the backward node as the first and last stop
 		stops[0] = Stop.new_Stop([stops[0].get_backward_positions()])
 		if (should_loop):
 			stops.append(stops[0]) # This will automatically already have only the backward node
-		return find_path(train, stops, should_loop)
+		return find_path(train, stops, should_loop, can_move_backwards)
 	else:
 		assert(false, "We should never get here")
 		return null
 
-static func find_path(train: Train, stops: Array[Stop], is_loop: bool) -> Schedule:
+static func find_path(train: Train, stops: Array[Stop], is_loop: bool, can_move_backwards: bool) -> Schedule:
 	var dynamnic_programming: Dictionary = {}
 	for i: int in range(stops.size() - 1):
 		var current_stop: Stop = stops[i]
@@ -48,7 +48,7 @@ static func find_path(train: Train, stops: Array[Stop], is_loop: bool) -> Schedu
 				var path: Path = find_path_between_nodes(start_position, end_node, train)
 				if (path != null):
 					add_to_dp_map(end_node, dynamnic_programming, RunningPath.new([path]))
-	var schedule: Schedule = calculate_running_best_path(dynamnic_programming, stops, is_loop)
+	var schedule: Schedule = calculate_running_best_path(dynamnic_programming, stops, is_loop, can_move_backwards)
 	return schedule
 
 #dynamnic_programming is a dictionary with key: StopNode, value: <Path or RunningPath, depending on caller>
@@ -71,7 +71,8 @@ static func add_to_dp_map(
 static func calculate_running_best_path(
 	dynamnic_programming: Dictionary, 
 	stops: Array[Stop],
-	is_loop: bool
+	is_loop: bool, 
+	can_move_backwards: bool
 ) -> Schedule:
 	# Map<StopNode, RunningPath<Path>>
 	#StopNode is the last node, and RunningPath is the series of Paths to get us to that node
@@ -87,12 +88,16 @@ static func calculate_running_best_path(
 					add_to_dp_map(next_stop_path.get_last_stop(), running_map, next_stop_path)
 			continue
 		
-		for current_stop_option: StopNode in stops[i].get_front_stops():
-			for next_stop_option: StopNode in stops[i + 1].get_front_stops():
-				# Types could be RunningPath | Path | null
-				var current_stop_path: RunningPath = running_map.get(current_stop_option.name)
-				var next_stop_path: RunningPath = dynamnic_programming.get(next_stop_option.name)
-				check_if_overlap_and_add_to_map(running_map, current_stop_path, next_stop_path)
+		# for current_stop_option: StopNode in stops[i].get_front_stops():
+		# 	for next_stop_option: StopNode in stops[i + 1].get_front_stops():
+		# 		# Types could be RunningPath | null
+		# 		var current_stop_path: RunningPath = running_map.get(current_stop_option.name)
+		# 		var next_stop_path: RunningPath = dynamnic_programming.get(next_stop_option.name)
+		# 		check_if_overlap_and_add_to_map(running_map, current_stop_path, next_stop_path)
+
+		var current_stop_options: Array[StopNode] = stops[i].get_front_stops()
+		var next_stop_options: Array[StopNode]  = stops[i + 1].get_front_stops()
+		check_for_overlap(running_map, dynamnic_programming, current_stop_options, next_stop_options, can_move_backwards)
 
 	var best_length: float = INF
 	var best_path: RunningPath = null
@@ -113,6 +118,61 @@ static func calculate_running_best_path(
 	assert(best_path.paths.size() == max(1, stops.size() - 1), "We should have as many paths as we have stops -1")
 	return Schedule.new(best_path.paths, is_loop)
 
+
+static func check_for_overlap(
+	running_map: Dictionary,
+	dynamnic_programming: Dictionary, 
+	current_stop_options: Array[StopNode], 
+	next_stop_options: Array[StopNode],
+	can_move_backwards: bool
+) -> void:
+	#Check if we can move backwards
+	if(!can_move_backwards): # Simple case, things need to match
+		for current_stop_option: StopNode in current_stop_options:
+			for next_stop_option: StopNode in next_stop_options:
+				var start_path: RunningPath = running_map.get(current_stop_option.name)
+				var end_path: RunningPath = dynamnic_programming.get(next_stop_option.name)
+				if (start_path == null or end_path == null):
+					continue
+				if (start_path.get_last_stop().name == end_path.get_first_stop().name):
+					# Can run twice for each end_path
+					var combined_array: Array[Path] = []
+					combined_array.append_array(start_path.paths)
+					combined_array.append_array(end_path.paths)
+					var running_path_list: RunningPath = RunningPath.new(combined_array)
+					add_to_dp_map(end_path.get_last_stop(), dynamnic_programming, running_path_list)
+	# We can move backwards, so the end of one path might not be the start of another(due to a reverse)
+	# So make sure we line up nodes that might reverse
+	else:
+		var shortest_first: RunningPath = null
+		var shortest_second: RunningPath = null
+		for option: StopNode in current_stop_options:
+			var test_path: RunningPath = running_map.get(option.name)
+			if (test_path == null):
+				continue
+			if (shortest_first == null or (test_path.length < shortest_first.length)):
+				shortest_first = test_path
+		for option: StopNode in next_stop_options:
+			var test_path: RunningPath = dynamnic_programming.get(option.name)
+			if (test_path == null):
+				continue
+			if (shortest_second == null or (test_path.length < shortest_second.length)):
+				shortest_second = test_path
+		
+		#Couldn't find a viable path
+		if (shortest_first == null or shortest_second == null):
+			return
+
+		# If the nodes arn't the same between the two paths,
+		# That means we did a reverse between the two paths. Set the reverse node
+		if not (shortest_first.get_last_stop().name == shortest_second.get_first_stop().name):
+			shortest_first.get_last_stop().is_reverse_node = true # Set the last node as a reverse node
+			
+		var combined_array: Array[Path] = []
+		combined_array.append_array(shortest_first.paths)
+		combined_array.append_array(shortest_second.paths)
+		var running_path_list: RunningPath = RunningPath.new(combined_array)
+		add_to_dp_map(shortest_second.get_last_stop(), running_map, running_path_list)
 
 class RunningPath:
 	var paths: Array[Path]
@@ -227,9 +287,8 @@ static func reconstruct_path(
 		var prev_path: Array[VirtualNode] = prev.path
 		assert(prev_path != null, "Should always be defined, at the very least an empty array")
 		if (prev_path.size() > 0):
-			for node : VirtualNode in prev_path:
-				path_nodes.insert(0, node)
-		else:
-			path_nodes.insert(0, prev_node)
+			for i: int in range(prev_path.size() - 1, -1, -1):
+				path_nodes.insert(0, prev_path[i])
+		path_nodes.insert(0, prev_node)
 		current = prev_node
 	return Path.new(path_nodes)

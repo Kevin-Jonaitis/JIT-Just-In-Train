@@ -39,9 +39,9 @@ func sort_stop_nodes(train: Train) -> Array[StopNode]:
 	for track_name: String in sorted_dict.keys():
 		(sorted_dict[track_name] as Array).sort_custom(func(a: StopNode, b: StopNode) -> int: return a.point_index < b.point_index)
 	
-	var sorted_stop_nodes: Array[StopNode]
-	sorted_stop_nodes.assign(sorted_dict[self.track.name] as Array[StopNode])
-
+	var sorted_stop_nodes: Array[StopNode] = []
+	if (sorted_dict.has(self.track.name)):
+		sorted_stop_nodes.assign(sorted_dict[self.track.name] as Array[StopNode])
 	if (sorted_stop_nodes.size() >= 2):
 		assert(sorted_stop_nodes[0].point_index <= sorted_stop_nodes[-1].point_index, "These should be in ascending order")
 	
