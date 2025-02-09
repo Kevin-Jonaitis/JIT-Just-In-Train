@@ -41,6 +41,37 @@ static func generate_name(track_: Track, index_: int, forward: bool, train_: Tra
 	var direction_str: String = "forward" if forward else "backward"
 	return str("stop-", track_.name, "-", index_, "-", train_.name, "-", direction_str)
 
+# possible connected stop node
+# possible connected junction node
+func get_connected_nodes(train: Train, should_fetch_reverse_edges: bool = true) -> Array[Edge]:
+	var edges_to_return: Array[Edge] = []
+	var sorted_stop_nodes: Array[StopNode] = sort_stop_nodes(train)
+
+	# Add all stop nodes that are in the same direction past this point
+	var distance_to_self: float = self.track.get_distance_to_point(self.get_point_index())
+	if is_forward():
+		var forward_nodes : Array[StopNode] = sorted_stop_nodes.filter(func(node: StopNode) -> bool: return node.is_forward())
+		for stopNode : StopNode in forward_nodes:
+			if (stopNode.point_index > self.get_point_index()):
+				var distance_to_stopNode: float = self.track.get_distance_to_point(stopNode.point_index)
+				edges_to_return.append(Edge.new(stopNode, absf(distance_to_stopNode - distance_to_self)))
+	else:
+		var backward_nodes : Array[StopNode] = sorted_stop_nodes.filter(func(node: StopNode) -> bool: return !node.is_forward())
+		for i: int in range(backward_nodes.size() - 1, -1, -1):
+			if (backward_nodes[i].point_index < self.get_point_index()):
+				var distance_to_stopNode: float = self.track.get_distance_to_point(backward_nodes[i].point_index)
+				edges_to_return.append(Edge.new(backward_nodes[i], absf(distance_to_stopNode - distance_to_self)))
+	
+	# Get possible connected junctions
+	var distance_to_stop_node: float = track.get_distance_to_point(point_index)
+	if (is_forward()):
+		var junction_node: JunctionNode = track.end_junction.get_junction_node(track, true)
+		edges_to_return.append(Edge.new(junction_node, track.length - distance_to_stop_node))
+	else:
+		var junction_node: JunctionNode = track.start_junction.get_junction_node(track, true)
+		edges_to_return.append(Edge.new(junction_node, distance_to_stop_node))
+	
+	return edges_to_return
 
 func create_node_in_opposite_direction() -> StopNode:
 	var opposite_node: StopNode = StopNode.new(track, point_index, not is_forward(), train)
