@@ -123,7 +123,7 @@ bezier_curve = NodePath("BezierPath2D_0")
 [node name="BezierPath2D_0" type="Path2D" parent="Tracks/Track"]
 curve = SubResource("Curve2D_xvilm")
 
-[node name="Junctions" type="Node2D" parent="."]
+[node name="Junctions" type="Node2D" parent="." groups=["Junctions"]]
 script = ExtResource("12_rdyhv")
 
 [node name="Trains" type="Node2D" parent="."]

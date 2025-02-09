@@ -63,13 +63,13 @@ func get_reverse_edges(train: Train) -> Array[Edge]:
 	# var length: float = train.length
 	# var out_node: JunctionNode = get_junction_node(connection.track, false)
 	# var in_node: JunctionNode = get_junction_node(connection.track, false)
-	var results : Array = generate_path_of_length_from_start(self, train, train.length)
+	var results : Array[Path] = generate_path_of_length_from_start(self, train, train.length)
 
 	if (results.size() == 0):
 		print("No reverse path found at junction: " + name + "for train: " + train.name)
 		return []
 	for path : Path in results:
-		assert(path.nodes.size() > 2, "Path should have at least 2 nodes: starting node and turnaround node")
+		assert(path.nodes.size() >= 2, "Path should have at least 2 nodes: starting node and turnaround node")
 		assert(path.nodes[-1] is StopNode, "Last node should be a stop node that's a returnaround node")
 		assert(path.nodes[0] is JunctionNode, "First node should be our junction node")
 		var full_path: Path = generate_path_with_reverse_nodes_added(path)
@@ -128,7 +128,7 @@ func generate_path_of_length_from_start(start_node: VirtualNode, train: Train, r
 	# Only get connected nodes; don't bother getting reverse edges for connected
 	# nodes as the train length will go down for each "further" intersection, and therefore
 	# will never be long enough to reverse
-	for edge : Edge in start_node.get_connected_nodes(train):
+	for edge : Edge in start_node.get_connected_nodes(train, false):
 		var new_lenth: float = remaining_length - edge.cost
 		if (new_lenth > 0):
 			var further_paths: Array[Path] = generate_path_of_length_from_start(edge.virtual_node, train, new_lenth)

@@ -18,31 +18,60 @@ var _connected_nodes: Dictionary
 var track: Track
 
 
-func get_connected_nodes(train: Train) -> Array[Edge]:
+func get_connected_nodes(train: Train, get_reverse_edges: bool = true) -> Array[Edge]:
 	var edges_to_return: Array[Edge] = []
-	var possible_stop_edge: Edge = get_connected_stop_node_edge(train)
+
+	var possible_stop_edge: Edge = get_possible_connected_stopnode(train)
 	if (possible_stop_edge):
+		assert (possible_stop_edge.virtual_node is StopNode, "This function assumes that the returned value is a StopNode")
 		edges_to_return.append(possible_stop_edge)
+	
+
+	var possible_junction_edge: Edge = get_possible_connected_junction_from_stopnode()
+	if (possible_junction_edge):
+		edges_to_return.append(possible_junction_edge)
+		
 
 	if (self is JunctionNode):
-		edges_to_return.append_array((self as JunctionNode).get_reverse_edges(train))
+		edges_to_return.assign(_connected_nodes.values() as Array[Edge]) # Regular connected nodes
+		if (get_reverse_edges):
+			edges_to_return.append_array((self as JunctionNode).get_reverse_edges(train))
 	
 	return edges_to_return
 
+func get_possible_connected_junction_from_stopnode() -> Edge:
+	if (self is StopNode):
+		var stop_node: StopNode = (self as StopNode)
+		var distance_to_stop_node: float = stop_node.track.get_distance_to_point(stop_node.point_index)
+		if (stop_node.is_forward()):
+			var junction_node: JunctionNode = track.end_junction.get_junction_node(track, true)
+			return Edge.new(junction_node, track.length - distance_to_stop_node)
+		else:
+			var junction_node: JunctionNode = track.start_junction.get_junction_node(track, true)
+			return Edge.new(junction_node, distance_to_stop_node)
+	return null
 
 func get_connected_nodes_including_reverse_start(train: Train, start_position: Stop.TrainPosition) -> Array[Edge]:
 	var connected_nodes: Array[Edge] = get_connected_nodes(train)
 
 	if (self.name == start_position.front_of_train.name):
 		assert(start_position.back_of_train.is_reverse_node, "Back of train should be a reverse node!!")
-		connected_nodes.append(Edge.new(start_position.back_of_train, 0))
+		connected_nodes.append(Edge.new(start_position.back_of_train, Edge.COST_TO_REVERSE))
 	return connected_nodes
 
 
 # These are "runtime" only nodes, so there's not part of the built graph
 # We return the "next" stop node in point index order on the track from this node and the direction 
 # the track is going in
-func get_connected_stop_node_edge(train: Train) -> Edge:
+
+
+# We are a junction node
+	# possible connected stop node
+	# possible connected junction node
+# We are a stop node
+	# possible connected stop node
+	# possible connected junction node
+func get_possible_connected_stopnode(train: Train) -> Edge:
 	#Dict should automatically de-dupe nodes that are the same
 	var stop_nodes_dict: Dictionary = {}
 	for stop: Stop in train._stops:
@@ -67,7 +96,8 @@ func get_connected_stop_node_edge(train: Train) -> Edge:
 		if self_casted.is_entry_node():
 			return null
 		elif self_casted.is_exit_node():
-			var possible_stop_points: Array[StopNode] = sorted_dict[self_casted.track.name]
+			var possible_stop_points: Array[StopNode]
+			possible_stop_points.assign(sorted_dict[self_casted.track.name])
 			if (possible_stop_points):
 				assert(possible_stop_points[0].point_index <= possible_stop_points[-1].point_index, "These should be in ascending order")
 				var distance_from_front: float  = get_distance_from_front_track()
@@ -82,7 +112,7 @@ func get_connected_stop_node_edge(train: Train) -> Edge:
 	elif (self is StopNode):
 		# Get first point in sorted_dict past this point
 		var sorted_stop_nodes: Array[StopNode]
-		sorted_stop_nodes.assign(sorted_dict[self.track.name])
+		sorted_stop_nodes.assign(sorted_dict[self.track.name] as Array[StopNode])
 		var distance_to_self: float = self.track.get_distance_to_point(self.get_point_index())
 		if (self as StopNode).is_forward():
 			var forward_nodes : Array[StopNode] = sorted_stop_nodes.filter(func(node: StopNode) -> bool: return node.is_forward())
