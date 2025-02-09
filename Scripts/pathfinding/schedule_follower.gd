@@ -18,6 +18,8 @@ var _progress: Progress
 # 	self.train = train_
 
 func _physics_process(delta: float) -> void:
+	if (!train.is_placed): # Make's debugging easier, would be caught by no schedule
+		return
 	update_train_position(delta)
 	# train.queue_redraw()
 
@@ -40,8 +42,8 @@ func update_train_position(delta: float) -> void:
 	if (_progress.overshoot && !train.schedule.is_loop): 
 		return
 	while (_progress.overshoot && train.schedule.is_loop):
-		_progress = Progress.new(train)
 		_progress = update_progress(_progress, schedule, _progress.overshoot)
+		_progress = Progress.new(train)
 
 	assert(_progress.overshoot == 0, "Overshoot should be 0")
 	train.set_position_and_rotation(_progress.position, 0) # Should we change this?
@@ -52,16 +54,17 @@ func update_progress(old_progress: Progress, schedule: Schedule, progress_px: fl
 	var path: Path = schedule.paths[current_path_index]
 	new_progress = path.update_progress(old_progress, progress_px, train.length)
 
-	while (new_progress.path_overshoot):
+	while (new_progress.path_overshoot != 0):
 		current_path_index += 1
 		if (current_path_index == schedule.paths.size()): # We overshot the whole schedule
+			var path_overshoot: float = new_progress.path_overshoot
 			new_progress = Progress.new(train)
-			new_progress.set_overshoot(new_progress.overshoot)
-			# overshoot_progress.set_overshoot(progress.overshoot)
-			return
+			new_progress.set_overshoot(path_overshoot)
+			return new_progress
+		progress_px = new_progress.path_overshoot
+		new_progress.path_overshoot = 0
 		path = schedule.paths[current_path_index]
 		new_progress.path_index = current_path_index
-		progress_px = new_progress.overshoot
 		new_progress = path.update_progress(new_progress, progress_px, train.length)
 
 	assert(new_progress.overshoot == 0, "Overshoot should be 0")

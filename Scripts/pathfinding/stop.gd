@@ -55,18 +55,26 @@ static func new_Stop(stop_option_: Array[TrainPosition]) -> Stop:
 # Right now, when placing a train, it'll always face whatever "forward" is on the track(increasing in point index)
 # the train_placed_forward flag says if we are facing opposite that direction
 # Return null if we can't create a stop because the back would go off the track
+
+# Our stops are placed at the MIDDLE of a cart, because that's the point at which a cart pivots around turns.
+# However, we calcualte the FRONT of the front cart and the BACK of the BACK cart the prevent placing a stop that would
+# have the train "hang over" the edge of a track
 static func create_stop_for_point(middle_of_front_car: TrackPointInfo, train: Train, train_placed_forward: bool) -> Stop:
-	var point_index_one: int  = middle_of_front_car.point_index
+	var middle_of_front_car_pt_index: int = middle_of_front_car.point_index
+	var middle_of_back_car_distance: float
 	var front_of_front_car: float
 	var back_of_back_car: float
-	var train_length : float = train.length
-	var current_point_distance: float = middle_of_front_car.track.get_distance_to_point(middle_of_front_car.point_index)
+	var length_of_cart : float = train.cart_length
+	var track_distance_to_middle_of_front_car: float = middle_of_front_car.track.get_distance_to_point(middle_of_front_car.point_index)
 	if train_placed_forward:
-		back_of_back_car = current_point_distance - (train_length / 2)
-		front_of_front_car = current_point_distance + (train_length / 2)
+		front_of_front_car = track_distance_to_middle_of_front_car + (length_of_cart / 2)
+		back_of_back_car = front_of_front_car - train.length
+		middle_of_back_car_distance = back_of_back_car + (length_of_cart / 2)
 	else:
-		back_of_back_car  = current_point_distance + (train_length / 2)
-		front_of_front_car = current_point_distance - (train_length / 2)
+		front_of_front_car = track_distance_to_middle_of_front_car - (length_of_cart / 2)
+		back_of_back_car  = front_of_front_car + train.length
+		middle_of_back_car_distance = back_of_back_car + (length_of_cart / 2)
+		
 
 	# TODO: allow a stop to cross a track boundry if  there's only 1 "previous" track
 	# Also TODO: we should have a "get_previous_node" function on stopnodes and junctionNodes to faciliate
@@ -75,18 +83,21 @@ static func create_stop_for_point(middle_of_front_car: TrackPointInfo, train: Tr
 		back_of_back_car < 0 || back_of_back_car > middle_of_front_car.track.length):
 		return null
 
-	var point_index_two : int = middle_of_front_car.track.get_approx_point_index_at_offset(back_of_back_car)
+	var point_index_two : int = middle_of_front_car.track.get_approx_point_index_at_offset(middle_of_back_car_distance)
 
-	return Stop.new_Stop(generate_train_position(point_index_one, point_index_two, middle_of_front_car.track, train, train_placed_forward))
+	return Stop.new_Stop(generate_train_position(middle_of_front_car_pt_index, point_index_two, middle_of_front_car.track, train, train_placed_forward))
 
 static func generate_train_position(point_index_one: int, point_index_two: int, track: Track, train: Train, train_facing_foward: bool) -> Array[TrainPosition]:
 	var front_of_train: StopNode = StopNode.new(track, point_index_one, train_facing_foward, train)
-	var back_of_train: StopNode = StopNode.new(track, point_index_two, train_facing_foward, train, true) # Is reverse node
+	# Even though the stopnode is part of the train, we don't want it to
+	# face the same way, since that'll make it seem like we can navigate there to "stop";
+	# we don't really want that
+	var back_of_train: StopNode = StopNode.new(track, point_index_two, !train_facing_foward, train, true) # Is reverse node
 
 	var position_one : TrainPosition = TrainPosition.new(front_of_train, back_of_train)
 
 	var front_of_train_reverse: StopNode = StopNode.new(track, point_index_two, !train_facing_foward, train)
-	var back_of_train_reverse: StopNode = StopNode.new(track, point_index_one, !train_facing_foward, train, true) # Is reverse node
+	var back_of_train_reverse: StopNode = StopNode.new(track, point_index_one, train_facing_foward, train, true) # Is reverse node
 
 
 	var position_two : TrainPosition = TrainPosition.new(front_of_train_reverse, back_of_train_reverse)

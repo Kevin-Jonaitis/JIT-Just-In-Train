@@ -17,24 +17,6 @@ var _connected_nodes: Dictionary
 # All nodes are either entry/exit to a track in a junction, or are ON a track
 var track: Track
 
-# Only get connected nodes on the same trainlines. This only applies to stop nodes
-# This allows each train to "see" it's own graph
-# Practically, this means that when we construct stops along a track, 
-# each train will have it's own directed graph along that track
-# and when we're pathfinding, we only see that path(by using this function)
-# func get_connected_nodes(train_name: String) -> Array[Edge]:
-# 	var result: Array[Edge] = []
-# 	# Workaround for https://github.com/godotengine/godot/issues/72566
-# 	result.assign(_connected_nodes.values().filter(
-# 		func(node: Edge) -> bool: 
-# 			if node.virtual_node is StopNode && (node.virtual_node as StopNode).train.name != train_name:
-# 				return false
-# 			else:
-# 				return true
-# 			))
-# 	return result
-
-
 
 func get_connected_nodes(train: Train) -> Array[Edge]:
 	var edges_to_return: Array[Edge] = []
@@ -48,49 +30,14 @@ func get_connected_nodes(train: Train) -> Array[Edge]:
 	return edges_to_return
 
 
-func get_connected_nodes_including_reverse_start(train: Train, start_position: Stop.TrainPosition, end_node: StopNode) -> Array[Edge]:
+func get_connected_nodes_including_reverse_start(train: Train, start_position: Stop.TrainPosition) -> Array[Edge]:
 	var connected_nodes: Array[Edge] = get_connected_nodes(train)
 
 	if (self.name == start_position.front_of_train.name):
-
-		#TODO: Handled by stop node connected edge coe
-
-
-		# assert(self is StopNode, "This should only be called on a stop node")
-		# # If this node is the start position, we should connect the next nodes as well
-		# var distance_to_node: float = abs(this_point - self.track.get_distance_to_point(self.get_point_index()))
-		# var track_length: float = self.track.length
-		# if ((self as StopNode).is_forward()):
-		# 	edges_to_return.append(Edge.new(self.track.end_junction.get_junction_node(self.track, true), 
-		# 	track_length - distance_to_node))
-		# else:
-		# 	edges_to_return.append(Edge.new(self.track.start_junction.get_junction_node(self.track, false), 
-		# 	distance_to_node))
-
-		# If we're at the start of pathfinding, we should be able to reverse the train for FREE
 		assert(start_position.back_of_train.is_reverse_node, "Back of train should be a reverse node!!")
 		connected_nodes.append(Edge.new(start_position.back_of_train, 0))
-
-		# We should also add the end of the junction to this path
-
-	# Handled by connected stop nodes		
-
-	# # Add the goal stop node if its viable
-	# var goal_point: int = end_node.get_point_index()
-	# if (track.uuid == end_node.track.uuid):
-	# 	for edge: Edge in _connected_nodes.values():
-	# 		if (track.uuid == edge.virtual_node.track.uuid): 
-	# 			var next_point: float = edge.virtual_node.get_point_index()
-	# 			if (next_point != this_point): # This means we are comparing internal nodes in a junction
-	# 				if (this_point < goal_point && goal_point < next_point) or (next_point < goal_point && goal_point < this_point):
-	# 					var cost: float = abs(goal_point - this_point)
-	# 					return [Edge.new(end_node, cost)]
-
-	
 	return connected_nodes
 
-
-# func get_connected_nodes_new(train: Train) -> Array[Edge]:
 
 # These are "runtime" only nodes, so there's not part of the built graph
 # We return the "next" stop node in point index order on the track from this node and the direction 
@@ -138,15 +85,17 @@ func get_connected_stop_node_edge(train: Train) -> Edge:
 		sorted_stop_nodes.assign(sorted_dict[self.track.name])
 		var distance_to_self: float = self.track.get_distance_to_point(self.get_point_index())
 		if (self as StopNode).is_forward():
-			for stopNode : StopNode in sorted_stop_nodes:
+			var forward_nodes : Array[StopNode] = sorted_stop_nodes.filter(func(node: StopNode) -> bool: return node.is_forward())
+			for stopNode : StopNode in forward_nodes:
 				if (stopNode.point_index > self.get_point_index()):
 					var distance_to_stopNode: float = self.track.get_distance_to_point(stopNode.point_index)
 					return Edge.new(stopNode, absf(distance_to_stopNode - distance_to_self))
 		else:
-			for i: int in range(sorted_stop_nodes.size() - 1, -1, -1):
-				if (sorted_stop_nodes[i].point_index < self.get_point_index()):
-					var distance_to_stopNode: float = self.track.get_distance_to_point(sorted_stop_nodes[i].point_index)
-					return Edge.new(sorted_stop_nodes[i], absf(distance_to_stopNode - distance_to_self))
+			var backward_nodes : Array[StopNode] = sorted_stop_nodes.filter(func(node: StopNode) -> bool: return !node.is_forward())
+			for i: int in range(backward_nodes.size() - 1, -1, -1):
+				if (backward_nodes[i].point_index < self.get_point_index()):
+					var distance_to_stopNode: float = self.track.get_distance_to_point(backward_nodes[i].point_index)
+					return Edge.new(backward_nodes[i], absf(distance_to_stopNode - distance_to_self))
 	else:
 		assert(false, "What other options are there??")
 	
@@ -197,7 +146,7 @@ func get_connected_stop_node_edge(train: Train) -> Edge:
 
 static func calculate_distance_between_two_connectable_nodes(node_one: VirtualNode, node_two: VirtualNode) -> float:
 	var same_juction: bool = false
-	var same_track: bool = node_one.track.uuid == node_two.track.uuid && same_juction
+	var same_track: bool = node_one.track.uuid == node_two.track.uuid
 	if (node_one is JunctionNode && node_two is JunctionNode):
 		same_juction = (node_one as JunctionNode).junction.name == (node_two as JunctionNode).junction.name
 		return 0

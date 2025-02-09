@@ -10,10 +10,10 @@ var train: Train
 
 # Train should reverse after reaching this node
 var is_reverse_node: bool = false
+# Which direction the stop faces on the TRACK(i.e. if a track index points increase from left to right, 
+# and this stop goes from right to left, 
+# then this would be considered backward)
 var forward : bool
-
-#TODO: add track direction for points that need to be different depending on which side of the track trains are coming from
-#(Example, a station where you want a long train to stop at a different spot depending on which way it's facing)
 
 func _init(track_: Track, point_index_: int, forward_: bool, train_: Train, is_reverse_node: bool = false) -> void:
 	self.name = generate_name(track_, point_index_, forward_, train_)

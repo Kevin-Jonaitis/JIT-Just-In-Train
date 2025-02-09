@@ -62,7 +62,8 @@ static func add_to_dp_map(
 
 	if (dynamnic_programming.has(end_node.name)):
 		var current_path: RunningPath = dynamnic_programming[end_node.name]
-		if (current_path.length > path.length):
+		if ((current_path.length == path.length && current_path.get_total_num_nodes() > path.get_total_num_nodes()) 
+		||  current_path.length > path.length):
 			dynamnic_programming[end_node.name] = path
 	else:
 		dynamnic_programming[end_node.name] = path
@@ -73,6 +74,7 @@ static func calculate_running_best_path(
 	is_loop: bool
 ) -> Schedule:
 	# Map<StopNode, RunningPath<Path>>
+	#StopNode is the last node, and RunningPath is the series of Paths to get us to that node
 	# We use a _different_ map here to keep the best running path
 	var running_map: Dictionary = {}
 	
@@ -97,6 +99,7 @@ static func calculate_running_best_path(
 
 	var final_paths: Array = \
 	stops[-1].stop_option \
+	.map(func(x: Stop.TrainPosition) -> StopNode: return x.front_of_train) \
 	.map(func(x: StopNode) -> String: return x.name) \
 	.map(func(name: String) -> RunningPath: return running_map.get(name)) \
 	.filter(func(x: RunningPath) -> bool: return x != null)
@@ -127,6 +130,12 @@ class RunningPath:
 
 	func get_last_stop() -> StopNode:
 		return paths[-1].get_last_stop()
+
+	func get_total_num_nodes() -> int:
+		var total: int = 0
+		for path: Path in paths:
+			total += path.nodes.size()
+		return total
 		
 
 static func check_if_overlap_and_add_to_map(
@@ -186,14 +195,14 @@ static func find_path_between_nodes(
 
 	while not open_set.is_empty():
 		var current: VirtualNode = open_set.extract_min()
-		if current == end:
+		if current.name == end.name:
 			return reconstruct_path(came_from, current)
 
 		if visited.has(current.name):
 			continue
 		visited[current.name] = true
-
-		for edge: Edge in current.get_connected_nodes_including_reverse_start(train, start_position, end):
+		var edges: Array[Edge] = current.get_connected_nodes_including_reverse_start(train, start_position)
+		for edge: Edge in edges:
 			var neighbor: VirtualNode = edge.virtual_node
 			var cost_to_neighbor: float = edge.cost
 			if visited.has(neighbor.name):
@@ -216,7 +225,8 @@ static func reconstruct_path(
 		var prev: Dictionary = came_from[current.name]
 		var prev_node: VirtualNode = prev.node
 		var prev_path: Array[VirtualNode] = prev.path
-		if (prev_path != null):
+		assert(prev_path != null, "Should always be defined, at the very least an empty array")
+		if (prev_path.size() > 0):
 			for node : VirtualNode in prev_path:
 				path_nodes.insert(0, node)
 		else:

@@ -67,6 +67,8 @@ class PathLocation:
 	var overshoot: float
 
 func check_if_track_segment_starts_with_reverse_node(track_segment_index: int) -> bool:
+	if (track_segment_index >= track_segments.size()):
+		return false
 	for node : StopNode in reverse_nodes:
 		if (node.track.uuid == track_segments[track_segment_index].track.uuid
 		&& node.get_point_index() == track_segments[track_segment_index].start_point_index):
@@ -95,7 +97,8 @@ func update_progress(old_progress: Progress, new_progress_px: float, train_lengt
 			# var overshot_path: PathLocation = PathLocation.new()
 			# overshot_path.overshoot = new_progress
 			new_progress.path_overshoot = new_progress_px
-			return 
+			new_progress.track_segment_progress = 0
+			return new_progress
 			
 		segment = track_segments[track_segment_index]
 		segment_length = segment.get_length()

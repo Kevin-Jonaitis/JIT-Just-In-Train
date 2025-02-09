@@ -4,8 +4,11 @@ class_name Train
 
 const TRAIN_COLLISION_LAYER: int = 8
 
-
+# Length of ALL cars end-to-end(including gaps)
 var length : float = 80 #TODO: Set this to a a real value based on the train sprites
+# Length of a single cart of the train
+const cart_length : float = 80 #TODO: Set this to a a real value based on the train sprites
+const num_of_carts : int = 1 #TODO: Set this to a a real value based on the train sprites
 
 var is_placed: bool = false
 @onready var _stops: Array[Stop] :
@@ -85,7 +88,7 @@ func get_stops() -> Array[Stop]:
 	return _stops
 
 func calculate_schedule() -> void:
-	schedule = Pathfinder.find_path_with_movement(self, true, true, true)
+	schedule = Pathfinder.find_path_with_movement(self, true, true, false)
 	schedule_follower.reset()
 	calculate_path_draw()
 
