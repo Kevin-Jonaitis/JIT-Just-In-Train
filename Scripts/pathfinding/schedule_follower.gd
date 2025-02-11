@@ -17,7 +17,7 @@ var _progress: Progress
 # func _init(train_: Train) -> void:
 # 	self.train = train_
 
-func _physics_process(delta: float) -> void:
+func _process(delta: float) -> void:
 	if (!train.is_placed): # Make's debugging easier, would be caught by no schedule
 		return
 	update_train_position(delta)
@@ -62,9 +62,9 @@ func update_progress(old_progress: Progress, schedule: Schedule, progress_px: fl
 			new_progress.set_overshoot(path_overshoot)
 			return new_progress
 		progress_px = new_progress.path_overshoot
-		new_progress.path_overshoot = 0
-		path = schedule.paths[current_path_index]
+		new_progress = Progress.new(train)
 		new_progress.path_index = current_path_index
+		path = schedule.paths[current_path_index]
 		new_progress = path.update_progress(new_progress, progress_px, train.length)
 
 	assert(new_progress.overshoot == 0, "Overshoot should be 0")
