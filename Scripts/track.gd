@@ -313,7 +313,7 @@ func get_angle_at_point_index(index: int) -> float:
 func delete_track() -> void:
 	start_junction.remove_track_and_nodes(self)
 	end_junction.remove_track_and_nodes(self)
-	virtual_node_manager.delete_interjunction_virtual_nodes()
+	# virtual_node_manager.delete_interjunction_virtual_nodes()
 	self.queue_free()
 	trains.update_schedules()
 
@@ -326,12 +326,6 @@ func get_distance_to_point(point_index: int) -> float:
 	else:
 		assert(false, "We haven't defined a curve for this track yet!")
 		return 0
-
-# func add_stops_to_track(point_index: int, train: Train) -> Array[StopNode]:
-# 	return virtual_node_manager.add_stops_to_track(point_index, train)
-
-# func remove_stop_from_track(point_index: int, train: Train) -> void:
-# 	virtual_node_manager.remove_stop_from_track(point_index, train)
 
 func get_point_at_index(index: int) -> Vector2:
 	if dubins_path:

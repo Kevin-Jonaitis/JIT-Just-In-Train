@@ -76,6 +76,7 @@ func add_point_if_unique(point: Vector2, segment_index: int) -> void:
 	else:
 		pass # For breakpointing
 
+# TODO: Replace this and TrackPointIndex to use track_pos instead of point_index
 # Written by Chat-GPT, tested by yours truly
 func get_angle_at_point_index(index: int) -> float:
 	var result: Array = find_segment_with_point(index)
@@ -104,6 +105,29 @@ func get_angle_at_point_index(index: int) -> float:
 		return angle_to_center + direction_sign * PI / 2.0
 
 	# Fallback (should never happen if segments are only Line or Arc)
+	assert(false, "This should never happen.")
+	return 0.0
+
+
+# Written by chat gpt verified by yours turly
+func get_angle_at_offset(offset: float) -> float:
+	var current_length: float = 0
+	for segment: Segment in segments:
+		if current_length + segment.length >= offset:
+			var segment_offset: float = offset - current_length
+			if segment is Line:
+				var line_seg: Line = segment
+				return (line_seg.end - line_seg.start).angle()
+			elif segment is Arc:
+				var arc_seg: Arc = segment
+				var arc_point: Vector2 = arc_seg.get_point_at_offset(segment_offset)
+				var vec_from_center: Vector2 = arc_point - arc_seg.center
+				var angle_to_center: float = vec_from_center.angle()
+				var direction_sign: float = 1.0
+				if arc_seg.end_theta < arc_seg.start_theta:
+					direction_sign = -1.0
+				return angle_to_center + direction_sign * PI / 2.0
+		current_length += segment.length
 	assert(false, "This should never happen.")
 	return 0.0
 

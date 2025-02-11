@@ -62,7 +62,7 @@ static func new_Stop(stop_option_: Array[TrainPosition]) -> Stop:
 # However, we calcualte the FRONT of the front cart and the BACK of the BACK cart the prevent placing a stop that would
 # have the train "hang over" the edge of a track
 static func create_stop_for_point(middle_of_front_car: TrackPointInfo, train: Train, train_placed_forward: bool) -> Stop:
-	var middle_of_front_car_pt_index: int = middle_of_front_car.point_index
+	var middle_of_front_car_track_pos: float = middle_of_front_car.track.get_distance_to_point(middle_of_front_car.point_index)
 	var middle_of_back_car_distance: float
 	var front_of_front_car: float
 	var back_of_back_car: float
@@ -85,23 +85,23 @@ static func create_stop_for_point(middle_of_front_car: TrackPointInfo, train: Tr
 		back_of_back_car < 0 || back_of_back_car > middle_of_front_car.track.length):
 		return null
 
-	var point_index_two : int = middle_of_front_car.track.get_approx_point_index_at_offset(middle_of_back_car_distance)
+	# var point_index_two : int = middle_of_front_car.track.get_approx_point_index_at_offset(middle_of_back_car_distance)
 
-	var stop : Stop = Stop.new_Stop(generate_train_position(middle_of_front_car_pt_index, point_index_two, middle_of_front_car.track, train, train_placed_forward))
-	# assert(stop.get_front_stops()[0].get_position() == stop.get_front_stops()[1].get_position(), "Positions should be the same else things will look bad when the train stops at the station")
+	var stop : Stop = Stop.new_Stop(generate_train_position(middle_of_front_car_track_pos, middle_of_back_car_distance, middle_of_front_car.track, train, train_placed_forward))
+	assert(stop.get_front_stops()[0].get_position() == stop.get_front_stops()[1].get_position(), "Positions should be the same else things will look bad when the train stops at the station")
 	return stop
 
-static func generate_train_position(point_index_one: int, point_index_two: int, track: Track, train: Train, train_facing_foward: bool) -> Array[TrainPosition]:
-	var front_of_train: StopNode = StopNode.new(track, point_index_one, train_facing_foward, train)
+static func generate_train_position(point_one_track_offset: float, point_two_track_offset: float, track: Track, train: Train, train_facing_foward: bool) -> Array[TrainPosition]:
+	var front_of_train: StopNode = StopNode.new(track, point_one_track_offset, train_facing_foward, train)
 	# Even though the stopnode is part of the train, we don't want it to
 	# face the same way, since that'll make it seem like we can navigate there to "stop";
 	# we don't really want that
-	var back_of_train: StopNode = StopNode.new(track, point_index_two, !train_facing_foward, train, true) # Is reverse node
+	var back_of_train: StopNode = StopNode.new(track, point_two_track_offset, !train_facing_foward, train, true) # Is reverse node
 
 	var position_one : TrainPosition = TrainPosition.new(front_of_train, back_of_train)
 
-	var front_of_train_reverse: StopNode = StopNode.new(track, point_index_two, !train_facing_foward, train)
-	var back_of_train_reverse: StopNode = StopNode.new(track, point_index_one, train_facing_foward, train, true) # Is reverse node
+	var front_of_train_reverse: StopNode = StopNode.new(track, point_two_track_offset, !train_facing_foward, train)
+	var back_of_train_reverse: StopNode = StopNode.new(track, point_one_track_offset, train_facing_foward, train, true) # Is reverse node
 
 
 	var position_two : TrainPosition = TrainPosition.new(front_of_train_reverse, back_of_train_reverse)

@@ -8,8 +8,6 @@ var nodes: Array[VirtualNode]  = []
 var track_segments: Array[TrackSegment] = []
 
 var uuid: String = Utils.generate_uuid()
-# var start_node: VirtualNode
-# var goal_node: VirtualNode
 
 var length: float
 
@@ -71,7 +69,7 @@ func check_if_track_segment_starts_with_reverse_node(track_segment_index: int) -
 		return false
 	for node : StopNode in reverse_nodes:
 		if (node.track.uuid == track_segments[track_segment_index].track.uuid
-		&& node.get_point_index() == track_segments[track_segment_index].start_point_index):
+		&& Utils.is_equal_approx(node.get_track_position(), track_segments[track_segment_index].start_track_pos)):
 			return true
 	return false
 
@@ -114,27 +112,26 @@ func update_progress(old_progress: Progress, new_progress_px: float, train_lengt
 
 class TrackSegment:
 	var track: Track
-	var start_point_index: int
-	var end_point_index: int
+	#Distance too this point on the track(not the global vector2 position)
+	var start_track_pos: float
+	var end_track_pos: float
 	var length: float
-	var starting_progress: float
+	var starting_progress: float #TODO: remove, this is redundant
 	
-	func _init(track_: Track, start_point_index_: int, end_point_index_: int) -> void:
+	func _init(track_: Track, start_track_pos_: float, end_track_pos_: float) -> void:
 		self.track = track_
-		self.start_point_index = start_point_index_
-		self.end_point_index = end_point_index_
+		self.start_track_pos = start_track_pos_
+		self.end_track_pos = end_track_pos_
 		self.length = calculate_length()
-		self.starting_progress = track.get_distance_to_point(start_point_index)
+		self.starting_progress = start_track_pos_
 
 	func get_position_at_progress(progress: float) -> Vector2:
-		if (end_point_index < start_point_index):
+		if (end_track_pos < start_track_pos):
 			progress = -progress
 		return track.get_point_at_offset(starting_progress + progress)
 	
 	func calculate_length() -> float:
-		var start_point: float = track.get_distance_to_point(start_point_index)
-		var end_point: float = track.get_distance_to_point(end_point_index)
-		return abs(end_point - start_point)
+		return abs(end_track_pos - start_track_pos)
 
 	# TODO: make ABSOLUTE
 	func get_length() -> float:
@@ -159,18 +156,18 @@ func create_track_segments() -> void:
 		return
 
 	var current_track: Track = nodes[0].track
-	var start_index: int = nodes[0].get_point_index()
+	var start_pos: float = nodes[0].get_track_position()
 
 	for i: int in range(1, nodes.size()):
 		var node: VirtualNode = nodes[i]
 		if node.track.uuid != current_track.uuid:
-			var end_index: int = nodes[i - 1].get_point_index()
-			var segment: TrackSegment = TrackSegment.new(current_track, start_index, end_index)
+			var end_pos: float = nodes[i - 1].get_track_position()
+			var segment: TrackSegment = TrackSegment.new(current_track, start_pos, end_pos)
 			track_segments.append(segment)
 			current_track = node.track
-			start_index = node.get_point_index()
+			start_pos = node.get_track_position()
 
 	# Add the last segment
-	var last_end_index: int = nodes[nodes.size() - 1].get_point_index()
-	var last_segment: TrackSegment = TrackSegment.new(current_track, start_index, last_end_index)
+	var last_end_position: float = nodes[nodes.size() - 1].get_track_position()
+	var last_segment: TrackSegment = TrackSegment.new(current_track, start_pos, last_end_position)
 	track_segments.append(last_segment)

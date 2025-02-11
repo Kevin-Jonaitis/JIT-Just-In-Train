@@ -37,13 +37,13 @@ func sort_stop_nodes(train: Train) -> Array[StopNode]:
 	
 	# sort the stop nodes by point index
 	for track_name: String in sorted_dict.keys():
-		(sorted_dict[track_name] as Array).sort_custom(func(a: StopNode, b: StopNode) -> int: return a.point_index < b.point_index)
+		(sorted_dict[track_name] as Array).sort_custom(func(a: StopNode, b: StopNode) -> int: return a.track_pos < b.track_pos)
 	
 	var sorted_stop_nodes: Array[StopNode] = []
 	if (sorted_dict.has(self.track.name)):
 		sorted_stop_nodes.assign(sorted_dict[self.track.name] as Array[StopNode])
 	if (sorted_stop_nodes.size() >= 2):
-		assert(sorted_stop_nodes[0].point_index <= sorted_stop_nodes[-1].point_index, "These should be in ascending order")
+		assert(sorted_stop_nodes[0].track_pos <= sorted_stop_nodes[-1].track_pos, "These should be in ascending order")
 	
 	return sorted_stop_nodes
 	
@@ -51,7 +51,7 @@ func sort_stop_nodes(train: Train) -> Array[StopNode]:
 # These are "runtime" only nodes, so there's not part of the built graph
 # We return the "next" stop node in point index order on the track from this node and the direction 
 # the track is going in
-func get_connected_nodes(train: Train, fetch_junctions_only: bool = false) -> Array[Edge]:
+func get_connected_nodes(train_: Train, fetch_junctions_only: bool = false) -> Array[Edge]:
 	assert(false, "This should be implemented in the subclasses")
 	return []
 
@@ -91,7 +91,7 @@ func add_connected_reverse_node(node: VirtualNode, edge: Edge) -> void:
 	_connected_nodes[node.name] = edge
 
 
-func get_point_index() -> int:
+func get_track_position() -> float:
 	assert(false, "This should be implemented in the subclasses")
 	return 0
 

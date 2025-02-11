@@ -38,11 +38,11 @@ func get_exit_node() -> JunctionNode:
 	assert(!exit_node.is_entry_node(), "This should be an exit node")
 	return exit_node
 
-func get_point_index() -> int:
+func get_track_position() -> float:
 	if connected_at_start_of_track:
 		return 0
 	else:
-		return track.get_points().size() - 1
+		return track.length
 
 func is_connected_at_start() -> bool:
 	return connected_at_start_of_track 
@@ -191,22 +191,19 @@ func generate_path_of_length_from_start(start_node: VirtualNode, train: Train, r
 
 			var overshoot_node: JunctionNode = edge.virtual_node
 
-			var start_index: int = start_node.get_point_index()
-			var end: int = overshoot_node.get_point_index()
+			var start: float = start_node.get_track_position()
+			var end: float = overshoot_node.get_track_position()
 
-			var is_increasing: bool = start_index < end
-			var goal_point: int
-			# This conversion won't be EXACTLY percise(may round up or down a few pixels), 
-			# so we give the train an extra point index(whatever that is) space
-			# to reverse, so when it actually does the reverse it's definetely clear of the junction
-			# I'm sure this will cause me a lot of bugs and bite me in the ass
+			var is_increasing: bool = start < end
+			var goal_offset: float
+
 			if (is_increasing):	
-				goal_point = start_node.track.get_approx_point_index_at_offset(remaining_length) + 1
+				goal_offset = remaining_length
 			else:
 				var track_length: float = start_node.track.get_length()
-				goal_point = start_node.track.get_approx_point_index_at_offset(track_length - remaining_length) - 1
+				goal_offset = track_length - remaining_length
 
-			var end_node: StopNode = StopNode.new(start_node.track, goal_point, is_increasing, train, true)
+			var end_node: StopNode = StopNode.new(start_node.track, goal_offset, is_increasing, train, true)
 
 			paths_to_return.append(Path.new([start_node, end_node]))
 	return paths_to_return

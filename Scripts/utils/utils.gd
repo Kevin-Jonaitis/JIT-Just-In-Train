@@ -63,6 +63,9 @@ func check_angle_matches(angle_a: float, angle_b: float) -> bool:
 	return false
 
 
+func is_equal_approx(a: float, b: float, tolerance: float = EPSILON) -> bool:
+	return abs(a - b) < tolerance
+
 func check_value_epsilon(value: float) -> bool:
 	if abs(value) <= EPSILON:
 		return true

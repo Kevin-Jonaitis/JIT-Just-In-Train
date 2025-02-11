@@ -104,12 +104,12 @@ func calculate_path_draw() -> void:
 	for path: Path in schedule.paths:
 		var color: Color = colors[randi() % colors.size()]
 		for segment: Path.TrackSegment in path.track_segments:
-			var start_index: int = segment.start_point_index
-			var end_index: int = segment.end_point_index
-			var step: int = 1 if start_index < end_index else -1
-			for i: int in range(start_index, end_index, step):
-				var point_a: Vector2 = segment.track.get_point_at_index(i)
-				var point_b: Vector2 = segment.track.get_point_at_index(i + step)
+			var start_pos: float = segment.start_track_pos
+			var end_pos: float = segment.end_track_pos
+			var step: int = 5 if start_pos < end_pos else -5 # 5 px
+			for i: int in range(start_pos, end_pos, step):
+				var point_a: Vector2 = segment.track.get_point_at_offset(i)
+				var point_b: Vector2 = segment.track.get_point_at_offset(i + step)
 				trains.drawableFunctionsToCallLater.append(func() -> void: trains.draw_line(point_a, point_b, color, 4))
 
 func _draw() -> void:
