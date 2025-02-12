@@ -55,13 +55,13 @@ func get_connected_nodes(train_: Train, fetch_junctions_only: bool = false) -> A
 	assert(false, "This should be implemented in the subclasses")
 	return []
 
-func get_connected_nodes_including_reverse_start(train: Train, start_position: Stop.TrainPosition) -> Array[Edge]:
-	var connected_nodes: Array[Edge] = get_connected_nodes(train)
+# func get_connected_nodes_including_reverse_start(train: Train, start_position: Stop.TrainPosition) -> Array[Edge]:
+# 	var connected_nodes: Array[Edge] = get_connected_nodes(train)
 
-	if (self.name == start_position.front_of_train.name):
-		assert(start_position.back_of_train.is_reverse_node, "Back of train should be a reverse node!!")
-		connected_nodes.append(Edge.new(start_position.back_of_train, Edge.COST_TO_REVERSE))
-	return connected_nodes
+# 	if (self.name == start_position.front_of_train.name):
+# 		assert(start_position.back_of_train.is_reverse_node, "Back of train should be a reverse node!!")
+# 		connected_nodes.append(Edge.new(start_position.back_of_train, Edge.COST_TO_REVERSE))
+# 	return connected_nodes
 
 
 static func calculate_distance_between_two_connectable_nodes(node_one: VirtualNode, node_two: VirtualNode) -> float:
@@ -72,7 +72,6 @@ static func calculate_distance_between_two_connectable_nodes(node_one: VirtualNo
 		return 0
 
 	assert(same_juction || same_track, "Can't compare nodes that arn't on the same track or junction!")
-		# assert(previous_node.track.uuid == current_node.track.uuid, "We should only have paths on the same track")
 	var distance_one: float = node_one.get_distance_from_front_track()
 	var distance_two: float = node_two.get_distance_from_front_track()
 	return absf(distance_one - distance_two)

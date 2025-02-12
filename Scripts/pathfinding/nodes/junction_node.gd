@@ -113,7 +113,8 @@ func get_connected_nodes(train: Train, fetch_junctions_only: bool = false) -> Ar
 		return edges_to_return
 
 	# Add possible turnaround point
-	edges_to_return.append_array(get_reverse_edges(train))
+	if (train.can_reverse):
+		edges_to_return.append_array(get_reverse_edges(train))
 
 	# Add possible stop nodes
 	if is_exit_node():

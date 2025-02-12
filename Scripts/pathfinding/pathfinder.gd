@@ -10,35 +10,33 @@ func _init() -> void:
 # We can't know what the "forward" and "backward" direction is of any intermediate stops
 static func find_path_with_movement(
 	train: Train, 
-	can_move_forward: bool, 
-	can_move_backwards: bool, 
 	should_loop: bool
 ) -> Schedule:
 	var stops: Array[Stop] = train.get_stops().duplicate() # Duplicate since we don't want to affect the underlying object
 	if (stops.size() <= 1):
 		return null
-	if (can_move_forward and can_move_backwards):
+	if (train.can_reverse):
 		if (should_loop):
 			stops.append(stops[0])
-		return find_path(train, stops, should_loop, can_move_backwards)
-	elif (can_move_forward):
+		return find_path(train, stops, should_loop)
+	else: # Can only go forwards
 		# only allow the forward node as the first stopz
 		stops[0] = Stop.new_Stop([stops[0].get_forward_positions()])
 		# If we want to connect it back to the start, we add the first node
 		if (should_loop):
 			stops.append(stops[0]) # This will automatically already have only the forward node
-		return find_path(train, stops, should_loop, can_move_backwards)
-	elif (can_move_backwards):
-		# only allow the backward node as the first and last stop
-		stops[0] = Stop.new_Stop([stops[0].get_backward_positions()])
-		if (should_loop):
-			stops.append(stops[0]) # This will automatically already have only the backward node
-		return find_path(train, stops, should_loop, can_move_backwards)
-	else:
-		assert(false, "We should never get here")
-		return null
+		return find_path(train, stops, should_loop)
+	# elif (can_move_backwards):
+	# 	# only allow the backward node as the first and last stop
+	# 	stops[0] = Stop.new_Stop([stops[0].get_backward_positions()])
+	# 	if (should_loop):
+	# 		stops.append(stops[0]) # This will automatically already have only the backward node
+	# 	return find_path(train, stops, should_loop, can_move_backwards)
+	# else:
+	# 	assert(false, "We should never get here")
+	# 	return null
 
-static func find_path(train: Train, stops: Array[Stop], is_loop: bool, can_move_backwards: bool) -> Schedule:
+static func find_path(train: Train, stops: Array[Stop], is_loop: bool) -> Schedule:
 	var dynamnic_programming: Dictionary = {}
 	for i: int in range(stops.size() - 1):
 		var current_stop: Stop = stops[i]
@@ -48,7 +46,7 @@ static func find_path(train: Train, stops: Array[Stop], is_loop: bool, can_move_
 				var path: Path = find_path_between_nodes(start_position, end_node, train)
 				if (path != null):
 					add_to_dp_map(end_node, dynamnic_programming, RunningPath.new([path]))
-	var schedule: Schedule = calculate_running_best_path(dynamnic_programming, stops, is_loop, can_move_backwards)
+	var schedule: Schedule = calculate_running_best_path(dynamnic_programming, stops, is_loop, train.can_reverse)
 	return schedule
 
 #dynamnic_programming is a dictionary with key: StopNode, value: <Path or RunningPath, depending on caller>
@@ -87,13 +85,6 @@ static func calculate_running_best_path(
 				if (next_stop_path != null):
 					add_to_dp_map(next_stop_path.get_last_stop(), running_map, next_stop_path)
 			continue
-		
-		# for current_stop_option: StopNode in stops[i].get_front_stops():
-		# 	for next_stop_option: StopNode in stops[i + 1].get_front_stops():
-		# 		# Types could be RunningPath | null
-		# 		var current_stop_path: RunningPath = running_map.get(current_stop_option.name)
-		# 		var next_stop_path: RunningPath = dynamnic_programming.get(next_stop_option.name)
-		# 		check_if_overlap_and_add_to_map(running_map, current_stop_path, next_stop_path)
 
 		var current_stop_options: Array[StopNode] = stops[i].get_front_stops()
 		var next_stop_options: Array[StopNode]  = stops[i + 1].get_front_stops()
@@ -165,7 +156,7 @@ static func check_for_overlap(
 
 		# If the nodes arn't the same between the two paths,
 		# That means we did a reverse between the two paths. Set the reverse node
-		if not (shortest_first.get_last_stop().name == shortest_second.get_first_stop().name):
+		if (shortest_first.get_last_stop().name != shortest_second.get_first_stop().name):
 			shortest_first.get_last_stop().is_reverse_node = true # Set the last node as a reverse node
 			
 		var combined_array: Array[Path] = []
@@ -240,9 +231,14 @@ static func heuristic(a: VirtualNode, b: VirtualNode) -> float:
 static func find_path_between_nodes(
 	start_position: Stop.TrainPosition, 
 	end: StopNode, 
-	train: Train
-) -> Path:
+	train: Train) -> Path:
 	var start: StopNode = start_position.front_of_train
+
+	if (train.can_reverse):
+		assert(start is StopNode, "This should be a stop node; otherwise adding a connection to a node will be permanent")
+		assert(start_position.back_of_train.is_reverse_node, "Back of train should be a reverse node!!")
+		start.add_connected_node(start_position.back_of_train, Edge.COST_TO_REVERSE)
+
 	var open_set: PriorityQueue = PriorityQueue.new()
 	var came_from: Dictionary = {}
 	var g_score: Dictionary = {}
@@ -261,7 +257,7 @@ static func find_path_between_nodes(
 		if visited.has(current.name):
 			continue
 		visited[current.name] = true
-		var edges: Array[Edge] = current.get_connected_nodes_including_reverse_start(train, start_position)
+		var edges: Array[Edge] = current.get_connected_nodes(train)
 		for edge: Edge in edges:
 			var neighbor: VirtualNode = edge.virtual_node
 			var cost_to_neighbor: float = edge.cost

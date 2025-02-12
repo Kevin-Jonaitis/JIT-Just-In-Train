@@ -49,7 +49,7 @@ func _ready() -> void: # Set the position of the stop when it actually enters th
 static func new_Stop(stop_option_: Array[TrainPosition]) -> Stop:
 	var stop: Stop = stopPreloaded.instantiate()
 	stop.stop_option = stop_option_
-	assert(stop_option_.size() == 2, "We should have two nodes")
+	#assert(stop_option_.size() == 2, "We should have two nodes")
 	# The first stop option should always have the train facing forward
 	
 	return stop
