@@ -26,7 +26,7 @@ var is_placed: bool = false
 var schedule: Schedule
 var on_ready_callables: Array[Callable]
 var should_loop: bool = true
-var can_reverse: bool = false
+var can_reverse: bool = true
 
 var front_car : TrainCar
 
@@ -93,7 +93,7 @@ func get_stops() -> Array[Stop]:
 	return _stops
 
 func calculate_schedule() -> void:
-	schedule = Pathfinder.find_path_with_movement(self, false)
+	schedule = Pathfinder.find_path_with_movement(self)
 	print_schedule()
 	schedule_follower.reset()
 	calculate_path_draw()

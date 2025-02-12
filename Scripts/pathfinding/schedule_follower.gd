@@ -42,8 +42,9 @@ func update_train_position(delta: float) -> void:
 	if (_progress.overshoot && !train.schedule.is_loop): 
 		return
 	while (_progress.overshoot && train.schedule.is_loop):
-		_progress = update_progress(_progress, schedule, _progress.overshoot)
+		var new_progress : float = _progress.overshoot
 		_progress = Progress.new(train)
+		_progress = update_progress(_progress, schedule, new_progress)
 
 	assert(_progress.overshoot == 0, "Overshoot should be 0")
 	train.set_position_and_rotation(_progress.position, 0) # Should we change this?
@@ -68,4 +69,6 @@ func update_progress(old_progress: Progress, schedule: Schedule, progress_px: fl
 		new_progress = path.update_progress(new_progress, progress_px, train)
 
 	assert(new_progress.overshoot == 0, "Overshoot should be 0")
+	assert(new_progress.path_overshoot == 0, "path overshoot should be 0")
+
 	return new_progress

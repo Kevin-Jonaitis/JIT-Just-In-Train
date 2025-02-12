@@ -30,15 +30,15 @@ func parse_reverse_nodes() -> Array[VirtualNode]:
 	return reversed_nodes
 
 
-func calculate_length(nodes_param: Array[VirtualNode]) -> float:
+static func calculate_length(nodes_param: Array[VirtualNode]) -> float:
 	var length_sum: float = 0
 	for i: int in range(1, nodes_param.size()):
 		var previous_node: VirtualNode = nodes_param[i - 1]
 		var current_node: VirtualNode = nodes_param[i]
 		var distance: float = VirtualNode.calculate_distance_between_two_connectable_nodes(previous_node, current_node)
-		var edge: Edge = Edge.new(current_node, distance)
-		assert(edge != null, "We should always have an edge between nodes_param in a path!")
-		length_sum += edge.cost
+		# var edge: Edge = Edge.new(current_node, distance)
+		# assert(edge != null, "We should always have an edge between nodes_param in a path!")
+		length_sum += distance
 	return length_sum
 
 

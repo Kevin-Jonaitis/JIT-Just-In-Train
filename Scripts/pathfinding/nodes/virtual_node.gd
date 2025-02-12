@@ -67,8 +67,8 @@ func get_connected_nodes(train_: Train, fetch_junctions_only: bool = false) -> A
 static func calculate_distance_between_two_connectable_nodes(node_one: VirtualNode, node_two: VirtualNode) -> float:
 	var same_juction: bool = false
 	var same_track: bool = node_one.track.uuid == node_two.track.uuid
-	if (node_one is JunctionNode && node_two is JunctionNode):
-		same_juction = (node_one as JunctionNode).junction.name == (node_two as JunctionNode).junction.name
+
+	if(are_nodes_are_at_same_position(node_one, node_two)):
 		return 0
 
 	assert(same_juction || same_track, "Can't compare nodes that arn't on the same track or junction!")
@@ -101,3 +101,12 @@ func create_node_in_opposite_direction() -> VirtualNode:
 func get_distance_from_front_track() -> float:
 	assert(false, "This should be implemented in the subclasses")
 	return 0
+
+static func are_nodes_are_at_same_position(node_one: VirtualNode, node_two: VirtualNode) -> bool:
+	if (node_one is StopNode and node_two is StopNode):
+		return node_one.track.uuid == node_two.track.uuid && \
+		node_one.get_track_position() == node_two.get_track_position()
+	elif (node_one is JunctionNode and node_two is JunctionNode):
+		return (node_one as JunctionNode).junction.name == (node_two as JunctionNode).junction.name
+	else:
+		return false

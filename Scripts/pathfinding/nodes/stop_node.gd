@@ -110,7 +110,4 @@ func get_connected_edge() -> Edge:
 		distance_to_point)
 
 func get_distance_from_front_track() -> float:
-	if (forward):
-		return track_pos
-	else:
-		return track.length - track_pos
+	return track_pos
