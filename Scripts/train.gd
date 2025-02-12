@@ -94,7 +94,7 @@ func get_stops() -> Array[Stop]:
 
 func calculate_schedule() -> void:
 	schedule = Pathfinder.find_path_with_movement(self)
-	print_schedule()
+	#print_schedule()
 	schedule_follower.reset()
 	calculate_path_draw()
 	queue_redraw()

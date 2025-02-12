@@ -105,7 +105,7 @@ func get_distance_from_front_track() -> float:
 static func are_nodes_are_at_same_position(node_one: VirtualNode, node_two: VirtualNode) -> bool:
 	if (node_one is StopNode and node_two is StopNode):
 		return node_one.track.uuid == node_two.track.uuid && \
-		node_one.get_track_position() == node_two.get_track_position()
+		Utils.is_equal_approx(node_one.get_track_position(),node_two.get_track_position())
 	elif (node_one is JunctionNode and node_two is JunctionNode):
 		return (node_one as JunctionNode).junction.name == (node_two as JunctionNode).junction.name
 	else:

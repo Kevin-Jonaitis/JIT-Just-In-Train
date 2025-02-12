@@ -46,7 +46,7 @@ project/assembly_name="JIT- Just In Train"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/gut/plugin.cfg")
+enabled=PackedStringArray()
 
 [global_group]
 

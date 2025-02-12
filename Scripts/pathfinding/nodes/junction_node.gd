@@ -66,7 +66,7 @@ func get_reverse_edges(train: Train) -> Array[Edge]:
 	var results : Array[Path] = generate_path_of_length_from_start(self, train, train.length)
 
 	if (results.size() == 0):
-		print("No reverse path found at junction: " + name + " for train: " + train.name)
+		# print("No reverse path found at junction: " + name + " for train: " + train.name)
 		return []
 	for path : Path in results:
 		assert(path.nodes.size() >= 2, "Path should have at least 2 nodes: starting node and turnaround node")
@@ -158,7 +158,8 @@ func generate_path_of_length_from_start(start_node: VirtualNode, train: Train, r
 				if (newPath.length == remaining_length):
 					paths_to_return.append(newPath)
 				else:
-					print("Ditching path because it's length doesn't match", newPath.length, remaining_length)
+					pass
+					# print("Ditching path because it's length doesn't match", newPath.length, remaining_length)
 		elif new_lenth <= 0:
 			if (edge.is_reverse_edge()):
 				continue;
