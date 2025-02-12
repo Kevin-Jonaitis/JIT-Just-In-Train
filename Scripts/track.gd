@@ -313,7 +313,7 @@ func get_angle_at_point_index(index: int) -> float:
 func delete_track() -> void:
 	start_junction.remove_track_and_nodes(self)
 	end_junction.remove_track_and_nodes(self)
-	# virtual_node_manager.delete_interjunction_virtual_nodes()
+	virtual_node_manager.delete_interjunction_virtual_nodes()
 	self.queue_free()
 	trains.update_schedules()
 

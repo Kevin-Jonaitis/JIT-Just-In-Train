@@ -25,7 +25,9 @@ func update_train_stops(old_track: Track, new_track_a: Track, new_track_b: Track
 				if (potential_point):
 					var stop: Stop = Stop.create_stop_for_point(potential_point, train, train.get_stops()[stop_index].is_placed_forward())
 					assert(stop != null, "We should be able to create a stop here always")
-					train.get_stops()[stop_index] = stop
+					#train.get_stops()[stop_index] = stop
+					train.replace_stop_at_index(stop, stop_index)
+					pass
 
 func update_schedules() -> void:
 	for train: Train in trains:

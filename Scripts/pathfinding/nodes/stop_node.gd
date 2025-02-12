@@ -42,7 +42,7 @@ static func generate_name(track_: Track, track_pos_: float, forward_: bool, trai
 	return generated_name
 
 # possible connected stop node
-# possible connected junction node
+# possible connected junction node 
 func get_connected_nodes(train_: Train, fetch_junctions_only: bool = false) -> Array[Edge]:
 	var edges_to_return: Array[Edge] = []
 	var sorted_stop_nodes: Array[StopNode] = sort_stop_nodes(train_)

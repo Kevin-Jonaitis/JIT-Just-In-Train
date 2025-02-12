@@ -52,7 +52,7 @@ func update_progress(old_progress: Progress, schedule: Schedule, progress_px: fl
 	var new_progress: Progress
 	var current_path_index: int = old_progress.path_index
 	var path: Path = schedule.paths[current_path_index]
-	new_progress = path.update_progress(old_progress, progress_px, train.length)
+	new_progress = path.update_progress(old_progress, progress_px, train)
 
 	while (new_progress.path_overshoot != 0):
 		current_path_index += 1
@@ -65,7 +65,7 @@ func update_progress(old_progress: Progress, schedule: Schedule, progress_px: fl
 		new_progress = Progress.new(train)
 		new_progress.path_index = current_path_index
 		path = schedule.paths[current_path_index]
-		new_progress = path.update_progress(new_progress, progress_px, train.length)
+		new_progress = path.update_progress(new_progress, progress_px, train)
 
 	assert(new_progress.overshoot == 0, "Overshoot should be 0")
 	return new_progress

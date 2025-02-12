@@ -76,6 +76,10 @@ func add_stop(stop: Stop) -> void:
 	$Stops.add_child(stop)
 	calculate_schedule()
 
+func replace_stop_at_index(stop: Stop, index: int) -> void:
+	$Stops.get_children()[index].replace_by(stop)
+	calculate_schedule()
+
 
 func remove_stop(stop_index: int) -> void:
 	# var stop: Stop = _stops[stop_index]
@@ -89,6 +93,7 @@ func get_stops() -> Array[Stop]:
 
 func calculate_schedule() -> void:
 	schedule = Pathfinder.find_path_with_movement(self, true, true, false)
+	print_schedule()
 	schedule_follower.reset()
 	calculate_path_draw()
 	queue_redraw()
@@ -96,6 +101,14 @@ func calculate_schedule() -> void:
 var colors: Array[Color] = [
 	Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.CYAN, Color.MAGENTA, Color.ORANGE, Color.PURPLE, Color.PINK, Color.TEAL, Color.GRAY, Color.LIME, Color.AQUA, Color.OLIVE, Color.MAROON, Color.TEAL, Color.SILVER, Color.WHITE, Color.BLACK
 ]
+
+
+func print_schedule() -> void:
+	if (schedule != null):
+		for path: Path in schedule.paths:
+			print("Start of path:")
+			for node: VirtualNode in path.nodes:
+				print(node.name)
 
 func calculate_path_draw() -> void:
 	if not schedule:

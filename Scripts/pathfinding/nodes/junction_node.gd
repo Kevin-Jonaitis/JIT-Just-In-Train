@@ -66,7 +66,7 @@ func get_reverse_edges(train: Train) -> Array[Edge]:
 	var results : Array[Path] = generate_path_of_length_from_start(self, train, train.length)
 
 	if (results.size() == 0):
-		print("No reverse path found at junction: " + name + "for train: " + train.name)
+		print("No reverse path found at junction: " + name + " for train: " + train.name)
 		return []
 	for path : Path in results:
 		assert(path.nodes.size() >= 2, "Path should have at least 2 nodes: starting node and turnaround node")
@@ -88,29 +88,6 @@ func get_distance_from_front_track() -> float:
 		return 0
 	else:
 		return track.get_length()
-
-# Used to construct paths for Stops
-
-# # TODO: finish
-# func get_path_up_to_last_junctuion(train: Train) -> Array[Path]:
-# 	var paths: Array[Path] = []
-
-# 	var results : Array[Path] = generate_path_of_length_from_start(self, train, train.length)
-
-
-# 	for path : Path in results:
-# 		assert(path.nodes.size() > 2, "Path should have at least 2 nodes: starting node and turnaround node")
-# 		assert(path.nodes[-1] is StopNode, "Last node should be a stop node that's a returnaround node")
-# 		assert(path.nodes[0] is JunctionNode, "First node should be our junction node")
-# 		# var full_path: Path = generate_path_with_reverse_nodes_added(path)
-# 		var nodes_without_start : Array[VirtualNode] = full_path.nodes.duplicate()
-# 		nodes_without_start.erase(0)
-# 		var entry_node: JunctionNode = get_entry_node()
-
-# 		# Use the OLD path length, because we don't use the turn-around length
-# 		var edge: Edge = Edge.new(entry_node, path.length, nodes_without_start)
-# 		edges.append(edge)
-# 	return paths
 
 func generate_path_with_reverse_nodes_added(path: Path) -> Path:
 	var nodes: Array[VirtualNode] = path.nodes

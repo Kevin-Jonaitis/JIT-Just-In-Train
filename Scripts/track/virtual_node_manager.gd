@@ -20,10 +20,10 @@ func setup_interjunction_virtual_nodes() -> void:
 	pass
 
 # # We need to do this, otherwise, we'll have a memory leak, because of cyclic references
-# func delete_interjunction_virtual_nodes() -> void:
-# 	assert(track.start_junction and track.end_junction, "We should have both junctions! Something went wrong")
-# 	track.start_junction.remove_virtual_nodes_and_references(track)
-# 	track.end_junction.remove_virtual_nodes_and_references(track)
+func delete_interjunction_virtual_nodes() -> void:
+	assert(track.start_junction and track.end_junction, "We should have both junctions! Something went wrong")
+	track.start_junction.remove_virtual_nodes_and_references(track)
+	track.end_junction.remove_virtual_nodes_and_references(track)
 
 # Always returns a positive value
 static func cost_between_nodes(node1: VirtualNode, node2: VirtualNode) -> float:

@@ -15,7 +15,7 @@ var reverse_nodes: Array[VirtualNode] = []
 
 func _init(new_nodes: Array[VirtualNode]) -> void:
 	# assert(new_nodes[0] is StopNode, "The first node should always be a stop node")
-	assert(new_nodes[-1] is StopNode, "The last node should always be a stop node")
+	#assert(new_nodes[-1] is StopNode, "The last node should always be a stop node")
 	self.nodes = new_nodes
 	self.length = calculate_length(nodes)
 	self.create_track_segments()
@@ -43,7 +43,7 @@ func calculate_length(nodes_param: Array[VirtualNode]) -> float:
 
 
 static func join_seperate_path_arrays(path_one: Path, path_two: Path) -> Path:
-	assert(path_one.nodes[0].name == path_two.nodes[-1].name, "The last stop of the first path and first stop of the second path should be the same")
+	# assert(path_one.nodes[0].name == path_two.nodes[-1].name, "The last stop of the first path and first stop of the second path should be the same")
 	path_one.nodes.pop_back()
 	path_two.nodes.pop_back()
 	return Path.new(path_one.nodes + path_two.nodes)
@@ -73,7 +73,7 @@ func check_if_track_segment_starts_with_reverse_node(track_segment_index: int) -
 			return true
 	return false
 
-func update_progress(old_progress: Progress, new_progress_px: float, train_length: float) -> Progress:
+func update_progress(old_progress: Progress, new_progress_px: float, train: Train) -> Progress:
 	var new_progress: Progress = Progress.copy(old_progress)
 	var track_segment_index: int = new_progress.track_segment_index
 	var previous_track_segment_progress: float = new_progress.track_segment_progress
@@ -83,7 +83,9 @@ func update_progress(old_progress: Progress, new_progress_px: float, train_lengt
 	while (previous_track_segment_progress + new_progress_px) > segment_length:
 		track_segment_index += 1
 		if(check_if_track_segment_starts_with_reverse_node(track_segment_index)):
-			new_progress_px = new_progress_px + train_length ## We assume here that we've built the paths to take the full reversal path into account
+			# When you flip around, the "train" advances by the amount of distance we shifit our
+			# cart position
+			new_progress_px = new_progress_px + train.cart_length * (train._cars.size() - 1)
 			new_progress.reverse()
 
 		new_progress_px = new_progress_px - (segment_length - previous_track_segment_progress)
@@ -144,12 +146,11 @@ class TrackSegment:
 # stop to junction(same track) # care
 # stop to stop(same track)
 
-# write a function in the path class that creates the TrackSegment from nodes.
 
-# Assume as you iterate through the nodes, you will change from one track to another. Only create a TrackSegment for each track that the nodes go over.
 
-# Make sure to set the correct start_index and end_index. These are the index of the points on the track. A junction node will either start at the beginning or end of the track, and a stop node
-# will be somewhere in the middle of the track.
+# Create track segments for each path of travel
+# If we are "reversing", we should create two track segments: one from the junction to the reverse point
+# And another from the reverse point back to the junction
 func create_track_segments() -> void:
 	track_segments.clear()
 	if nodes.size() < 2:
@@ -160,7 +161,7 @@ func create_track_segments() -> void:
 
 	for i: int in range(1, nodes.size()):
 		var node: VirtualNode = nodes[i]
-		if node.track.uuid != current_track.uuid:
+		if node.track.uuid != current_track.uuid || (is_reverse_spot(nodes[i - 1], node)):
 			var end_pos: float = nodes[i - 1].get_track_position()
 			var segment: TrackSegment = TrackSegment.new(current_track, start_pos, end_pos)
 			track_segments.append(segment)
@@ -171,3 +172,9 @@ func create_track_segments() -> void:
 	var last_end_position: float = nodes[nodes.size() - 1].get_track_position()
 	var last_segment: TrackSegment = TrackSegment.new(current_track, start_pos, last_end_position)
 	track_segments.append(last_segment)
+
+static func is_reverse_spot(node_one: VirtualNode, node_two: VirtualNode) -> bool:
+	if (node_one is StopNode and node_two is StopNode && node_one.track.uuid == node_two.track.uuid &&
+	(node_one as StopNode).forward != (node_two as StopNode).forward):
+		return true
+	return false
