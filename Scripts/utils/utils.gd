@@ -62,6 +62,14 @@ func check_angle_matches(angle_a: float, angle_b: float) -> bool:
 		return true
 	return false
 
+func measure(func_to_measure: Callable, name_: String) -> Variant:
+	
+	var start_time: float = Time.get_ticks_usec()
+	var result: Variant = func_to_measure.call()
+	var end_time: float = Time.get_ticks_usec()
+	print(name_ + ": " + str((end_time - start_time) / 1000) + " milliseconds")
+	return result
+
 
 func is_equal_approx(a: float, b: float, tolerance: float = EPSILON) -> bool:
 	return abs(a - b) < tolerance

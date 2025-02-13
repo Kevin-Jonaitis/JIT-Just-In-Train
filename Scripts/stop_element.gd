@@ -28,4 +28,5 @@ static func new_stop_element(name_: String, train_: Train, stop_index_: int) -> 
 	return stop_element
 
 func _on_remove_pressed() -> void:
-	emit_signal("on_station_removed", train, stop_index)
+	var result : int = Utils.measure(func() -> Variant: return emit_signal("on_station_removed", train, stop_index), "on_remove_pressed")
+	print("EMILT SINGAL RESULT: ", result)

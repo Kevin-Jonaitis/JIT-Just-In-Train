@@ -27,17 +27,24 @@ static func find_path_with_movement(
 
 static func find_path(train: Train, stops: Array[Stop]) -> Schedule:
 	var dynamnic_programming: Dictionary = {}
+	Utils.measure(func() -> void:
+		find_path_between_set_nodes(train, stops, dynamnic_programming),
+	"find path between SET of nodes")
+	var schedule: Schedule = Utils.measure(func() -> Variant: return calculate_running_best_path(dynamnic_programming, stops, train),
+	"calculate best path")
+	return schedule
+
+
+static func find_path_between_set_nodes(train: Train, stops: Array[Stop], dynamnic_programming: Dictionary) -> void:
 	for i: int in range(stops.size() - 1):
 		var current_stop: Stop = stops[i]
 		var next_stop: Stop = stops[i + 1]
 		for start_position: Stop.TrainPosition in current_stop.stop_option:
 			for end_node: StopNode in next_stop.get_front_stops():
-				var path: Path = find_path_between_nodes(start_position, end_node, train)
+				var path: Path = Utils.measure(func() -> Variant: return find_path_between_nodes(start_position, end_node, train),
+				"find path between nodes")
 				if (path != null):
 					add_to_dp_map(end_node, dynamnic_programming, RunningPath.new([path]))
-	var schedule: Schedule = calculate_running_best_path(dynamnic_programming, stops, train)
-	return schedule
-
 #dynamnic_programming is a dictionary with key: StopNode, value: <Path or RunningPath, depending on caller>
 
 # First the map will be dp<StopNode, Path> then it'll transform into dp<StopNode, RunningPath>

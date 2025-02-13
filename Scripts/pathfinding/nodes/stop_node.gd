@@ -93,7 +93,7 @@ func get_track_position() -> float:
 func get_track_name() -> String:
 	return track.name
 	# assert(name.begins_with("stop"), "This isn't a temp node, a bad call was made here")
-	# var split = name.split("-")
+	# var split = n	ame.split("-")
 	# return split[1]
 
 

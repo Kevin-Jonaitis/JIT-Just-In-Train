@@ -93,7 +93,7 @@ func get_stops() -> Array[Stop]:
 	return _stops
 
 func calculate_schedule() -> void:
-	schedule = Pathfinder.find_path_with_movement(self)
+	schedule = Utils.measure(func() -> Variant: return Pathfinder.find_path_with_movement(self), "pathfinder")
 	#print_schedule()
 	schedule_follower.reset()
 	calculate_path_draw()
