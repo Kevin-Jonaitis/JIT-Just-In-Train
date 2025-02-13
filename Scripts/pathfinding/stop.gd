@@ -32,6 +32,10 @@ func set_stop_visible(visible_: bool) -> void:
 func get_forward_stop() -> TrainPosition:
 	return stop_option[0]
 
+func get_train() -> Train:
+	assert(stop_option.size() > 0, "We should have at least one train position")
+	return stop_option[0].front_of_train.train
+
 # It's placed forward if it's first stops are forward-facing
 func is_placed_forward() -> bool:
 	return stop_option[0].front_of_train.is_forward()

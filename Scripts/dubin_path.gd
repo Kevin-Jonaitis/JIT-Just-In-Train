@@ -1,7 +1,8 @@
 extends Resource
 
 #TODO: Optimze so that we don't create points for dubin paths that arn't actually used.
-	
+
+#TODO: Allow multiple dubin paths that are E2E to be combined by adding their segments to the segments array	
 # find the smallest viable path type
 # size it up until it gets to the next path type, or until it's 4x the distance between the points, whatever comes first?
 

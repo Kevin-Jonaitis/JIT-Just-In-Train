@@ -28,6 +28,8 @@ var trackStartAngle: float = 0
 var trackEndingAngle: float = 0
 # If it's possible to build the track given the starting and ending positions and directions
 var validTrack: bool = false
+#Whether it's valid to place a track start/end point here(for example, due to a stop you can't)
+var can_place_point: bool = false
 
 ## Track Settings
 var tangentSwitchEndpoint: bool = false
@@ -174,7 +176,21 @@ func cancel_track() -> void:
 	
 func find_nearest_grid_and_tangents(mousePos: Vector2) -> void:
 	var mousePosition: Vector2 = mousePos
+	
+	
+
 	current_overlay = track_intersection_searcher.check_for_junctions_or_track_at_position(mousePosition)
+	var near_stop: bool = TrackIntersectionSearcher.check_for_stops_at_position(current_overlay)
+	if (near_stop):
+		can_place_point = false
+		arrow_start.modulate = Color(1, 0, 0)
+		arrow_end.modulate = Color(1, 0, 0)
+	else:
+		# Reset every time we run to find the nearest grid point
+		can_place_point = true
+		arrow_start.modulate = Color(1, 1, 1)
+		arrow_end.modulate = Color(1, 1, 1)
+		
 	var snap_tangent: Variant = null
 	var tangents: Array = []
 	# Find the closet track point. If the track endpoint is within our radius, we should "stick" to it. 

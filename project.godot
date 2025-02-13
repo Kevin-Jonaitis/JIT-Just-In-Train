@@ -52,6 +52,7 @@ enabled=PackedStringArray()
 
 tracks="the tracks node"
 Junctions=""
+trains=""
 
 [gui]
 

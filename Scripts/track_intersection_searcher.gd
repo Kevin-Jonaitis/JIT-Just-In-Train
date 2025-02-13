@@ -25,6 +25,30 @@ func check_for_junctions_or_track_at_position(position: Vector2) -> TrackOrJunct
 	return null
 
 
+static func check_for_stops_at_position(track_or_junction: TrackOrJunctionOverlap) -> bool:
+	# assert(track_or_junction, "We shouldn't call this with null")
+	# Can't have a stop at a junction, so short circuit
+	if (track_or_junction == null || track_or_junction.junction):
+		return false
+	
+	var point_info: TrackPointInfo = track_or_junction.trackPointInfo
+	var track_to_test : Track = point_info.track
+	var position: Vector2 = point_info.get_point()
+
+	var stops : Array[Stop] = Utils.get_all_stops()
+	for stop: Stop in stops:
+		var train : Train = stop.get_train()
+		var minimum_required_distance: float = train.length -  (train.cart_length / 2)
+		for train_pos: Stop.TrainPosition in stop.stop_option:
+			if (train_pos.front_of_train.track.uuid != track_to_test.uuid):
+				continue
+			if ((train_pos.front_of_train.track.uuid == track_to_test.uuid && 
+			train_pos.front_of_train.get_position().distance_to(position) < minimum_required_distance) ||
+			(train_pos.back_of_train.track.uuid == track_to_test.uuid 
+			&& train_pos.back_of_train.get_position().distance_to(position) < minimum_required_distance)):
+				return true
+	return false
+
 func check_for_collision(position: Vector2, mask: int) -> Array[Dictionary]:
 	track_intersection = null
 	var query: PhysicsShapeQueryParameters2D = PhysicsShapeQueryParameters2D.new()

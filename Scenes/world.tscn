@@ -126,7 +126,7 @@ curve = SubResource("Curve2D_xvilm")
 [node name="Junctions" type="Node2D" parent="." groups=["Junctions"]]
 script = ExtResource("12_rdyhv")
 
-[node name="Trains" type="Node2D" parent="."]
+[node name="Trains" type="Node2D" parent="." groups=["trains"]]
 script = ExtResource("10_u8kh7")
 
 [node name="Stations" type="Node2D" parent="."]

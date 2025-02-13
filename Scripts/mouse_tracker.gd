@@ -55,7 +55,7 @@ func handle_edit_mode(event: InputEvent) -> void:
 		trackBuilder.queue_redraw()
 	elif (!track_or_train):
 		trackBuilder.visible = false
-		train_builder.set_train_builder_enabled()			
+		train_builder.set_train_builder_enabled()		
 
 	if (track_or_train):
 		handle_track_building(event)
@@ -69,9 +69,9 @@ func handle_track_building(event: InputEvent) -> void:
 		trackBuilder.find_nearest_grid_and_tangents(get_global_mouse_position())
 	# if (event is InputEventMouseMotion):
 	if (event.is_action_pressed("left_click")):
-		if (trackBuilder.trackStartingPosition == null):
+		if (trackBuilder.trackStartingPosition == null && trackBuilder.can_place_point):
 			trackBuilder.intialize_and_set_start_point()
-		elif (trackBuilder.trackStartingPosition != null && trackBuilder.validTrack):
+		elif (trackBuilder.trackStartingPosition != null && trackBuilder.validTrack && trackBuilder.can_place_point):
 				trackBuilder.solidifyTrack()
 				return; # We don't want to call build track again
 	elif (event.is_action_pressed("track_mode")):
