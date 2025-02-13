@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://cr5xyl54nbt3h"]
 
-[ext_resource type="Script" path="res://Scripts/junction.gd" id="1_ax2dl"]
-[ext_resource type="Script" path="res://Scripts/collision_shape_2d.gd" id="2_v1awx"]
+[ext_resource type="Script" uid="uid://dgu1ai3bf63h0" path="res://Scripts/junction.gd" id="1_ax2dl"]
+[ext_resource type="Script" uid="uid://3jf3yskienoy" path="res://Scripts/collision_shape_2d.gd" id="2_v1awx"]
 
 [node name="Junction" type="Node2D"]
 script = ExtResource("1_ax2dl")

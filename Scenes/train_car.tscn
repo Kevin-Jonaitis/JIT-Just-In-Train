@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://b7r520607ib5w"]
 
-[ext_resource type="Script" path="res://Scenes/train_car.gd" id="1_82te6"]
+[ext_resource type="Script" uid="uid://cp0q0mwkb0x7u" path="res://Scenes/train_car.gd" id="1_82te6"]
 [ext_resource type="PackedScene" uid="uid://bfsvlbfk8q1dq" path="res://Scenes/train_sprite.tscn" id="1_wsco8"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_mxkxs"]

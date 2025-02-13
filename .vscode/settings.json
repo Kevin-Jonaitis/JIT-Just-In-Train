@@ -4,9 +4,11 @@
     //     "**/addons": true
     // },
     "search.exclude": {
-        "**/addons": true
+        "**/addons": true,
+        "**/*.uid": true
     },
-    "explorer.exclude": {
-        "**/addons": true
+    "files.exclude": {
+        "**/addons": true,
+        "**/*.uid": true
     }
 }

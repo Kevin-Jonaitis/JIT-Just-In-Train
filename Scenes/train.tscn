@@ -1,8 +1,8 @@
 [gd_scene load_steps=5 format=3 uid="uid://dcoe2hsmx5c22"]
 
-[ext_resource type="Script" path="res://Scripts/pathfinding/schedule_follower.gd" id="1_6okc3"]
-[ext_resource type="Script" path="res://Scripts/train.gd" id="1_d7wio"]
-[ext_resource type="Script" path="res://Scripts/stops.gd" id="4_73r2y"]
+[ext_resource type="Script" uid="uid://rnjkfrkktmv" path="res://Scripts/pathfinding/schedule_follower.gd" id="1_6okc3"]
+[ext_resource type="Script" uid="uid://bw33i8k1rulcb" path="res://Scripts/train.gd" id="1_d7wio"]
+[ext_resource type="Script" uid="uid://dm3oagscvaajl" path="res://Scripts/stops.gd" id="4_73r2y"]
 [ext_resource type="PackedScene" uid="uid://b7r520607ib5w" path="res://Scenes/train_car.tscn" id="4_a6eo5"]
 
 [node name="Train" type="Node2D"]

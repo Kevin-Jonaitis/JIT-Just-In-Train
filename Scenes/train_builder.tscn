@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://bd4106ayhxdc0"]
 
-[ext_resource type="Script" path="res://Scripts/train_builder.gd" id="1_0dkfy"]
+[ext_resource type="Script" uid="uid://ct81vkhir5l0i" path="res://Scripts/train_builder.gd" id="1_0dkfy"]
 
 [node name="TrainBuilder" type="Node2D"]
 script = ExtResource("1_0dkfy")
