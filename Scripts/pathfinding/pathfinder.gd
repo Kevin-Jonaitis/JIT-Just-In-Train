@@ -231,6 +231,10 @@ static func find_path_between_nodes(
 	train: Train) -> Path:
 	var start: StopNode = start_position.front_of_train
 
+	print("Start node: ", start.name)
+	print("End node: ", end.name)
+	print("")
+
 	if (train.can_reverse):
 		assert(start is StopNode, "This should be a stop node; otherwise adding a connection to a node will be permanent")
 		assert(start_position.back_of_train.is_reverse_node, "Back of train should be a reverse node!!")

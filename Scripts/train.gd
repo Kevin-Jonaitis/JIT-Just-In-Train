@@ -30,6 +30,8 @@ var can_reverse: bool = true
 
 var front_car : TrainCar
 
+var update_schedule_dirty: bool = false
+
 # whether the train's "back"(the last-added car) is starting direction of travel or not
 var _use_last_car_as_front: bool = false
 @onready var schedule_follower: ScheduleFollower = $ScheduleFollower
@@ -75,29 +77,36 @@ func verify_name_unique(name_: String) -> void:
 
 func add_stop(stop: Stop) -> void:
 	$Stops.add_child(stop)
-	calculate_schedule()
+	queue_calculate_schedule()
 
 func replace_stop_at_index(stop: Stop, index: int) -> void:
 	$Stops.get_children()[index].replace_by(stop)
-	calculate_schedule()
+	queue_calculate_schedule()
 
+
+# Make the call to calculate_schedule idempotent in that it's called at most once per frame
+func queue_calculate_schedule() -> void:
+	update_schedule_dirty = true
+	call_deferred("calculate_schedule")
 
 func remove_stop(stop_index: int) -> void:
 	# var stop: Stop = _stops[stop_index]
 	# var point_index: int = stop.stop_option[0].point_index
 	_stops[stop_index].free()
 	# _stops.remove_at(stop_index)
-	calculate_schedule()
+	queue_calculate_schedule()
 
 func get_stops() -> Array[Stop]:
 	return _stops
 
 func calculate_schedule() -> void:
-	schedule = Utils.measure(func() -> Variant: return Pathfinder.find_path_with_movement(self), "pathfinder")
-	#print_schedule()
-	schedule_follower.reset()
-	calculate_path_draw()
-	queue_redraw()
+	if update_schedule_dirty:
+		update_schedule_dirty = false
+		schedule = Utils.measure(func() -> Variant: return Pathfinder.find_path_with_movement(self), "pathfinder")
+		#print_schedule()
+		schedule_follower.reset()
+		calculate_path_draw()
+		queue_redraw()
 
 var colors: Array[Color] = [
 	Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.CYAN, Color.MAGENTA, Color.ORANGE, Color.PURPLE, Color.PINK, Color.TEAL, Color.GRAY, Color.LIME, Color.AQUA, Color.OLIVE, Color.MAROON, Color.TEAL, Color.SILVER, Color.WHITE, Color.BLACK
