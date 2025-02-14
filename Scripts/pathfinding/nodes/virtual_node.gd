@@ -13,7 +13,9 @@ var name: String:
 
 # Map<connected_node_name Edge>!! (caused at least one bug because it wasn't typed :( )
 # DO NOT USE DIRECTLY, use provided functions
-var _connected_nodes: Dictionary
+# var _connected_nodes: Dictionary
+
+
 # All nodes are either entry/exit to a track in a junction, or are ON a track
 var track: Track
 
@@ -76,18 +78,20 @@ static func calculate_distance_between_two_connectable_nodes(node_one: VirtualNo
 	var distance_two: float = node_two.get_distance_from_front_track()
 	return absf(distance_one - distance_two)
 
-func erase_connected_node(name_: String) -> void:
-	return _connected_nodes.erase(name_)
-
+#TODO: Refactor these so they're simpiler
+func erase_connected_node(node: VirtualNode) -> void:
+	Graph.remove_edge(self.name, node.name)
 
 func clear() -> void:
-	_connected_nodes.clear()
+	Graph.remove_node(self)
+	# _connected_nodes.clear()
 	
 func add_connected_node(node: VirtualNode, cost: float) -> void:
-	_connected_nodes[node.name] = Edge.new(node, cost)
+	Graph.add_edge(self, node, cost)
+	# _connected_nodes[node.name] = Edge.new(node, cost)
 
-func add_connected_reverse_node(node: VirtualNode, edge: Edge) -> void:
-	_connected_nodes[node.name] = edge
+# func add_connected_reverse_node(node: VirtualNode, edge: Edge) -> void:
+# 	_connected_nodes[node.name] = edge
 
 
 func get_track_position() -> float:

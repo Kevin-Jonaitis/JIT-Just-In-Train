@@ -1,53 +1,36 @@
 extends Node2D
-
 class_name Junction
-
 
 var uuid: String = Utils.generate_uuid()
 static var counter: int = 0
 
-# Yeah this could be a map, but really there will be less than 10 connections
-# and an array is so much easier to deal with
+# An array of "TrackConnection" objects describing which tracks connect to this Junction
 var lines: Array[TrackConnection]
 
-# Do not use these directly, they're in calculations to determine which way
-# the angle of the junction is going
-# Use TrackConnection.approach_from_angle instead
-
-# This angle (and opposite angle) represents the angle at which 
-# ALL tracks are coming _into_ the junction. They will always come in at 180 degrees from 
-# each other
 var _angle: float
 var _opposite_angle: float
 
-
-#Map<internal_node_id, JunctionNode>
-var virtual_nodes: Dictionary = {}
+# Since we’re now using a global Graph, we remove:
+# var virtual_nodes: Dictionary = {}
 
 const scene: PackedScene = preload("res://Scenes/junction.tscn")
 
+@onready var trains: Trains = get_tree().get_first_node_in_group("trains")
 
-@onready var trains: Trains = get_node("/root/Trains")
-
-# Cases:
-# 1. You're adding a single connection to a brand-new junction because it's the end of a track
-# 2. You're adding two connections to a brand new junction(placing a new track in the middle of an existing track)
-# 3. You're adding a connection to an existing junction
-
-# In all cases, a junction is always created with 1 track
-# and is UPDATED to add one more track
+# ---------------------------------------------------------
+# Classes for connections
+# ---------------------------------------------------------
 class TrackConnection:
 	var track: Track
 	# Wether it approaches from angle or opposite angle going INTO the junction
 	var approach_from_angle: bool
 	var connected_at_start: bool
 
-	func _init(track_: Track, approach_from_angle_: float, connected_at_start_: bool) -> void:
+	func _init(track_: Track, approach_from_angle_: bool, connected_at_start_: bool) -> void:
 		track = track_
 		approach_from_angle = approach_from_angle_
 		connected_at_start = connected_at_start_
 
-# Just a helper class
 class NewConnection:
 	var track: Track 
 	var angle: float
@@ -56,102 +39,117 @@ class NewConnection:
 	func _init(track_: Track, connected_at_start_: bool) -> void:
 		track = track_
 		connected_at_start = connected_at_start_
-
-		if (connected_at_start_):
+		if connected_at_start_:
 			angle = Utils.normalize_angle_0_to_2_pi(track.get_angle_at_point_index(0) + PI)
 		else:
 			angle = track.get_angle_at_point_index(-1)
 
+# ---------------------------------------------------------
+# Main logic
+# ---------------------------------------------------------
+
 func get_junction_node(track: Track, is_entry: bool) -> JunctionNode:
+	# We no longer rely on local virtual_nodes; we look for the node in the global Graph.
 	var node_name: String = JunctionNode.generate_name(self, track, is_entry)
-	if (virtual_nodes.has(node_name)):
-		return virtual_nodes[node_name]
+	if Graph.nodes.has(node_name):
+		var node: VirtualNode = Graph.nodes[node_name]
+		return node # Should be a JunctionNode or VirtualNode
 	else:
-		assert(false, "Virtual node not found, this should never happen!")
+		assert(false, "Virtual node not found in Graph. This should never happen!")
 		return null
 
 func add_vritual_nodes_for_connection(connection_: TrackConnection) -> void:
-	var entry_node: JunctionNode = JunctionNode.new(self, connection_.track, true, connection_.connected_at_start)
-	var exit_node: JunctionNode = JunctionNode.new(self, connection_.track, false, connection_.connected_at_start)
-	
-	virtual_nodes[entry_node.name] =  entry_node
-	virtual_nodes[exit_node.name] =  exit_node
-	
-	# You can only travel to nodes that are the opposite angle
-	var approach_from_angle: float = connection_.approach_from_angle
+	# 1. Create two new JunctionNodes (subclass of VirtualNode).
+	var entry_node: JunctionNode = JunctionNode.new(self, connection_.track, true,  connection_.connected_at_start)
+	var exit_node: JunctionNode  = JunctionNode.new(self, connection_.track, false, connection_.connected_at_start)
+
+	# 2. Register them in the global Graph
+	#    This adds them to graph.nodes, e.g. keyed by entry_node.name
+	Graph.add_node(entry_node)
+	Graph.add_node(exit_node)
+
+	# 3. For any connections in "lines" that are opposite approach, create zero-cost edges
+	var approach_from_angle: bool = connection_.approach_from_angle
 	var approachable_connections: bool = !approach_from_angle
 
 	for connection: TrackConnection in lines:
 		if connection == connection_:
 			continue
 		if connection.approach_from_angle == approachable_connections:
-			 # It's free to travel internally
-			var connected_node_out: VirtualNode = get_junction_node(connection.track, false)
-			entry_node.add_connected_node(connected_node_out, 0)
-			var connected_node_in: VirtualNode = get_junction_node(connection.track, true)
-			connected_node_in.add_connected_node(exit_node, 0)
+			# "connected_node_out" is the 'exit' for that track
+			var connected_node_out: JunctionNode = get_junction_node(connection.track, false)
+			# create edge: entry_node -> connected_node_out
+			Graph.add_edge(entry_node, connected_node_out, 0.0)
+
+			var connected_node_in: JunctionNode = get_junction_node(connection.track, true)
+			# create edge: connected_node_in -> exit_node
+			Graph.add_edge(connected_node_in, exit_node, 0.0)
 
 func add_connection(connection: NewConnection) -> void:
-	# Check if the track is already connected
-	
+	# 1. Determine if the new track approaches from the _angle or _opposite_angle
 	var track_connection: TrackConnection = null
-
-	if (Utils.check_angle_matches(connection.angle, _angle)):
+	if Utils.check_angle_matches(connection.angle, _angle):
 		track_connection = TrackConnection.new(connection.track, true, connection.connected_at_start)
-	elif (Utils.check_angle_matches(connection.angle, _opposite_angle)):
+	elif Utils.check_angle_matches(connection.angle, _opposite_angle):
 		track_connection = TrackConnection.new(connection.track, false, connection.connected_at_start)
 	else:
 		assert(false, "Connection angle doesn't match junction angle or opposite angle")
 		return
-	
+
+	# 2. Ensure no duplicate track/angle
 	for existing: TrackConnection in lines:
-		if existing.track.uuid == connection.track.uuid and Utils.check_angle_matches(existing.approach_from_angle,track_connection.approach_from_angle):
-				assert(false, "Track is already connected to this junction at the same angle!!")
-	
-	if(connection.connected_at_start):
+		if existing.track.uuid == connection.track.uuid \
+		and Utils.check_angle_matches(existing.approach_from_angle, track_connection.approach_from_angle):
+			assert(false, "Track is already connected to this junction at the same angle!!")
+
+	# 3. Update track references
+	if connection.connected_at_start:
 		connection.track.start_junction = self
 	else:
 		connection.track.end_junction = self
 
+	# 4. Add the connection to our "lines" array
 	lines.append(track_connection)
+
+	# 5. Create the new VirtualNodes (JunctionNodes) and edges
 	add_vritual_nodes_for_connection(track_connection)
 
 func remove_track_and_nodes(track: Track) -> void:
+	# Remove from lines
 	for i: int in range(lines.size()):
 		if lines[i].track.uuid == track.uuid:
 			lines.remove_at(i)
-			return
+			break 
+	# Now remove the associated VirtualNodes from the global Graph
 	remove_virtual_nodes_and_references(track)
 
-# Copilot 90% generated Yehaw
+
 func remove_virtual_nodes_and_references(track: Track) -> void:
 	var entry_node_name: String = JunctionNode.generate_name(self, track, true)
-	var exit_node_name: String = JunctionNode.generate_name(self, track, false)
-
+	var exit_node_name:  String = JunctionNode.generate_name(self, track, false)
 	remove_node_and_references(entry_node_name)
 	remove_node_and_references(exit_node_name)
 
 func remove_node_and_references(node_name: String) -> void:
-	if (virtual_nodes.has(node_name)):
-		virtual_nodes.erase(node_name)
-
-	# Remove references to this track in other nodes
-	for node: VirtualNode in virtual_nodes.values():
-		node.erase_connected_node(node_name)
-
+	# 1. If the node exists in the global Graph, remove it from there.
+	if Graph.nodes.has(node_name):
+		var node_to_remove: VirtualNode = Graph.nodes[node_name]
+		Graph.remove_node(node_to_remove)  # This will remove edges as well
+		# The rest of the references (edges, etc.) are handled by the Graph’s remove_node logic
 
 func get_outgoing_connections(track: Track) -> Array[TrackConnection]:
-	var outgoing_conenctions: Array[TrackConnection] = []
+	var outgoing_connections: Array[TrackConnection] = []
 	var angle_dir: bool
-	# TODO: mini-optimization to not iterate over list twice
+	# 1. Find the approach_from_angle for the track
 	for connection: TrackConnection in lines:
 		if connection.track.uuid == track.uuid:
 			angle_dir = connection.approach_from_angle
-			break;
+			break
+	# 2. Any connection that has a different approach_from_angle is "outgoing"
 	for connection: TrackConnection in lines:
 		if connection.approach_from_angle != angle_dir:
-			outgoing_conenctions.append(connection)
-	return outgoing_conenctions	
+			outgoing_connections.append(connection)
+	return outgoing_connections
 
 static func new_Junction(position_: Vector2, junctionsNode: Junctions, connection: NewConnection) -> Junction:
 	var junction: Junction = scene.instantiate()

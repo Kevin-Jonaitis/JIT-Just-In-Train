@@ -28,13 +28,13 @@ func create_node_in_opposite_direction() -> JunctionNode:
 
 func get_entry_node() -> JunctionNode:
 	assert(self.is_exit_node(), "What are you doing getting an entry node on NOT an exit node??")
-	var entry_node: JunctionNode = junction.virtual_nodes.get(generate_name(junction, track, true))
+	var entry_node: JunctionNode = Graph.nodes.get(generate_name(junction, track, true))
 	assert(entry_node.is_entry_node(), "This should be an exit node")
 	return entry_node
 
 func get_exit_node() -> JunctionNode:
 	assert(self.is_entry_node(), "What are you doing getting an exit node on NOT an entry node??")
-	var exit_node: JunctionNode = junction.virtual_nodes.get(generate_name(junction, track, false))
+	var exit_node: JunctionNode = Graph.nodes.get(generate_name(junction, track, true))
 	assert(!exit_node.is_entry_node(), "This should be an exit node")
 	return exit_node
 
@@ -107,7 +107,8 @@ func get_connected_nodes(train: Train, fetch_junctions_only: bool = false) -> Ar
 	var edges_to_return : Array[Edge] = []
 
 	# Add all other possible junction nodes(internal and across the track)
-	edges_to_return.assign(_connected_nodes.values() as Array[Edge])
+	edges_to_return.assign(Graph.get_outgoing_edges(self))
+	# edges_to_return.assign(_connected_nodes.values() as Array[Edge])
 
 	if (fetch_junctions_only):
 		return edges_to_return

@@ -70,4 +70,4 @@ static func insert_stop_between_nodes(
 	# Do not erase pointers between junctions, this should always be a viable path
 	if (node1 is JunctionNode and node2 is JunctionNode):
 		return
-	node1.erase_connected_node(node2.name)
+	node1.erase_connected_node(node2)
