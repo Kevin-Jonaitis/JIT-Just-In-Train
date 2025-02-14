@@ -29,7 +29,7 @@ var outgoing_edges: Dictionary[String, Array] = {}
 
 # Incoming edges: to_node_name (String) -> Array of from_node_name (String)
 # ONLY USED TO HELP REMOVE NODES
-var incoming_edges: Dictionary[String, Array] = {}
+var _incoming_edges: Dictionary[String, Array] = {}
 
 # Turnaround loops: node_name (String) -> Edge (loop back to itself)
 var turnaround_loops: Dictionary[String, Edge] = {}
@@ -46,8 +46,8 @@ func get_outgoing_edges(node: VirtualNode) -> Array[Edge]:
 	
 func add_node(node: VirtualNode) -> void:
 	nodes[node.name] = node
-	# if not incoming_edges.has(node.name):
-	# 	incoming_edges[node.name] = []  # Array of String
+	# if not _incoming_edges.has(node.name):
+	# 	_incoming_edges[node.name] = []  # Array of String
 	# if not outgoing_edges.has(node.name):
 	# 	outgoing_edges[node.name] = []  # Array of String
 	_update_all_turnaround_loops()
@@ -64,33 +64,28 @@ func remove_node(node: VirtualNode) -> void:
 
 	# Remove outgoing edges from this node
 	if outgoing_edges.has(node_name):
-		var edges_array: Array[Edge] 
-		edges_array.assign(outgoing_edges[node_name] as Array[Edge])
-		for edge: Edge in edges_array:
+		for edge: Edge in outgoing_edges[node_name]:
 			var dest_name: String = edge.to_node.name
-			assert(incoming_edges.has(dest_name), "If an outgoing edge exists, so should the incoming one")
-			if (incoming_edges[dest_name].size() == 1):
-				incoming_edges.erase(dest_name)
+			assert(_incoming_edges.has(dest_name), "If an outgoing edge exists, so should the incoming one")
+			if (_incoming_edges[dest_name].size() == 1):
+				_incoming_edges.erase(dest_name)
 			else:
-				incoming_edges[dest_name].erase(node_name)
+				_incoming_edges[dest_name].erase(node_name)
 				
 		outgoing_edges.erase(node_name)
 
 	# Remove all edges that point to this node
-	if incoming_edges.has(node_name):
-		var from_list: Array[String] 
-		from_list.assign(incoming_edges[node_name] as Array[String])
-		for from_name: String in from_list:
+	if _incoming_edges.has(node_name):
+		for from_name: String in _incoming_edges[node_name]:
 			assert(outgoing_edges.has(from_name), "If an incoming edge exists, so should the outgoing one")
-			var src_edges: Array[Edge]
-			src_edges.assign(outgoing_edges[from_name] as Array[Edge])
+			var src_edges: Array = outgoing_edges[from_name]
 			for i: int in range(src_edges.size() - 1, -1, -1):
 				if src_edges[i].to_node.name == node_name:
 					if (src_edges.size() == 1):
 						outgoing_edges.erase(from_name)
 					else:
 						src_edges.remove_at(i)
-		incoming_edges.erase(node_name)
+		_incoming_edges.erase(node_name)
 
 	# Remove any turnaround loop for this node
 	if turnaround_loops.has(node_name):
@@ -111,9 +106,9 @@ func add_edge(from_node: VirtualNode, to_node: VirtualNode, cost: float) -> void
 		outgoing_edges[from_node.name] = []
 	outgoing_edges[from_node.name].append(edge)
 
-	if not incoming_edges.has(to_node.name):
-		incoming_edges[to_node.name] = []
-	incoming_edges[to_node.name].append(from_node.name)
+	if not _incoming_edges.has(to_node.name):
+		_incoming_edges[to_node.name] = []
+	_incoming_edges[to_node.name].append(from_node.name)
 
 	_update_all_turnaround_loops()
 
@@ -126,8 +121,7 @@ func remove_edge(from_name: String, to_name: String) -> void:
 	# var to_name: String = to_node.name
 
 	if outgoing_edges.has(from_name):
-		var edges_array: Array[Edge]
-		edges_array.assign(outgoing_edges[from_name] as Array[Edge])
+		var edges_array: Array = outgoing_edges[from_name]
 		for i: int in range(edges_array.size() - 1, -1, -1):
 			if edges_array[i].to_node.name == to_name:
 				if (edges_array.size() == 1):
@@ -135,11 +129,11 @@ func remove_edge(from_name: String, to_name: String) -> void:
 				else:
 					edges_array.remove_at(i)
 
-	if incoming_edges.has(to_name):
-		if (incoming_edges[to_name].size() == 1):
-			incoming_edges.erase(to_name)
+	if _incoming_edges.has(to_name):
+		if (_incoming_edges[to_name].size() == 1):
+			_incoming_edges.erase(to_name)
 		else:
-			incoming_edges[to_name].erase(from_name)
+			_incoming_edges[to_name].erase(from_name)
 
 	_update_all_turnaround_loops()
 	verify_edges()
@@ -176,10 +170,10 @@ func verify_edges() -> void:
 		var edges_array: Array[Edge]
 		edges_array.assign(outgoing_edges[node_name] as Array[Edge])
 		for edge: Edge in edges_array:
-			assert(incoming_edges.has(edge.to_node.name), "Outgoing edge has no incoming edge")
-			assert(incoming_edges[edge.to_node.name].find(node_name) != -1, "Outgoing edge has no incoming edge") 
+			assert(_incoming_edges.has(edge.to_node.name), "Outgoing edge has no incoming edge")
+			assert(_incoming_edges[edge.to_node.name].find(node_name) != -1, "Outgoing edge has no incoming edge") 
 	
-	#assert(outgoing_edges.size() == incoming_edges.size(), "Mismatched edge counts")
+	#assert(outgoing_edges.size() == _incoming_edges.size(), "Mismatched edge counts")
 
 
 
@@ -260,9 +254,9 @@ func print_graph() -> void:
 
 	# Print incoming edges as before
 	print("Incoming Edges: ")
-	for incoming_edge: String in incoming_edges.keys():
+	for incoming_edge: String in _incoming_edges.keys():
 		var from_list: Array[String] 
-		from_list.assign(incoming_edges[incoming_edge] as Array[String])
+		from_list.assign(_incoming_edges[incoming_edge] as Array[String])
 		print("  ", incoming_edge, " -> ", from_list)
 	
 	print("Turaround Nodes: ")
