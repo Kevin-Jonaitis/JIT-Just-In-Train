@@ -63,10 +63,10 @@ func get_connected_nodes(train_: Train, fetch_junctions_only: bool = false) -> A
 	var distance_to_self: float  = track_pos
 	if is_forward():
 		var forward_nodes : Array[StopNode] = sorted_stop_nodes.filter(func(node: StopNode) -> bool: return node.is_forward())
-		for stopNode : StopNode in forward_nodes:
-			if (stopNode.track_pos > self.track_pos):
-				var distance_to_stopNode: float = stopNode.track_pos
-				edges_to_return.append(Edge.new(stopNode, absf(distance_to_stopNode - distance_to_self)))
+		for stop_node : StopNode in forward_nodes:
+			if (stop_node.track_pos > self.track_pos):
+				var distance_to_stopNode: float = stop_node.track_pos
+				edges_to_return.append(Edge.new(stop_node, absf(distance_to_stopNode - distance_to_self)))
 	else:
 		var backward_nodes : Array[StopNode] = sorted_stop_nodes.filter(func(node: StopNode) -> bool: return !node.is_forward())
 		for i: int in range(backward_nodes.size() - 1, -1, -1):

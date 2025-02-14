@@ -1,5 +1,7 @@
 extends Node2D
 
+class_name Trains
+
 var trains : Array[Train]:
 	get:
 		var result : Array[Train] = []

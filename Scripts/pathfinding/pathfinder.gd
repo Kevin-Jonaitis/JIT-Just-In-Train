@@ -260,7 +260,7 @@ static func find_path_between_nodes(
 		visited[current.name] = true
 		var edges: Array[Edge] = current.get_connected_nodes(train)
 		for edge: Edge in edges:
-			var neighbor: VirtualNode = edge.virtual_node
+			var neighbor: VirtualNode = edge.to_node
 			var cost_to_neighbor: float = edge.cost
 			if visited.has(neighbor.name):
 				continue

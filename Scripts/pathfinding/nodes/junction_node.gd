@@ -143,7 +143,7 @@ func generate_path_of_length_from_start(start_node: VirtualNode, train: Train, r
 	for edge : Edge in start_node.get_connected_nodes(train, true):
 		var new_lenth: float = remaining_length - edge.cost
 		if (new_lenth > 0):
-			var further_paths: Array[Path] = generate_path_of_length_from_start(edge.virtual_node, train, new_lenth)
+			var further_paths: Array[Path] = generate_path_of_length_from_start(edge.to_node, train, new_lenth)
 			var newPath: Path
 			var path_first_half: Path
 			if (edge.is_reverse_edge()):
@@ -151,7 +151,7 @@ func generate_path_of_length_from_start(start_node: VirtualNode, train: Train, r
 				reverse_path_nodes.insert(0, start_node)
 				path_first_half = Path.new(reverse_path_nodes)
 			else:
-				path_first_half = Path.new([start_node, edge.virtual_node])
+				path_first_half = Path.new([start_node, edge.to_node])
 			
 			for further_path : Path in further_paths:
 				newPath = Path.join_seperate_path_arrays(path_first_half, further_path)
@@ -165,10 +165,10 @@ func generate_path_of_length_from_start(start_node: VirtualNode, train: Train, r
 				continue;
 
 			assert(start_node is JunctionNode, "This should be a junction node")
-			assert(edge.virtual_node is JunctionNode, "This should be a junction node")
-			assert(edge.virtual_node.track.uuid == start_node.track.uuid, "If we're decreasing the length, we should always be on the same track")
+			assert(edge.to_node is JunctionNode, "This should be a junction node")
+			assert(edge.to_node.track.uuid == start_node.track.uuid, "If we're decreasing the length, we should always be on the same track")
 
-			var overshoot_node: JunctionNode = edge.virtual_node
+			var overshoot_node: JunctionNode = edge.to_node
 
 			var start: float = start_node.get_track_position()
 			var end: float = overshoot_node.get_track_position()

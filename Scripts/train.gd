@@ -37,7 +37,7 @@ var _use_last_car_as_front: bool = false
 @onready var schedule_follower: ScheduleFollower = $ScheduleFollower
 # @onready var front_offset: Node2D = $FrontOffset
 #TODO: cleanup to use global directly
-@onready var trains: Trains = Trains
+@onready var trains: Trains = get_tree().get_first_node_in_group("trains")
 @onready var junctions: Junctions = get_tree().get_first_node_in_group("Junctions")
 
 

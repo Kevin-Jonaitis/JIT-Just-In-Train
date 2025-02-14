@@ -18,12 +18,10 @@ config/icon="res://icon.png"
 [autoload]
 
 MapManager="*res://Scripts/map_manager.gd"
-Utils="*res://Scripts/utils/utils.gd"
-EventBus="*res://Scripts/event_bus.gd"
-ObjectFetcher="*res://Scripts/object_fetcher.gd"
-Trains="*res://Scripts/trains.gd"
-Junctions="res://Scripts/junctions.gd"
-Stations="res://Scripts/stations.gd"
+Utils="*res://Globals/utils.gd"
+EventBus="*res://Globals/event_bus.gd"
+ObjectFetcher="*res://Globals/object_fetcher.gd"
+Graph="*res://Globals/graph.gd"
 
 [debug]
 
