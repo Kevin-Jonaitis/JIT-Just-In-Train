@@ -282,6 +282,7 @@ static func find_path_between_nodes(
 	while not open_set.is_empty():
 		var current: VirtualNode = open_set.extract_min()
 		var current_name: String = current.name
+		print("Current: ", current_name, ", start: ", start.name, "m end: ", end.name)
 		if current_name == end.name:
 			return reconstruct_path(came_from, current)
 

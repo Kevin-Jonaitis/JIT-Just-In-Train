@@ -158,7 +158,7 @@ func generate_path_of_length_from_start(start_node: VirtualNode, train: Train, r
 			# for further_path : Path in further_paths:
 			if further_path != null:
 				newPath = Path.join_seperate_path_arrays(path_first_half, further_path)
-				if (newPath.length == remaining_length):
+				if (Utils.is_equal_approx(newPath.length, remaining_length)):
 					return newPath
 				else:
 					assert(false, "This should never happen, our path should be exactly remaining length")

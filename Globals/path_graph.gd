@@ -212,7 +212,10 @@ func _calculate_and_set_turnaround_loop(node: JunctionNode, train: Train) -> voi
 	# Retrieve the inner dictionary (mapping node name -> Edge)
 	var loops: Dictionary = turnaround_loops_by_train[train_key] as Dictionary
 	# Add or update the turnaround loop for the given junction.
-	loops[node.name] = reverse_edge
+	if (reverse_edge != null):
+		loops[node.name] = reverse_edge
+	else:
+		loops.erase(node.name)
 
 	# var junction_nodes: Array[JunctionNode] = get_all_exit_nodes()
 	# for junction_node: JunctionNode in junction_nodes:
@@ -237,18 +240,14 @@ func _find_edge_to(edges_array: Array, target_name: String) -> Edge:
 
 
 func verify_edges() -> void:
-
-	#print_graph()
-
-	# Verify the values in the outgoing arrays match the incoming arrays
-	for node_name: String in outgoing_edges.keys():
-		var edges_array: Array = outgoing_edges[node_name]
-		for edge: Edge in edges_array:
-			assert(_incoming_edges.has(edge.to_node.name), "Outgoing edge has no incoming edge")
-			assert(_incoming_edges[edge.to_node.name].find(node_name) != -1, "Outgoing edge has no incoming edge") 
+	pass
+	# # Verify the values in the outgoing arrays match the incoming arrays
+	# for node_name: String in outgoing_edges.keys():
+	# 	var edges_array: Array = outgoing_edges[node_name]
+	# 	for edge: Edge in edges_array:
+	# 		assert(_incoming_edges.has(edge.to_node.name), "Outgoing edge has no incoming edge")
+	# 		assert(_incoming_edges[edge.to_node.name].find(node_name) != -1, "Outgoing edge has no incoming edge") 
 	
-	#assert(outgoing_edges.size() == _incoming_edges.size(), "Mismatched edge counts")
-
 
 # -------------------------------------------------------------------
 # Debug

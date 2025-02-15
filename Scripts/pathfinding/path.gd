@@ -43,9 +43,9 @@ static func calculate_length(nodes_param: Array[VirtualNode]) -> float:
 
 
 static func join_seperate_path_arrays(path_one: Path, path_two: Path) -> Path:
-	# assert(path_one.nodes[0].name == path_two.nodes[-1].name, "The last stop of the first path and first stop of the second path should be the same")
+	# assert(path_one.nodes[-1].name == path_two.nodes[0].name, "The last stop of the first path and first stop of the second path should be the same")
 	path_one.nodes.pop_back()
-	path_two.nodes.pop_back()
+	#path_two.nodes.pop_back() #TODO: is this right to remove???
 	return Path.new(path_one.nodes + path_two.nodes)
 
 func get_first_stop() -> VirtualNode:
