@@ -36,7 +36,6 @@ func create_new_train(visible_: bool) -> void:  # Added return type
 	train.set_name_user("Train-" + str(train_counter))
 	train_counter += 1
 	train.visible = visible_
-	# train.is_placed = true
 	valid_train_placement = false
 	add_new_train.emit(train)
 
@@ -59,4 +58,5 @@ func place_train() -> void:  # Added return type
 	train.modulate = SOLID
 	train.front_car.area2d.collision_layer = Train.TRAIN_COLLISION_LAYER
 	train.is_placed = true
+	DeferredQueue.queue_calculate_turnaround(train) # As soon as it's placed set its turnaround loops
 	create_new_train(true)

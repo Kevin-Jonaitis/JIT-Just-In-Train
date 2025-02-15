@@ -51,8 +51,8 @@ class NewConnection:
 func get_junction_node(track: Track, is_entry: bool) -> JunctionNode:
 	# We no longer rely on local virtual_nodes; we look for the node in the global Graph.
 	var node_name: String = JunctionNode.generate_name(self, track, is_entry)
-	if Graph.nodes.has(node_name):
-		var node: VirtualNode = Graph.nodes[node_name]
+	if Graph._nodes.has(node_name):
+		var node: VirtualNode = Graph._nodes[node_name]
 		return node # Should be a JunctionNode or VirtualNode
 	else:
 		assert(false, "Virtual node not found in Graph. This should never happen!")
@@ -132,8 +132,8 @@ func remove_virtual_nodes_and_references(track: Track) -> void:
 
 func remove_node_and_references(node_name: String) -> void:
 	# 1. If the node exists in the global Graph, remove it from there.
-	if Graph.nodes.has(node_name):
-		var node_to_remove: VirtualNode = Graph.nodes[node_name]
+	if Graph._nodes.has(node_name):
+		var node_to_remove: VirtualNode = Graph._nodes[node_name]
 		Graph.remove_node(node_to_remove)  # This will remove edges as well
 		# The rest of the references (edges, etc.) are handled by the Graph’s remove_node logic
 

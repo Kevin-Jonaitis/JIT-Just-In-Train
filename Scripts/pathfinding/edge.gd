@@ -10,16 +10,18 @@ var to_node: VirtualNode
 var cost: float
 
 # Optional path if there are a couple of nodes to get to this node; this will
-# happen for reverse nodes, where they _must_ take this path.
 var intermediate_nodes: Array[VirtualNode] = []
+var intermediate_nodes_train: Train = null
+# happen for reverse nodes, where they _must_ take this path.
 
 var name: String
 
 
-func _init(node_: VirtualNode, cost_: float, intermediate_nodes_ : Array[VirtualNode] = []) -> void:
+func _init(node_: VirtualNode, cost_: float, intermediate_nodes_ : Array[VirtualNode] = [], intermediate_nodes_train_: Train = null) -> void:
 	to_node = node_
 	cost = cost_
 	self.intermediate_nodes = intermediate_nodes_
+	self.intermediate_nodes_train = intermediate_nodes_train_
 	self.name = Utils.generate_uuid() # TODO: update with incoming edge name
 
 func is_reverse_edge() -> bool:

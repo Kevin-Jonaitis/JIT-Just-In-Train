@@ -28,13 +28,13 @@ func create_node_in_opposite_direction() -> JunctionNode:
 
 func get_entry_node() -> JunctionNode:
 	assert(self.is_exit_node(), "What are you doing getting an entry node on NOT an exit node??")
-	var entry_node: JunctionNode = Graph.nodes.get(generate_name(junction, track, true))
+	var entry_node: JunctionNode = Graph._nodes.get(generate_name(junction, track, true))
 	assert(entry_node.is_entry_node(), "This should be an exit node")
 	return entry_node
 
 func get_exit_node() -> JunctionNode:
 	assert(self.is_entry_node(), "What are you doing getting an exit node on NOT an entry node??")
-	var exit_node: JunctionNode = Graph.nodes.get(generate_name(junction, track, true))
+	var exit_node: JunctionNode = Graph._nodes.get(generate_name(junction, track, true))
 	assert(!exit_node.is_entry_node(), "This should be an exit node")
 	return exit_node
 
@@ -55,32 +55,33 @@ func is_exit_node() -> bool:
 
 
 
-func get_reverse_edges(train: Train) -> Array[Edge]:
+# We only get the FIRST valid reverse edge. This saves processing time, and anyways
+# which reverse edge it takes would be artibrary anyways
+func get_reverse_edge(train: Train) -> Edge:
 	if (!self.is_exit_node()):
-		return []
+		return null
 
-	var edges: Array[Edge] = []
+	# var edges: Array[Edge] = []
 	# var length: float = train.length
 	# var out_node: JunctionNode = get_junction_node(connection.track, false)
 	# var in_node: JunctionNode = get_junction_node(connection.track, false)
-	var results : Array[Path] = generate_path_of_length_from_start(self, train, train.length)
+	var path : Path = generate_path_of_length_from_start(self, train, train.length)
 
-	if (results.size() == 0):
+	if (path == null):
 		# print("No reverse path found at junction: " + name + " for train: " + train.name)
-		return []
-	for path : Path in results:
-		assert(path.nodes.size() >= 2, "Path should have at least 2 nodes: starting node and turnaround node")
-		assert(path.nodes[-1] is StopNode, "Last node should be a stop node that's a returnaround node")
-		assert(path.nodes[0] is JunctionNode, "First node should be our junction node")
-		var full_path: Path = generate_path_with_reverse_nodes_added(path)
-		var nodes_without_start : Array[VirtualNode] = full_path.nodes.duplicate()
-		nodes_without_start.remove_at(0)
-		var entry_node: JunctionNode = get_entry_node()
+		return null
+	assert(path.nodes.size() >= 2, "Path should have at least 2 nodes: starting node and turnaround node")
+	assert(path.nodes[-1] is StopNode, "Last node should be a stop node that's a returnaround node")
+	assert(path.nodes[0] is JunctionNode, "First node should be our junction node")
+	var full_path: Path = generate_path_with_reverse_nodes_added(path)
+	var nodes_without_start : Array[VirtualNode] = full_path.nodes.duplicate()
+	nodes_without_start.remove_at(0)
+	var entry_node: JunctionNode = get_entry_node()
 
-		# Use the OLD path length, because we don't use the turn-around length
-		var edge: Edge = Edge.new(entry_node, path.length, nodes_without_start)
-		edges.append(edge)
-	return edges
+	# Use the OLD path length, because we don't use the turn-around length
+	var edge: Edge = Edge.new(entry_node, path.length, nodes_without_start, train)
+	# edges.append(edge)
+	return edge
 
 
 func get_distance_from_front_track() -> float:
@@ -102,49 +103,49 @@ func generate_path_with_reverse_nodes_added(path: Path) -> Path:
 # possible connected stop node
 # possible connected junction node
 # possible connected reverse node
-func get_connected_nodes(train: Train, fetch_junctions_only: bool = false) -> Array[Edge]:
-	var sorted_stops: Array[StopNode] = sort_stop_nodes(train)
-	var edges_to_return : Array[Edge] = []
+# func get_connected_nodes(train: Train, fetch_junctions_only: bool = false) -> Array[Edge]:
+# 	var sorted_stops: Array[StopNode] = sort_stop_nodes(train)
+# 	var edges_to_return : Array[Edge] = []
 
-	# Add all other possible junction nodes(internal and across the track)
-	edges_to_return.assign(Graph.get_outgoing_edges(self))
-	# edges_to_return.assign(_connected_nodes.values() as Array[Edge])
+# 	# Add all other possible junction nodes(internal and across the track)
+# 	edges_to_return.assign(Graph.get_outgoing_edges(self, train))
+# 	# edges_to_return.assign(_connected_nodes.values() as Array[Edge])
 
-	if (fetch_junctions_only):
-		return edges_to_return
+# 	if (fetch_junctions_only):
+# 		return edges_to_return
 
-	# Add possible turnaround point
-	if (train.can_reverse):
-		edges_to_return.append_array(get_reverse_edges(train))
+# 	# Add possible turnaround point
+# 	if (train.can_reverse):
+# 		edges_to_return.append(get_reverse_edge(train))
 
-	# Add possible stop nodes
-	if is_exit_node():
-		if (sorted_stops.size() != 0):
-			# assert(possible_stop_points[0].point_index <= possible_stop_points[-1].point_index, "These should be in ascending order")
-			if (is_connected_at_start()): # We should use the forward nodes
-				var forward_nodes : Array[StopNode] = sorted_stops.filter(func(node: StopNode) -> bool: return node.is_forward())
-				for node : StopNode in forward_nodes:
-					# Distance from "front" for junction node(self) is 0
-					edges_to_return.append(Edge.new(node, node.get_distance_from_front_track()))
-			else: # We should add the backwards nodes
-				var backward_nodes : Array[StopNode] = sorted_stops.filter(func(node: StopNode) -> bool: return !node.is_forward())
-				for node : StopNode in backward_nodes:
-					# Distance from "front" for junction node(self) is track length
-					edges_to_return.append(Edge.new(node, track.length - node.get_distance_from_front_track()))
+# 	# Add possible stop nodes
+# 	if is_exit_node():
+# 		if (sorted_stops.size() != 0):
+# 			# assert(possible_stop_points[0].point_index <= possible_stop_points[-1].point_index, "These should be in ascending order")
+# 			if (is_connected_at_start()): # We should use the forward nodes
+# 				var forward_nodes : Array[StopNode] = sorted_stops.filter(func(node: StopNode) -> bool: return node.is_forward())
+# 				for node : StopNode in forward_nodes:
+# 					# Distance from "front" for junction node(self) is 0
+# 					edges_to_return.append(Edge.new(node, node.get_distance_from_front_track()))
+# 			else: # We should add the backwards nodes
+# 				var backward_nodes : Array[StopNode] = sorted_stops.filter(func(node: StopNode) -> bool: return !node.is_forward())
+# 				for node : StopNode in backward_nodes:
+# 					# Distance from "front" for junction node(self) is track length
+# 					edges_to_return.append(Edge.new(node, track.length - node.get_distance_from_front_track()))
 
-	return edges_to_return
+# 	return edges_to_return
 
 # We just need one turnaround point
-func generate_path_of_length_from_start(start_node: VirtualNode, train: Train, remaining_length: float) -> Array[Path]:
-	assert(remaining_length > 0, "This should never happen, how did we recurse below 0")
-	var paths_to_return : Array[Path] = []
+func generate_path_of_length_from_start(start_node: VirtualNode, train: Train, remaining_length: float) -> Path:
+	assert(remaining_length >= 0, "This should never happen, how did we recurse below 0")
+	# var paths_to_return : Array[Path] = []
 	# Only get connected nodes; don't bother getting reverse edges for connected
 	# nodes as the train length will go down for each "further" intersection, and therefore
-	# will never be long enough to reverse
-	for edge : Edge in start_node.get_connected_nodes(train, true):
+	# will never be long enough to reverse	
+	for edge : Edge in Graph.get_connected_edges(start_node, train, true):
 		var new_lenth: float = remaining_length - edge.cost
 		if (new_lenth > 0):
-			var further_paths: Array[Path] = generate_path_of_length_from_start(edge.to_node, train, new_lenth)
+			var further_path: Path = generate_path_of_length_from_start(edge.to_node, train, new_lenth)
 			var newPath: Path
 			var path_first_half: Path
 			if (edge.is_reverse_edge()):
@@ -154,13 +155,15 @@ func generate_path_of_length_from_start(start_node: VirtualNode, train: Train, r
 			else:
 				path_first_half = Path.new([start_node, edge.to_node])
 			
-			for further_path : Path in further_paths:
+			# for further_path : Path in further_paths:
+			if further_path != null:
 				newPath = Path.join_seperate_path_arrays(path_first_half, further_path)
 				if (newPath.length == remaining_length):
-					paths_to_return.append(newPath)
+					return newPath
 				else:
+					assert(false, "This should never happen, our path should be exactly remaining length")
 					pass
-					# print("Ditching path because it's length doesn't match", newPath.length, remaining_length)
+				# print("Ditching path because it's length doesn't match", newPath.length, remaining_length)
 		elif new_lenth <= 0:
 			if (edge.is_reverse_edge()):
 				continue;
@@ -185,5 +188,5 @@ func generate_path_of_length_from_start(start_node: VirtualNode, train: Train, r
 
 			var end_node: StopNode = StopNode.new(start_node.track, goal_offset, is_increasing, train, true)
 
-			paths_to_return.append(Path.new([start_node, end_node]))
-	return paths_to_return
+			return Path.new([start_node, end_node])
+	return null

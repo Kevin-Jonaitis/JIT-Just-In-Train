@@ -224,21 +224,50 @@ static func get_node_position(node: VirtualNode) -> Vector2:
 static func heuristic(a: VirtualNode, b: VirtualNode) -> float:
 	return get_node_position(a).distance_to(get_node_position(b))
 
+static func possible_edge_to_end_node(current: VirtualNode, end_node: StopNode) -> Edge:
+	if current.track == end_node.track:
+		if current is StopNode:
+			var current_cast: StopNode = current
+			if (current_cast.is_forward() && end_node.is_forward()):
+				if current_cast.get_track_position() < end_node.get_track_position():
+					var distance: float = end_node.get_track_position() - current_cast.get_track_position() 
+					return Edge.new(end_node, distance)
+			elif (!current_cast.is_forward() && !end_node.is_forward()):
+				if current.get_track_position() > end_node.get_track_position():
+					var distance: float = current_cast.get_track_position() - end_node.get_track_position()
+					return Edge.new(end_node, distance)		
+		if current is JunctionNode:
+			var current_cast: JunctionNode = current
+			if (current_cast.is_exit_node()):
+				if current_cast.connected_at_start_of_track && end_node.is_forward():
+					return Edge.new(end_node, end_node.get_track_position())
+				if !current_cast.connected_at_start_of_track && !end_node.is_forward():
+					return Edge.new(end_node, current_cast.track.length - current_cast.get_track_position())
+	return null
+
+# If this is a stop node, get the junctions it'd be connected to
+static func get_connected_junction_edges_for_stop_node(current: StopNode) -> Array[Edge]:
+	var junction_node: JunctionNode
+	if (current.is_forward()):
+		junction_node = current.track.start_junction.get_junction_node(current.track, false)
+	else:
+		junction_node = current.track.end_junction.get_junction_node(current.track, false)
+	
+	var connected_edges: Array[Edge] = Graph.get_connected_edges(junction_node, current.train)
+	return connected_edges
+
 # Copilot generated(it is A* as requested, and looks like code from A* algorithm wiki page)
 static func find_path_between_nodes(
 	start_position: Stop.TrainPosition, 
 	end: StopNode, 
 	train: Train) -> Path:
 	var start: StopNode = start_position.front_of_train
+	var start_name: String = start.name
 
 	print("Start node: ", start.name)
 	print("End node: ", end.name)
 	print("")
 
-	if (train.can_reverse):
-		assert(start is StopNode, "This should be a stop node; otherwise adding a connection to a node will be permanent")
-		assert(start_position.back_of_train.is_reverse_node, "Back of train should be a reverse node!!")
-		start.add_connected_node(start_position.back_of_train, Edge.COST_TO_REVERSE)
 
 	var open_set: PriorityQueue = PriorityQueue.new()
 	var came_from: Dictionary = {}
@@ -252,19 +281,37 @@ static func find_path_between_nodes(
 
 	while not open_set.is_empty():
 		var current: VirtualNode = open_set.extract_min()
-		if current.name == end.name:
+		var current_name: String = current.name
+		if current_name == end.name:
 			return reconstruct_path(came_from, current)
 
-		if visited.has(current.name):
+		if visited.has(current_name):
 			continue
-		visited[current.name] = true
-		var edges: Array[Edge] = current.get_connected_nodes(train)
+
+		visited[current_name] = true
+		# We do it all for you, buddy
+		var edges: Array[Edge] = Graph.get_connected_edges(current, train)
+
+		# Allow reversing at the start node
+		if (current_name == start_name && train.can_reverse):
+			assert(start is StopNode, "This should be a stop node; otherwise adding a connection to a node will be permanent")
+			assert(start_position.back_of_train.is_reverse_node, "Back of train should be a reverse node!!")
+			edges.append(Edge.new(start_position.back_of_train, Edge.COST_TO_REVERSE))
+			edges.append_array(get_connected_junction_edges_for_stop_node(current as StopNode))
+		if (current_name == start_position.back_of_train.name):
+			edges.append_array(get_connected_junction_edges_for_stop_node(current as StopNode))
+
+		# Add the end stop node edge if it's viable
+		var possible_end_edge: Edge = possible_edge_to_end_node(current, end)
+		if (possible_end_edge):
+			edges.append(possible_end_edge)
+
 		for edge: Edge in edges:
 			var neighbor: VirtualNode = edge.to_node
 			var cost_to_neighbor: float = edge.cost
 			if visited.has(neighbor.name):
 				continue
-			var tentative_g: float = g_score[current.name] + cost_to_neighbor
+			var tentative_g: float = g_score[current_name] + cost_to_neighbor
 			if tentative_g < g_score.get(neighbor.name, INF):
 				came_from[neighbor.name] = { "node": current, "path": edge.intermediate_nodes }
 				g_score[neighbor.name] = tentative_g

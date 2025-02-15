@@ -22,7 +22,7 @@ extends Node
 # Data Structures
 # -------------------------------------------------------------------
 # Nodes: node name (String) -> VirtualNode
-var nodes: Dictionary[String, VirtualNode] = {}
+var _nodes: Dictionary[String, VirtualNode] = {}
 
 # Outgoing edges: from_node_name (String) -> Array of Edge
 var outgoing_edges: Dictionary[String, Array] = {}
@@ -34,6 +34,15 @@ var _incoming_edges: Dictionary[String, Array] = {}
 # Turnaround loops: node_name (String) -> Edge (loop back to itself)
 var turnaround_loops: Dictionary[String, Edge] = {}
 
+# Needs to be kept in sync with _nodes
+# I'll probably regret this later
+var exit_nodes: Array[JunctionNode] = []
+
+
+# Turnaround loops by train: train name (String) -> Dictionary 
+#   (inner Dictionary: node name (String) -> Edge)
+var turnaround_loops_by_train: Dictionary[String, Dictionary] = {}
+
 @onready var trains: Trains = Utils.get_node_by_ground_name("trains")
 var update_turnaround_loops_dirty: bool = false
 
@@ -41,21 +50,33 @@ var update_turnaround_loops_dirty: bool = false
 # Node Management
 # -------------------------------------------------------------------
 
-func get_outgoing_edges(node: VirtualNode) -> Array[Edge]:
+func get_connected_edges(node: VirtualNode, train: Train, get_turnarounds: bool = true) -> Array[Edge]:
+	assert(train, "Train must be provided")
 	var connected_edges: Array[Edge] = []
 	if outgoing_edges.has(node.name):
+		# Get the actual array (no assign(), so changes affect the stored array)
 		connected_edges.assign(outgoing_edges[node.name] as Array[Edge])
+	
+	# Lookup turnaround loops for this train (keyed by train.name)
+	if (get_turnarounds):
+		var train_key: String = train.name
+		if turnaround_loops_by_train.has(train_key):
+			var loops: Dictionary = turnaround_loops_by_train[train_key] as Dictionary
+			if loops.has(node.name):
+				connected_edges.append(loops[node.name] as Edge)
 	return connected_edges
 	
 func add_node(node: VirtualNode) -> void:
-	nodes[node.name] = node
-	queue_update_turnaround_loops()
+	_nodes[node.name] = node
+	exit_nodes = get_all_exit_nodes()
 	verify_edges()
+
 
 
 func remove_node(node: VirtualNode) -> void:
 	var node_name: String = node.name
-	nodes.erase(node_name)
+	_nodes.erase(node_name)
+	exit_nodes = get_all_exit_nodes()
 
 	# Remove outgoing edges from this node
 	if outgoing_edges.has(node_name):
@@ -82,11 +103,12 @@ func remove_node(node: VirtualNode) -> void:
 						src_edges.remove_at(i)
 		_incoming_edges.erase(node_name)
 
-	# Remove any turnaround loop for this node
-	if turnaround_loops.has(node_name):
-		turnaround_loops.erase(node_name)
+	# Remove any turnaround loop for this node from every train's dictionary
+	for train_key: String in turnaround_loops_by_train.keys():
+		var loops: Dictionary = turnaround_loops_by_train[train_key] as Dictionary
+		if loops.has(node_name):
+			loops.erase(node_name)
 
-	queue_update_turnaround_loops()
 	verify_edges()
 
 
@@ -104,8 +126,6 @@ func add_edge(from_node: VirtualNode, to_node: VirtualNode, cost: float) -> void
 	if not _incoming_edges.has(to_node.name):
 		_incoming_edges[to_node.name] = []
 	_incoming_edges[to_node.name].append(from_node.name)
-
-	queue_update_turnaround_loops()
 
 	verify_edges()
 
@@ -130,40 +150,90 @@ func remove_edge(from_name: String, to_name: String) -> void:
 		else:
 			_incoming_edges[to_name].erase(from_name)
 
-	queue_update_turnaround_loops()
 	verify_edges()
 
 # -------------------------------------------------------------------
-# Turnaround Loop Management
+# Turnaround Loop Management (Per-Train)
 # -------------------------------------------------------------------
+# New public function that updates turnaround loops for a given train.
+func update_turnaround_loops_for_train(train: Train) -> void:
+	var junction_nodes: Array[JunctionNode] = exit_nodes
+	for junction_node: JunctionNode in junction_nodes:
+		var node_name: String = junction_node.name
+		if turnaround_loops.has(node_name):
+			var loop_edge: Edge = turnaround_loops[node_name]
+			if not _is_loop_valid(node_name, loop_edge):
+				_calculate_and_set_turnaround_loop(junction_node, train)
+		else:
+			# Otherwise, try to calculate one.
+			_calculate_and_set_turnaround_loop(junction_node, train)
+			
 
-func queue_update_turnaround_loops() -> void:
-	update_turnaround_loops_dirty = true
-	call_deferred("_update_turnaround_loops")
+# TODO: This might not actually be much better than just recalcuating all loops every time.
+func _is_loop_valid(start_node_name: String, loop_edge: Edge) -> bool:
+	if loop_edge == null:
+		return false
+	# Simulate walking the chain for this specific train.
+	var current_name: String = start_node_name
+	var chain: Array[VirtualNode] = loop_edge.intermediate_nodes  # Expected to be Array of VirtualNode
 
-func _update_turnaround_loops() -> void:
-
-	if (update_turnaround_loops_dirty):
-		update_turnaround_loops_dirty = false
-	else:
-		return
-	# STEP A: Validate or recalc existing loops
-	for node_name: String in turnaround_loops.keys():
-		var loop_edge: Edge = turnaround_loops[node_name]
-		if not _is_loop_valid(node_name, loop_edge):
-			var new_loop: Edge = _calculate_turnaround_loop(nodes[node_name])
-			if new_loop == null:
-				turnaround_loops.erase(node_name)
-			else:
-				turnaround_loops[node_name] = new_loop
+	for next_node: VirtualNode in chain:
+		if (next_node is StopNode): # Don't find connections for stop _nodes because they're dynamically created
+			continue
+		if not outgoing_edges.has(current_name):
+			return false
+		var found_edge: Edge = _find_edge_to(outgoing_edges[current_name], next_node.name)
+		if found_edge == null:
+			return false
+		current_name = next_node.name
 	
-	# STEP B: For nodes without a loop, try to calculate one
-	for node_name: String in nodes.keys():
-		if not turnaround_loops.has(node_name):
-			var maybe_loop: Edge = _calculate_turnaround_loop(nodes[node_name])
-			if maybe_loop != null:
-				turnaround_loops[node_name] = maybe_loop	
+	# Then from the last intermediate node back to the start node
+	if not outgoing_edges.has(current_name):
+		return false
+	var closing_edge: Edge = _find_edge_to(outgoing_edges[current_name], start_node_name)
+	if closing_edge == null:
+		return false
+
+	# Optionally, add train-specific validations (e.g. ensure the path length is sufficient for the train)
+	# For example:
+	# if (calculate_total_cost(loop_edge) < train.length):
+	#     return false
+
+	return true
+
+
+func _calculate_and_set_turnaround_loop(node: JunctionNode, train: Train) -> void:
+	assert(node.is_exit_node(), "Turnaround loops are only valid for exit _nodes")
+	var reverse_edge: Edge = node.get_reverse_edge(train)
+	var train_key: String = train.name
+	# If no turnaround loops exist for this train yet, create a new dictionary.
+	if not turnaround_loops_by_train.has(train_key):
+		turnaround_loops_by_train[train_key] = {}
+	# Retrieve the inner dictionary (mapping node name -> Edge)
+	var loops: Dictionary = turnaround_loops_by_train[train_key] as Dictionary
+	# Add or update the turnaround loop for the given junction.
+	loops[node.name] = reverse_edge
+
+	# var junction_nodes: Array[JunctionNode] = get_all_exit_nodes()
+	# for junction_node: JunctionNode in junction_nodes:
+		
+
+
+func get_all_exit_nodes() -> Array[JunctionNode]:
+	var exit_nodes: Array[JunctionNode] = []
+	for node_name: String in _nodes.keys():
+		var node: VirtualNode = _nodes[node_name]
+		if node is JunctionNode && (node as JunctionNode).is_exit_node():
+			exit_nodes.append(node as JunctionNode)
 	
+	return exit_nodes
+
+func _find_edge_to(edges_array: Array, target_name: String) -> Edge:
+	for e: Edge in edges_array:
+		if e.to_node and e.to_node.name == target_name:
+			return e
+	return null
+
 
 
 func verify_edges() -> void:
@@ -180,48 +250,6 @@ func verify_edges() -> void:
 	#assert(outgoing_edges.size() == _incoming_edges.size(), "Mismatched edge counts")
 
 
-
-func _is_loop_valid(start_node_name: String, loop_edge: Edge) -> bool:
-	if loop_edge == null:
-		return false
-	# Simulate walking the chain
-	var current_name: String = start_node_name
-	var chain: Array[VirtualNode] = loop_edge.intermediate_nodes
-
-	for next_node: VirtualNode in chain:
-		if not outgoing_edges.has(current_name):
-			return false
-		var found_edge: Edge = _find_edge_to(outgoing_edges[current_name], next_node.name)
-		if found_edge == null:
-			return false
-		current_name = next_node.name
-	
-	# Then from the last intermediate node to the start node
-	if not outgoing_edges.has(current_name):
-		return false
-	var closing_edge: Edge = _find_edge_to(outgoing_edges[current_name], start_node_name)
-	if closing_edge == null:
-		return false
-
-	return true
-
-
-func _find_edge_to(edges_array: Array[Edge], target_name: String) -> Edge:
-	for e: Edge in edges_array:
-		if e.to_node and e.to_node.name == target_name:
-			return e
-	return null
-
-# -------------------------------------------------------------------
-# Placeholder: your loop-finding function
-# -------------------------------------------------------------------
-func _calculate_turnaround_loop(node: VirtualNode) -> Edge:
-	# Implement your own logic to build an Edge that represents a cycle
-	# from node.name -> ... -> node.name.
-	# Return null if none is found.
-	return null
-
-
 # -------------------------------------------------------------------
 # Debug
 # -------------------------------------------------------------------
@@ -229,19 +257,18 @@ func print_graph() -> void:
 	print("")
 	# Build a dictionary mapping node_name -> a more readable description.
 	var node_debug_map: Dictionary[String, String] = {}
-	for node_name: String in nodes.keys():
-		var node_obj : VirtualNode = nodes[node_name]
+	for node_name: String in _nodes.keys():
+		var node_obj : VirtualNode = _nodes[node_name]
 		# For now, just store the node's name (or any short identifier).
 		# If your VirtualNode has a custom method like get_debug_string(), you could call that here.
 		node_debug_map[node_name] = "VirtualNode(name=" + node_obj.name + ")"
 
-	# Now print the debug dictionary instead of the raw 'nodes' dictionary.
+	# Now print the debug dictionary instead of the raw '_nodes' dictionary.
 	# print("Nodes: ", node_debug_map)
 	print("Nodes:")
 	for node_name: String in node_debug_map.keys():
-		var node_obj: String = node_debug_map[node_name]
 		# Print the node's name and any other relevant info
-		print("  ", node_name, " -> ", node_obj)
+		print("  ", node_name)
 
 
 	# Print outgoing edges as before
@@ -253,8 +280,7 @@ func print_graph() -> void:
 			print(
 				"  ", node_name, 
 				" -> ", edge.to_node.name, 
-				", cost=", edge.cost, 
-				", intermediate=", edge.intermediate_nodes.size()
+				", cost=", edge.cost
 			)
 
 	# Print incoming edges as before
@@ -264,8 +290,13 @@ func print_graph() -> void:
 		from_list.assign(_incoming_edges[incoming_edge] as Array[String])
 		print("  ", incoming_edge, " -> ", from_list)
 	
-	print("Turaround Nodes: ")
-	for loop_node_name: String in turnaround_loops.keys():
-		var loop_edge: Edge = turnaround_loops[loop_node_name]
-		# Summarize the loop edge in a short string
-		print("Edge(to=" + loop_edge.to_node.name + ", cost=" + str(loop_edge.cost) + ")")
+	print("Turnaround Loops By Train:")
+	for train_key: String in turnaround_loops_by_train.keys():
+		var loops: Dictionary = turnaround_loops_by_train[train_key]
+		print("  Train: ", train_key)
+		for node_name: String in loops.keys():
+			var loop_edge: Edge = loops[node_name]
+			var node_list: String = ""
+			for node: VirtualNode in loop_edge.intermediate_nodes:
+				node_list += node.name + ", "
+			print("    ", node_name, " -> Edge(to=", loop_edge.to_node.name, ", list=", node_list, " cost=", str(loop_edge.cost), ")")

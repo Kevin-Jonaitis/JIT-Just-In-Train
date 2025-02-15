@@ -6,16 +6,20 @@ var deferred_update_loops_call: Variant = null
 var queue_dirty: bool = false
 
 
-func queue_calculate_turnaround() -> void:
+func queue_all_turnaround_loop_calculationos() -> void:
+	for train: Train in Utils.get_trains_node().trains:
+		queue_calculate_turnaround(train)
+
+func queue_calculate_turnaround(train: Train) -> void:
 	Graph.update_turnaround_loops_dirty = true
 	queue_dirty = true
-	deferred_update_loops_call = func() -> void: Graph._update_turnaround_loops()
+	deferred_update_loops_call = func() -> void: Graph.update_turnaround_loops_for_train(train)
 	call_deferred("process_queue")
 	
 
 # Add/remove/delte track
 func network_updated() -> void:
-	queue_calculate_turnaround()
+	queue_all_turnaround_loop_calculationos()
 	queue_update_schedules()
 
 
