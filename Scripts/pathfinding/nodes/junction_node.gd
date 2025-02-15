@@ -99,42 +99,6 @@ func generate_path_with_reverse_nodes_added(path: Path) -> Path:
 		new_nodes_to_add.append(newNode)
 	return Path.new(path.nodes + new_nodes_to_add)
 
-
-# possible connected stop node
-# possible connected junction node
-# possible connected reverse node
-# func get_connected_nodes(train: Train, fetch_junctions_only: bool = false) -> Array[Edge]:
-# 	var sorted_stops: Array[StopNode] = sort_stop_nodes(train)
-# 	var edges_to_return : Array[Edge] = []
-
-# 	# Add all other possible junction nodes(internal and across the track)
-# 	edges_to_return.assign(Graph.get_outgoing_edges(self, train))
-# 	# edges_to_return.assign(_connected_nodes.values() as Array[Edge])
-
-# 	if (fetch_junctions_only):
-# 		return edges_to_return
-
-# 	# Add possible turnaround point
-# 	if (train.can_reverse):
-# 		edges_to_return.append(get_reverse_edge(train))
-
-# 	# Add possible stop nodes
-# 	if is_exit_node():
-# 		if (sorted_stops.size() != 0):
-# 			# assert(possible_stop_points[0].point_index <= possible_stop_points[-1].point_index, "These should be in ascending order")
-# 			if (is_connected_at_start()): # We should use the forward nodes
-# 				var forward_nodes : Array[StopNode] = sorted_stops.filter(func(node: StopNode) -> bool: return node.is_forward())
-# 				for node : StopNode in forward_nodes:
-# 					# Distance from "front" for junction node(self) is 0
-# 					edges_to_return.append(Edge.new(node, node.get_distance_from_front_track()))
-# 			else: # We should add the backwards nodes
-# 				var backward_nodes : Array[StopNode] = sorted_stops.filter(func(node: StopNode) -> bool: return !node.is_forward())
-# 				for node : StopNode in backward_nodes:
-# 					# Distance from "front" for junction node(self) is track length
-# 					edges_to_return.append(Edge.new(node, track.length - node.get_distance_from_front_track()))
-
-# 	return edges_to_return
-
 # We just need one turnaround point
 func generate_path_of_length_from_start(start_node: VirtualNode, train: Train, remaining_length: float) -> Path:
 	assert(remaining_length >= 0, "This should never happen, how did we recurse below 0")

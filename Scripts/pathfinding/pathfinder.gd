@@ -201,15 +201,6 @@ static func check_if_overlap_and_add_to_map(
 		var running_path_list: RunningPath = RunningPath.new(combined_array)
 		add_to_dp_map(end_path.get_last_stop(), dynamnic_programming, running_path_list)
 
-# static func combine_paths(first_half: Path, second_half: Path) -> Path:
-# 	var first_half_nodes: Array[VirtualNode] = first_half.nodes
-# 	var second_half_nodes: Array[VirtualNode] = second_half.nodes
-# 	assert(first_half_nodes[-1].name == second_half.nodes[0].name, "Nodes should overlap")
-# 	first_half_nodes.pop_back()	
-# 	var combined_nodes: Array[VirtualNode] = first_half_nodes + second_half_nodes
-# 	var length: float = first_half.length + second_half.length
-# 	return Path.new(combined_nodes)
-
 static func get_node_position(node: VirtualNode) -> Vector2:
 	if (node is StopNode):
 		var node_cast : StopNode = node

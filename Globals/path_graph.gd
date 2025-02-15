@@ -1,26 +1,5 @@
 extends Node
 
-# External classes:
-#   class_name VirtualNode:
-#       var name: String  (immutable once set)
-#       # ...
-#
-#   class_name Edge (extends RefCounted):
-#       static var COST_TO_REVERSE: float = 100
-#       var to_node: VirtualNode
-#       var cost: float
-#       var intermediate_nodes: Array[VirtualNode]
-#       var name: String
-#
-#       func _init(node_: VirtualNode, cost_: float, intermediate_nodes_: Array[VirtualNode] = []) -> void:
-#           to_node = node_
-#           cost = cost_
-#           intermediate_nodes = intermediate_nodes_
-#           name = Utils.generate_uuid()
-
-# -------------------------------------------------------------------
-# Data Structures
-# -------------------------------------------------------------------
 # Nodes: node name (String) -> VirtualNode
 var _nodes: Dictionary[String, VirtualNode] = {}
 
@@ -38,13 +17,13 @@ var turnaround_loops: Dictionary[String, Edge] = {}
 # I'll probably regret this later
 var exit_nodes: Array[JunctionNode] = []
 
-
 # Turnaround loops by train: train name (String) -> Dictionary 
 #   (inner Dictionary: node name (String) -> Edge)
 var turnaround_loops_by_train: Dictionary[String, Dictionary] = {}
 
-@onready var trains: Trains = Utils.get_node_by_ground_name("trains")
 var update_turnaround_loops_dirty: bool = false
+
+@onready var trains: Trains = Utils.get_node_by_ground_name("trains")
 
 # -------------------------------------------------------------------
 # Node Management
@@ -70,7 +49,6 @@ func add_node(node: VirtualNode) -> void:
 	_nodes[node.name] = node
 	exit_nodes = get_all_exit_nodes()
 	verify_edges()
-
 
 
 func remove_node(node: VirtualNode) -> void:
@@ -216,10 +194,6 @@ func _calculate_and_set_turnaround_loop(node: JunctionNode, train: Train) -> voi
 		loops[node.name] = reverse_edge
 	else:
 		loops.erase(node.name)
-
-	# var junction_nodes: Array[JunctionNode] = get_all_exit_nodes()
-	# for junction_node: JunctionNode in junction_nodes:
-		
 
 
 func get_all_exit_nodes() -> Array[JunctionNode]:
