@@ -92,3 +92,10 @@ func get_all_stops() -> Array[Stop]:
 		for stop: Stop in train.get_stops():
 			stops.append(stop)
 	return stops
+
+
+func get_node_by_ground_name(name: String) -> Variant:
+	return get_tree().get_first_node_in_group(name)
+
+func get_trains_node() -> Trains:
+	return get_node_by_ground_name("trains")

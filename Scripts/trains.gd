@@ -32,10 +32,6 @@ func update_train_stops(old_track: Track, new_track_a: Track, new_track_b: Track
 					train.replace_stop_at_index(stop, stop_index)
 					pass
 
-func update_schedules() -> void:
-	for train: Train in trains:
-		train.queue_calculate_schedule()
-
 # TODO: Put this somewhere more appropriate
 func get_point_info_on_new_tracks(old_point: Vector2, new_track_a: Track, new_track_b: Track) -> TrackPointInfo:
 	var track_a_points: Array[Vector2] = new_track_a.dubins_path.shortest_path.get_points()

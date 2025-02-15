@@ -56,7 +56,7 @@ func build_track(starting_overlay: TrackOrJunctionOverlap, ending_overlay: Track
 	virtual_node_manager.setup_interjunction_virtual_nodes()
 	temp = false
 	area.solidify_collision_area()
-	trains.update_schedules() # Recalcualte all train schedules. # Could probably emit here
+	DeferredQueue.network_updated()
 
 # TODO: make this cleaner
 func assert_name_unique(name_: String) -> void:
@@ -315,7 +315,7 @@ func delete_track() -> void:
 	end_junction.remove_track_and_nodes(self)
 	virtual_node_manager.delete_interjunction_virtual_nodes() # TODO: remove, because it's duplicated?
 	self.queue_free()
-	trains.update_schedules()
+	DeferredQueue.network_updated()
 
 func get_distance_to_point(point_index: int) -> float:
 	if bezier_curve:

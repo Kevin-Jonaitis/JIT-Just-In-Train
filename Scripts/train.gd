@@ -30,6 +30,7 @@ var can_reverse: bool = true
 
 var front_car : TrainCar
 
+# Used by deferred queue to update the schedule maximum once per frame
 var update_schedule_dirty: bool = false
 
 # whether the train's "back"(the last-added car) is starting direction of travel or not
@@ -77,24 +78,19 @@ func verify_name_unique(name_: String) -> void:
 
 func add_stop(stop: Stop) -> void:
 	$Stops.add_child(stop)
-	queue_calculate_schedule()
+	DeferredQueue.queue_update_schedule(self)
 
 func replace_stop_at_index(stop: Stop, index: int) -> void:
 	$Stops.get_children()[index].replace_by(stop)
-	queue_calculate_schedule()
+	DeferredQueue.queue_update_schedule(self)
 
-
-# Make the call to calculate_schedule idempotent in that it's called at most once per frame
-func queue_calculate_schedule() -> void:
-	update_schedule_dirty = true
-	call_deferred("calculate_schedule")
 
 func remove_stop(stop_index: int) -> void:
 	# var stop: Stop = _stops[stop_index]
 	# var point_index: int = stop.stop_option[0].point_index
 	_stops[stop_index].free()
 	# _stops.remove_at(stop_index)
-	queue_calculate_schedule()
+	DeferredQueue.queue_update_schedule(self)
 
 func get_stops() -> Array[Stop]:
 	return _stops

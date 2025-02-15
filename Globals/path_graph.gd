@@ -34,6 +34,9 @@ var _incoming_edges: Dictionary[String, Array] = {}
 # Turnaround loops: node_name (String) -> Edge (loop back to itself)
 var turnaround_loops: Dictionary[String, Edge] = {}
 
+@onready var trains: Trains = Utils.get_node_by_ground_name("trains")
+var update_turnaround_loops_dirty: bool = false
+
 # -------------------------------------------------------------------
 # Node Management
 # -------------------------------------------------------------------
@@ -46,7 +49,7 @@ func get_outgoing_edges(node: VirtualNode) -> Array[Edge]:
 	
 func add_node(node: VirtualNode) -> void:
 	nodes[node.name] = node
-	_update_all_turnaround_loops()
+	queue_update_turnaround_loops()
 	verify_edges()
 
 
@@ -83,7 +86,7 @@ func remove_node(node: VirtualNode) -> void:
 	if turnaround_loops.has(node_name):
 		turnaround_loops.erase(node_name)
 
-	_update_all_turnaround_loops()
+	queue_update_turnaround_loops()
 	verify_edges()
 
 
@@ -102,7 +105,7 @@ func add_edge(from_node: VirtualNode, to_node: VirtualNode, cost: float) -> void
 		_incoming_edges[to_node.name] = []
 	_incoming_edges[to_node.name].append(from_node.name)
 
-	_update_all_turnaround_loops()
+	queue_update_turnaround_loops()
 
 	verify_edges()
 
@@ -127,13 +130,23 @@ func remove_edge(from_name: String, to_name: String) -> void:
 		else:
 			_incoming_edges[to_name].erase(from_name)
 
-	_update_all_turnaround_loops()
+	queue_update_turnaround_loops()
 	verify_edges()
 
 # -------------------------------------------------------------------
 # Turnaround Loop Management
 # -------------------------------------------------------------------
-func _update_all_turnaround_loops() -> void:
+
+func queue_update_turnaround_loops() -> void:
+	update_turnaround_loops_dirty = true
+	call_deferred("_update_turnaround_loops")
+
+func _update_turnaround_loops() -> void:
+
+	if (update_turnaround_loops_dirty):
+		update_turnaround_loops_dirty = false
+	else:
+		return
 	# STEP A: Validate or recalc existing loops
 	for node_name: String in turnaround_loops.keys():
 		var loop_edge: Edge = turnaround_loops[node_name]
@@ -207,6 +220,7 @@ func _calculate_turnaround_loop(node: VirtualNode) -> Edge:
 	# from node.name -> ... -> node.name.
 	# Return null if none is found.
 	return null
+
 
 # -------------------------------------------------------------------
 # Debug
