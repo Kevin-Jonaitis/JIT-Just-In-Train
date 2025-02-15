@@ -46,10 +46,6 @@ func get_outgoing_edges(node: VirtualNode) -> Array[Edge]:
 	
 func add_node(node: VirtualNode) -> void:
 	nodes[node.name] = node
-	# if not _incoming_edges.has(node.name):
-	# 	_incoming_edges[node.name] = []  # Array of String
-	# if not outgoing_edges.has(node.name):
-	# 	outgoing_edges[node.name] = []  # Array of String
 	_update_all_turnaround_loops()
 	verify_edges()
 
@@ -57,10 +53,6 @@ func add_node(node: VirtualNode) -> void:
 func remove_node(node: VirtualNode) -> void:
 	var node_name: String = node.name
 	nodes.erase(node_name)
-
-
-	# if outgoing_edges.has(node_name):
-	# 	# remove_edge(
 
 	# Remove outgoing edges from this node
 	if outgoing_edges.has(node_name):
@@ -163,12 +155,11 @@ func _update_all_turnaround_loops() -> void:
 
 func verify_edges() -> void:
 
-	print_graph()
+	#print_graph()
 
 	# Verify the values in the outgoing arrays match the incoming arrays
 	for node_name: String in outgoing_edges.keys():
-		var edges_array: Array[Edge]
-		edges_array.assign(outgoing_edges[node_name] as Array[Edge])
+		var edges_array: Array = outgoing_edges[node_name]
 		for edge: Edge in edges_array:
 			assert(_incoming_edges.has(edge.to_node.name), "Outgoing edge has no incoming edge")
 			assert(_incoming_edges[edge.to_node.name].find(node_name) != -1, "Outgoing edge has no incoming edge") 
