@@ -22,7 +22,7 @@ func _init(node_: VirtualNode, cost_: float, intermediate_nodes_ : Array[Virtual
 	cost = cost_
 	self.intermediate_nodes = intermediate_nodes_
 	self.intermediate_nodes_train = intermediate_nodes_train_
-	self.name = Utils.generate_uuid() # TODO: update with incoming edge name
+	self.name = Utils.generate_unique_id() # TODO: update with incoming edge name
 
 func is_reverse_edge() -> bool:
 	return !intermediate_nodes.is_empty()

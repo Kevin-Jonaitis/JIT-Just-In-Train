@@ -3,7 +3,7 @@
 class_name Track
 extends Node2D
 
-var uuid: String = Utils.generate_uuid()
+var uuid: String = Utils.generate_unique_id()
 static var counter: int = 0
 @onready var track_visual_component: TrackVisualComponent = $TrackVisualComponent
 ## Used to keep track of last changes in the editor, and if changed, to re-render the points
@@ -333,3 +333,9 @@ func get_point_at_index(index: int) -> Vector2:
 	else:
 		assert(false, "We haven't defined a curve for this track yet, or you're using a curve type we haven't implemented!!")
 		return Vector2.ZERO
+
+func get_start_position() -> Vector2:
+	return get_point_at_index(0)
+	
+func get_end_position() -> Vector2:
+	return get_point_at_index(-1)

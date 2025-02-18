@@ -100,12 +100,13 @@ func calculate_schedule() -> void:
 		print("NODE SIZE", Graph._nodes.size())
 		print("EDGES SIZE", Graph.get_num_of_edges())
 		update_schedule_dirty = false
-		schedule = Utils.measure(func() -> Variant: return Pathfinder.find_path_with_movement(self), "pathfinder")
+		# Graph.debug_verify_astar_vs_graph()
+		schedule = Pathfinder.find_path_with_movement(self)
 		#print_schedule()
 		schedule_follower.reset()
 		calculate_path_draw()
 		queue_redraw()
-		# Graph.print_graph()
+		Graph.print_graph()
 
 var colors: Array[Color] = [
 	Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.CYAN, Color.MAGENTA, Color.ORANGE, Color.PURPLE, Color.PINK, Color.TEAL, Color.GRAY, Color.LIME, Color.AQUA, Color.OLIVE, Color.MAROON, Color.TEAL, Color.SILVER, Color.WHITE, Color.BLACK
@@ -141,6 +142,6 @@ func _draw() -> void:
 			var end_stop: StopNode = stop_option.back_of_train
 			var offset_vector: Vector2 = Vector2(5, 5)
 
-			draw_circle(front_stop.get_position(), 3, Color.WHITE, true)
-			draw_circle(end_stop.get_position(), 3, Color.RED, true)
-			draw_line(front_stop.get_position() + offset_vector, end_stop.get_position() + offset_vector, Color.BLACK, 4)
+			draw_circle(front_stop.get_vector_pos(), 3, Color.WHITE, true)
+			draw_circle(end_stop.get_vector_pos(), 3, Color.RED, true)
+			draw_line(front_stop.get_vector_pos() + offset_vector, end_stop.get_vector_pos() + offset_vector, Color.BLACK, 4)

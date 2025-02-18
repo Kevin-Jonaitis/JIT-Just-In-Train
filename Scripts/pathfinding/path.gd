@@ -7,7 +7,7 @@ class_name Path
 var nodes: Array[VirtualNode]  = []
 var track_segments: Array[TrackSegment] = []
 
-var uuid: String = Utils.generate_uuid()
+var uuid: String = Utils.generate_unique_id()
 
 var length: float
 

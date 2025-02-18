@@ -43,9 +43,9 @@ static func check_for_stops_at_position(track_or_junction: TrackOrJunctionOverla
 			if (train_pos.front_of_train.track.uuid != track_to_test.uuid):
 				continue
 			if ((train_pos.front_of_train.track.uuid == track_to_test.uuid && 
-			train_pos.front_of_train.get_position().distance_to(position) < minimum_required_distance) ||
+			train_pos.front_of_train.get_vector_pos().distance_to(position) < minimum_required_distance) ||
 			(train_pos.back_of_train.track.uuid == track_to_test.uuid 
-			&& train_pos.back_of_train.get_position().distance_to(position) < minimum_required_distance)):
+			&& train_pos.back_of_train.get_vector_pos().distance_to(position) < minimum_required_distance)):
 				return true
 	return false
 

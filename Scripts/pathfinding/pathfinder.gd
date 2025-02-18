@@ -2,6 +2,8 @@ extends Object
 
 class_name Pathfinder
 
+static var A_STAR: AStar2DCustom = AStar2DCustom.new()
+
 func _init() -> void:
 	assert(false, "This class only has static functions, don't instantiate it!")
 
@@ -27,12 +29,18 @@ static func find_path_with_movement(
 
 static func find_path(train: Train, stops: Array[Stop]) -> Schedule:
 	var dynamnic_programming: Dictionary = {}
-	Utils.measure(func() -> void:
-		find_path_between_set_nodes(train, stops, dynamnic_programming),
-	"find path between SET of nodes")
-	var schedule: Schedule = Utils.measure(func() -> Variant: return calculate_running_best_path(dynamnic_programming, stops, train),
-	"calculate best path")
+	var added_connections: Array[Array] = connect_reverse_nodes_for_train(train)
+	find_path_between_set_nodes(train, stops, dynamnic_programming)
+	var schedule: Schedule = calculate_running_best_path(dynamnic_programming, stops, train)
+	remove_reverse_connections(added_connections)
+
 	return schedule
+
+# We only remove the reverse connections from the astar graph
+# and it's corresponding cost graph, as we don't need to reclaculate them each a* run
+static func remove_reverse_connections(added_connections: Array[Array]) -> void:
+	for connection: Array[VirtualNode] in added_connections:
+		Graph.remove_reverse_connection_from_astar(connection[0], connection[1])
 
 
 static func find_path_between_set_nodes(train: Train, stops: Array[Stop], dynamnic_programming: Dictionary) -> void:
@@ -41,12 +49,156 @@ static func find_path_between_set_nodes(train: Train, stops: Array[Stop], dynamn
 		var next_stop: Stop = stops[i + 1]
 		for start_position: Stop.TrainPosition in current_stop.stop_option:
 			for end_node: StopNode in next_stop.get_front_stops():
-				var path: Path = Utils.measure(func() -> Variant: return find_path_between_nodes(start_position, end_node, train),
-				"find path between nodes")
+				var path: Path = new_astar_runner(start_position, end_node, train)
 				print("connected calls for set of stops", Graph.PROFILING_COUNT)
 				Graph.PROFILING_COUNT = 0
 				if (path != null):
 					add_to_dp_map(end_node, dynamnic_programming, RunningPath.new([path]))
+
+
+static func add_stop_node_connection_to_graph(node: StopNode) -> Array[VirtualNode]:
+	var junction_node: JunctionNode
+
+	# Add start to end of track
+	if (node.is_forward()):
+		junction_node = node.track.end_junction.get_junction_node(node.track, false, false)
+	else:
+		junction_node = node.track.start_junction.get_junction_node(node.track, true, false)
+	Graph.add_edge(node, junction_node, 
+	VirtualNode.calculate_distance_between_two_connectable_nodes(node, junction_node))
+
+	return [node, junction_node]
+
+class TempPointsAndConnections:
+	var points: Array[VirtualNode] = []
+	var connections: Array[Array]  = [] # tuple of start and end VirtualNode
+
+	# func _init(points_: Array[VirtualNode], connections_: Array[Array]) -> void:
+	# 	self.points = points_
+	# 	self.connections = connections_
+
+
+static func new_astar_runner(start_position: Stop.TrainPosition, end: StopNode, train: Train) -> Path:
+	var temp_data: TempPointsAndConnections = connect_stop_nodes_to_graph(start_position, end, train)
+	# Graph.debug_print_astar_network()
+	var path: PackedInt64Array = calcualte_path(start_position, end)
+	var possible_path: Path
+	if (path == null || path.size() == 0):
+		possible_path = null
+	else:
+		possible_path = convert_path_to_virtual_nodes(path, train)
+
+	# We need to remove the stops _after_ we construct the path so we can do name lookups in the graph
+	# for reconstruction
+	remove_temp_stop_connections(temp_data)
+	return possible_path
+
+static func calcualte_path(start_position: Stop.TrainPosition, end: StopNode) -> PackedInt64Array:
+	return A_STAR.get_id_path(start_position.front_of_train.identifier, end.identifier)
+
+
+# This can potenetially be really slow, as we have to add a connection for every exit node in the graph
+# It runs O(n) where n is the number of nodes in the graph
+static func connect_reverse_nodes_for_train(train: Train) -> Array[Array]:
+	var added_connections: Array[Array] = []
+	var dict: Dictionary = Graph.get_turnaround_loops_for_train(train)
+	for key: String in dict.keys():
+		var edge: Edge = dict[key]
+		Graph.add_reverse_connection_to_astar(Graph._nodes[key], edge.to_node, edge.cost)
+		added_connections.append([Graph._nodes[key], edge.to_node])
+
+	return added_connections
+
+static func convert_path_to_virtual_nodes(path: PackedInt64Array, train: Train) -> Path:
+	var virtual_nodes: Array[VirtualNode] = []
+	for i: int in range(path.size()):
+		# Check if we go through a reverse node by checking if the previous and next node are the same
+		if (i < path.size() - 1 && JunctionNode.deduce_if_loopback_edge(path[i], path[i + 1])):
+			# This could be cleaner, we do a double lookup here and in the "deduce" call
+			var current_node: VirtualNode = Graph.map_identifier_to_node(path[i])
+			var next_node: VirtualNode = Graph.map_identifier_to_node(path[i + 1])
+			virtual_nodes.append(current_node)
+			virtual_nodes.append_array(Graph.get_turnaround_loop_for_train_at_node(train, current_node).intermediate_nodes)
+			virtual_nodes.append(next_node)
+			i += 1 # Skip the next node
+		else:
+			var node: VirtualNode = Graph.map_identifier_to_node(path[i])
+			virtual_nodes.append(node)
+	return Path.new(virtual_nodes)
+
+
+static func remove_temp_stop_connections(temp_data: TempPointsAndConnections) -> void:
+	for connection: Array[VirtualNode] in temp_data.connections:
+		Graph.remove_edge(connection[0], connection[1])
+	for point: VirtualNode in temp_data.points:
+		Graph.remove_node(point)
+
+# Make all the (temp) connections for stop nodes
+static func connect_stop_nodes_to_graph(start_position: Stop.TrainPosition, end_node: StopNode, train: Train) -> TempPointsAndConnections:
+	var temp_data: TempPointsAndConnections = TempPointsAndConnections.new()
+	# var added_connections: Array[Array]	= []
+	var start: StopNode = start_position.front_of_train
+
+	# Add points
+	temp_data.points.append(start_position.front_of_train)
+	Graph.add_node(start_position.front_of_train)
+	if (train.can_reverse):
+		temp_data.points.append(start_position.back_of_train)
+		Graph.add_node(start_position.back_of_train)
+	temp_data.points.append(end_node)
+	Graph.add_node(end_node)
+	
+	# Add connection front train -> junction
+	temp_data.connections.append(add_stop_node_connection_to_graph(start_position.front_of_train))
+	
+	# Add the connecetion front train -> reverse train
+	if (train.can_reverse):
+		Graph.add_edge(start, start_position.back_of_train, Edge.COST_TO_REVERSE)
+		temp_data.connections.append([start, start_position.back_of_train])
+
+	# Add the connection reverse train -> junction
+	if (train.can_reverse):
+		temp_data.connections.append(add_stop_node_connection_to_graph(start_position.back_of_train))
+
+	# Add connection of junction -> end node
+	var junction_node: JunctionNode
+	if (end_node.is_forward()):
+		junction_node = end_node.track.start_junction.get_junction_node(end_node.track, true, false)
+	else:
+		junction_node = end_node.track.end_junction.get_junction_node(end_node.track, false, false)
+
+	Graph.add_edge(junction_node, end_node, 
+	VirtualNode.calculate_distance_between_two_connectable_nodes(junction_node, end_node))
+	temp_data.connections.append([junction_node, end_node])
+
+	# Add (possible) connection start -> end node
+	var start_to_end : Edge = connect_possible_stop_nodes(start_position.front_of_train, end_node)
+	if (start_to_end != null):
+		Graph.add_edge(start_position.front_of_train, end_node, start_to_end.cost)
+		temp_data.connections.append([start_position.front_of_train, end_node])
+	
+	# Add (possible) connection reverse -> end node
+	var reverse_to_end : Edge = connect_possible_stop_nodes(start_position.back_of_train, end_node)
+	if (reverse_to_end != null):
+		Graph.add_edge(start_position.back_of_train, end_node, reverse_to_end.cost)
+		temp_data.connections.append([start_position.back_of_train, end_node])
+
+	return temp_data
+
+
+static func connect_possible_stop_nodes(current: StopNode, end_node: StopNode) -> Edge:
+	if current.track == end_node.track:
+		if (current.is_forward() && end_node.is_forward()):
+			if current.get_track_position() < end_node.get_track_position():
+				var distance: float = end_node.get_track_position() - current.get_track_position() 
+				return Edge.new(end_node, distance)
+		elif (!current.is_forward() && !end_node.is_forward()):
+			if current.get_track_position() > end_node.get_track_position():
+				var distance: float = current.get_track_position() - end_node.get_track_position()
+				return Edge.new(end_node, distance)		
+	return null
+
+
 
 # First the map will be dp<StopNode, Path> then it'll transform into dp<StopNode, RunningPath>
 static func add_to_dp_map(
@@ -205,7 +357,7 @@ static func check_if_overlap_and_add_to_map(
 static func get_node_position(node: VirtualNode) -> Vector2:
 	if (node is StopNode):
 		var node_cast : StopNode = node
-		return node_cast.get_position()
+		return node_cast.get_vector_pos()
 	elif (node is JunctionNode):
 		var node_cast : JunctionNode = node
 		return node_cast.junction.position
@@ -241,9 +393,9 @@ static func possible_edge_to_end_node(current: VirtualNode, end_node: StopNode) 
 static func get_connected_junction_edges_for_stop_node(current: StopNode) -> Array[Edge]:
 	var junction_node: JunctionNode
 	if (current.is_forward()):
-		junction_node = current.track.start_junction.get_junction_node(current.track, false)
+		junction_node = current.track.start_junction.get_junction_node(current.track, true, false)
 	else:
-		junction_node = current.track.end_junction.get_junction_node(current.track, false)
+		junction_node = current.track.end_junction.get_junction_node(current.track, false, false)
 	
 	var connected_edges: Array[Edge] = Graph.get_connected_edges(junction_node, current.train)
 	return connected_edges

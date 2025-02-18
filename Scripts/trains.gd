@@ -24,7 +24,7 @@ func update_train_stops(old_track: Track, new_track_a: Track, new_track_b: Track
 			var virtual_node : StopNode = train.get_stops()[stop_index].stop_option[0].front_of_train # Just check one, all stops should be on the same train track
 			# We only need to get one "StopNode" in a Stop to regenerate the whole Stop(hopefully! This'll probably cause a bug later on with trains being placed in reverse)
 			if (virtual_node.track.uuid == old_track.uuid):
-				var potential_point: TrackPointInfo = get_point_info_on_new_tracks(virtual_node.get_position(), new_track_a, new_track_b)
+				var potential_point: TrackPointInfo = get_point_info_on_new_tracks(virtual_node.get_vector_pos(), new_track_a, new_track_b)
 				if (potential_point):
 					var stop: Stop = Stop.create_stop_for_point(potential_point, train, train.get_stops()[stop_index].is_placed_forward())
 					assert(stop != null, "We should be able to create a stop here always")

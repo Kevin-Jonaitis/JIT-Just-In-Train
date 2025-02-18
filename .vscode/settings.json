@@ -11,5 +11,5 @@
         "**/addons": true,
         "**/*.uid": true
     },
-    "godotTools.editorPath.godot4": "c:\\Godot_v4.4-beta3_mono_win64\\Godot_v4.4-beta3_mono_win64_console.exe"
+    "godotTools.editorPath.godot4": "C:\\Godot_v4.4-beta4_win64.exe"
 }

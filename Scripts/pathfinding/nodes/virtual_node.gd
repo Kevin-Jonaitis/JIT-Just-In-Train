@@ -11,6 +11,7 @@ var name: String:
 		assert(name == "", "Name cannot be changed")
 		name = value
 
+var identifier: int # A unique int identifier. 
 # All nodes are either entry/exit to a track in a junction, or are ON a track
 var track: Track
 
@@ -38,6 +39,10 @@ func create_node_in_opposite_direction() -> VirtualNode:
 func get_distance_from_front_track() -> float:
 	assert(false, "This should be implemented in the subclasses")
 	return 0
+
+func get_vector_pos() -> Vector2:
+	assert(false, "This should be implemented in the subclasses")
+	return Vector2()
 
 static func are_nodes_are_at_same_position(node_one: VirtualNode, node_two: VirtualNode) -> bool:
 	if (node_one is StopNode and node_two is StopNode):

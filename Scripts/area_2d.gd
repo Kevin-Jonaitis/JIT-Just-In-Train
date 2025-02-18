@@ -2,7 +2,7 @@ extends Area2D
 
 class_name Area
 
-var uuid: String = Utils.generate_uuid()
+var uuid: String = Utils.generate_unique_id()
 @onready var space_state: PhysicsDirectSpaceState2D = get_world_2d().direct_space_state
 
 var drawableFunctionsToCallLater: Array[Callable] = []

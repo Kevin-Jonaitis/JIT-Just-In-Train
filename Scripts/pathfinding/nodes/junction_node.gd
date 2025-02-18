@@ -8,35 +8,61 @@ class_name JunctionNode
 var junction: Junction
 # Wether this junction is connected at the start or end POINT INDEX of the track
 var connected_at_start_of_track: bool
+var is_exit_node_bool: bool
 
-func _init(junction_: Junction, track_: Track, is_entry: bool, connected_at_start_: bool) -> void:
-	self.name = generate_name(junction_, track_, is_entry)
+func _init(junction_: Junction, track_: Track, connected_at_start_: bool, is_entry: bool) -> void:
+	self.name = generate_name(junction_, track_, connected_at_start_, is_entry)
 	self.track = track_
 	self.junction = junction_
 	self.connected_at_start_of_track = connected_at_start_
+	self.identifier = Graph.map_name_to_number(name)
+	self.is_exit_node_bool = name.ends_with("-exit")
 
 #<junction_name>-<track-name>-<entry/exit/null>
-static func generate_name(junction_: Junction, track_: Track, is_entry: bool) -> String:
-	if is_entry:
-		return str(junction_.name, "-", track_.name, "-entry")
+static func generate_name(junction_: Junction, track_: Track, connected_at_start_: bool, is_entry: bool) -> String:
+	var track_end : String
+	# If this track loops back onto the same junction, we need to be able to differentiate
+	# between the nodes that are at the start and end of the track
+	if connected_at_start_: 
+		track_end = "-t_str" 
 	else:
-		return str(junction_.name, "-", track_.name, "-exit")
+		track_end = "-t_end"	
+	if is_entry:
+		return str(junction_.name, "-", track_.name, track_end + "-entry")
+	else:
+		return str(junction_.name, "-", track_.name, track_end + "-exit")
 
 func create_node_in_opposite_direction() -> JunctionNode:
-	var opposite_node: JunctionNode = JunctionNode.new(junction, track, not is_entry_node(), connected_at_start_of_track)
+	var opposite_node: JunctionNode = JunctionNode.new(junction, track, connected_at_start_of_track, not is_entry_node())
 	return opposite_node
-
-func get_entry_node() -> JunctionNode:
+	
+func get_entry_node_same_track_side() -> JunctionNode:
 	assert(self.is_exit_node(), "What are you doing getting an entry node on NOT an exit node??")
-	var entry_node: JunctionNode = Graph._nodes.get(generate_name(junction, track, true))
+	var entry_node: JunctionNode = Graph._nodes.get(generate_name(junction, track, connected_at_start_of_track, true))
 	assert(entry_node.is_entry_node(), "This should be an exit node")
 	return entry_node
 
-func get_exit_node() -> JunctionNode:
+func get_exit_node_same_track_side() -> JunctionNode:
 	assert(self.is_entry_node(), "What are you doing getting an exit node on NOT an entry node??")
-	var exit_node: JunctionNode = Graph._nodes.get(generate_name(junction, track, true))
+	var exit_node: JunctionNode = Graph._nodes.get(generate_name(junction, track, connected_at_start_of_track, true))
 	assert(!exit_node.is_entry_node(), "This should be an exit node")
 	return exit_node
+
+static func deduce_if_loopback_edge(node_one_identifier: int, node_two_indetifier: int) -> bool:
+	var nodeOne: VirtualNode = Graph.map_identifier_to_node(node_one_identifier)
+	var nodeTwo: VirtualNode = Graph.map_identifier_to_node(node_two_indetifier)
+	if (nodeOne == nodeTwo):
+		return false
+	if (nodeOne is JunctionNode and nodeTwo is JunctionNode):
+		var junctionOne: JunctionNode = nodeOne as JunctionNode
+		var junctionTwo: JunctionNode = nodeTwo as JunctionNode
+		if (junctionOne.junction == junctionTwo.junction && 
+		junctionOne.track == junctionTwo.track && 
+		junctionOne.is_exit_node() && junctionTwo.is_entry_node() && 
+		junctionOne.is_connected_at_start() == junctionTwo.is_connected_at_start()):
+			return true
+
+	return false
 
 func get_track_position() -> float:
 	if connected_at_start_of_track:
@@ -48,11 +74,18 @@ func is_connected_at_start() -> bool:
 	return connected_at_start_of_track 
 
 func is_entry_node() -> bool:
-	return name.ends_with("-entry")
+	return !is_exit_node_bool
 
 func is_exit_node() -> bool:
-	return name.ends_with("-exit")
+	return is_exit_node_bool
 
+# We can't rely on the position of this junction, as it might not placed on the map yet
+# However, the start/end position of the track will have been calcualted already
+func get_vector_pos() -> Vector2:
+	if connected_at_start_of_track:
+		return track.get_start_position()
+	else:
+		return track.get_end_position()
 
 
 # We only get the FIRST valid reverse edge. This saves processing time, and anyways
@@ -61,10 +94,6 @@ func get_reverse_edge(train: Train) -> Edge:
 	if (!self.is_exit_node()):
 		return null
 
-	# var edges: Array[Edge] = []
-	# var length: float = train.length
-	# var out_node: JunctionNode = get_junction_node(connection.track, false)
-	# var in_node: JunctionNode = get_junction_node(connection.track, false)
 	var path : Path = generate_path_of_length_from_start(self, train, train.length)
 
 	if (path == null):
@@ -76,7 +105,7 @@ func get_reverse_edge(train: Train) -> Edge:
 	var full_path: Path = generate_path_with_reverse_nodes_added(path)
 	var nodes_without_start : Array[VirtualNode] = full_path.nodes.duplicate()
 	nodes_without_start.remove_at(0)
-	var entry_node: JunctionNode = get_entry_node()
+	var entry_node: JunctionNode = get_entry_node_same_track_side()
 
 	# Use the OLD path length, because we don't use the turn-around length
 	var edge: Edge = Edge.new(entry_node, path.length, nodes_without_start, train)

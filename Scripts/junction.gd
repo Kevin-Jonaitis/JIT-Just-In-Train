@@ -1,7 +1,7 @@
 extends Node2D
 class_name Junction
 
-var uuid: String = Utils.generate_uuid()
+var uuid: String = Utils.generate_unique_id()
 static var counter: int = 0
 
 # An array of "TrackConnection" objects describing which tracks connect to this Junction
@@ -33,7 +33,7 @@ class TrackConnection:
 
 class NewConnection:
 	var track: Track 
-	var angle: float
+	var angle: float # Then angle facing AWAY from the track at the connection point
 	var connected_at_start: bool
 
 	func _init(track_: Track, connected_at_start_: bool) -> void:
@@ -48,9 +48,10 @@ class NewConnection:
 # Main logic
 # ---------------------------------------------------------
 
-func get_junction_node(track: Track, is_entry: bool) -> JunctionNode:
+func get_junction_node(track: Track, connected_at_start: bool, is_entry: bool) -> JunctionNode:
+
 	# We no longer rely on local virtual_nodes; we look for the node in the global Graph.
-	var node_name: String = JunctionNode.generate_name(self, track, is_entry)
+	var node_name: String = JunctionNode.generate_name(self, track, connected_at_start, is_entry)
 	if Graph._nodes.has(node_name):
 		var node: VirtualNode = Graph._nodes[node_name]
 		return node # Should be a JunctionNode or VirtualNode
@@ -60,8 +61,8 @@ func get_junction_node(track: Track, is_entry: bool) -> JunctionNode:
 
 func add_vritual_nodes_for_connection(connection_: TrackConnection) -> void:
 	# 1. Create two new JunctionNodes (subclass of VirtualNode).
-	var entry_node: JunctionNode = JunctionNode.new(self, connection_.track, true,  connection_.connected_at_start)
-	var exit_node: JunctionNode  = JunctionNode.new(self, connection_.track, false, connection_.connected_at_start)
+	var entry_node: JunctionNode = JunctionNode.new(self, connection_.track, connection_.connected_at_start, true)
+	var exit_node: JunctionNode  = JunctionNode.new(self, connection_.track, connection_.connected_at_start, false)
 
 	# 2. Register them in the global Graph
 	#    This adds them to graph.nodes, e.g. keyed by entry_node.name
@@ -77,11 +78,11 @@ func add_vritual_nodes_for_connection(connection_: TrackConnection) -> void:
 			continue
 		if connection.approach_from_angle == approachable_connections:
 			# "connected_node_out" is the 'exit' for that track
-			var connected_node_out: JunctionNode = get_junction_node(connection.track, false)
+			var connected_node_out: JunctionNode = get_junction_node(connection.track, connection.connected_at_start, false)
 			# create edge: entry_node -> connected_node_out
 			Graph.add_edge(entry_node, connected_node_out, 0.0)
 
-			var connected_node_in: JunctionNode = get_junction_node(connection.track, true)
+			var connected_node_in: JunctionNode = get_junction_node(connection.track,  connection.connected_at_start, true)
 			# create edge: connected_node_in -> exit_node
 			Graph.add_edge(connected_node_in, exit_node, 0.0)
 
@@ -98,8 +99,9 @@ func add_connection(connection: NewConnection) -> void:
 
 	# 2. Ensure no duplicate track/angle
 	for existing: TrackConnection in lines:
-		if existing.track.uuid == connection.track.uuid \
-		and Utils.check_angle_matches(existing.approach_from_angle, track_connection.approach_from_angle):
+		if (existing.track.uuid == connection.track.uuid &&
+		existing.connected_at_start == connection.connected_at_start &&
+		Utils.check_angle_matches(existing.approach_from_angle, track_connection.approach_from_angle)):
 			assert(false, "Track is already connected to this junction at the same angle!!")
 
 	# 3. Update track references
@@ -125,10 +127,20 @@ func remove_track_and_nodes(track: Track) -> void:
 
 
 func remove_virtual_nodes_and_references(track: Track) -> void:
-	var entry_node_name: String = JunctionNode.generate_name(self, track, true)
-	var exit_node_name:  String = JunctionNode.generate_name(self, track, false)
-	remove_node_and_references(entry_node_name)
-	remove_node_and_references(exit_node_name)
+	if track.start_junction == self:
+		var entry_node_name_start_track: String = JunctionNode.generate_name(self, track, true, true)
+		var exit_node_name_start_track:  String = JunctionNode.generate_name(self, track, true, false)
+		if (entry_node_name_start_track):
+			remove_node_and_references(entry_node_name_start_track)
+		if (exit_node_name_start_track):
+			remove_node_and_references(exit_node_name_start_track)
+	if track.end_junction == self:
+		var entry_node_name_end_track: String = JunctionNode.generate_name(self, track, false, true)
+		var exit_node_name_end_track:  String = JunctionNode.generate_name(self, track, false, false)
+		if (entry_node_name_end_track):
+			remove_node_and_references(entry_node_name_end_track)
+		if (exit_node_name_end_track):
+			remove_node_and_references(exit_node_name_end_track)
 
 func remove_node_and_references(node_name: String) -> void:
 	# 1. If the node exists in the global Graph, remove it from there.

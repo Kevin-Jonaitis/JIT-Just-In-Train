@@ -30,12 +30,15 @@ static var bake_interval: int = 5
 const EPSILON: float = 1e-4
 var calcualtedPoints: bool = false
 # use get_points()
+
 var _points: Array[Vector2] = []
 # Dumb way to figure out which segment a point is a part of. 
 # We don't know because points sometimes overlap in segments ad we filter them out in the
 # final points array, and there are a bunch
 # of edge cases that can determine which segment a point is a part of which 
 # frankly I'm too lazy to figure out
+#TODO: I should figure this out. Really I should only have 1 overlapping point at the cross point
+# for each segment, right?
 var segment_index_for_point: Array[int] = []
 
 # Direction the track is HEADED. start_theta should point INTO the track, end_theta should point OUT of the track
@@ -236,17 +239,17 @@ func split_at_point_index(point_index: int) -> Array[DubinPath]:
 
 
 func find_segment_with_point(point_index: int) -> Array:
-	var point: Vector2 = _points[point_index]
 
-	var segment_index: int = 0
-	var split_segment_index: int = 0
-	for segment: Segment in segments:
-		split_segment_index = 0
-		for seg_point: Vector2 in segment.points:
-			if seg_point == point: # We can compare Vector2 floats here because the points(should) be taken from the same data structure
-				return [segment_index, split_segment_index]
-			split_segment_index += 1
-		segment_index += 1
+	var segment_index: int = segment_index_for_point[point_index]
+	var point: Vector2 = _points[point_index]
+	var segment: Segment = segments[segment_index]
+
+	# var segment_index: int = 0
+	var local_segment_index: int = 0
+	for seg_point: Vector2 in segment.points:
+		if seg_point == point: # We can compare Vector2 floats here because the points(should) be taken from the same data structure
+			return [segment_index, local_segment_index]
+		local_segment_index += 1
 
 	assert(false, "Could not find matching point, something's wrong with how we're cosntructing the points for the dubin path from the poitns from the arc/line :(")
 	return []

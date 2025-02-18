@@ -22,8 +22,9 @@ func _init(track_: Track, track_pos_: float, forward_: bool, train_: Train, is_r
 	self.train = train_
 	self.forward = forward_
 	self.is_reverse_node = is_reverse_node_
+	self.identifier = Graph.map_name_to_number(name)
 
-func get_position() -> Vector2:
+func get_vector_pos() -> Vector2:
 	return track.dubins_path.shortest_path.get_point_at_offset(track_pos)
 
 func get_angle_of_point() -> float:
