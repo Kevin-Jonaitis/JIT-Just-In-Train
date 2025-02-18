@@ -25,11 +25,21 @@ var update_turnaround_loops_dirty: bool = false
 
 @onready var trains: Trains = Utils.get_node_by_ground_name("trains")
 
+static var PROFILING_COUNT : int = 0
+
 # -------------------------------------------------------------------
 # Node Management
 # -------------------------------------------------------------------
 
+# Used for performance outread
+func get_num_of_edges() -> int:
+	var count: int = 0
+	for node_name: String in outgoing_edges.keys():
+		count += outgoing_edges[node_name].size()
+	return count
+
 func get_connected_edges(node: VirtualNode, train: Train, get_turnarounds: bool = true) -> Array[Edge]:
+	PROFILING_COUNT += 1
 	assert(train, "Train must be provided")
 	var connected_edges: Array[Edge] = []
 	if outgoing_edges.has(node.name):

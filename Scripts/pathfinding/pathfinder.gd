@@ -43,9 +43,10 @@ static func find_path_between_set_nodes(train: Train, stops: Array[Stop], dynamn
 			for end_node: StopNode in next_stop.get_front_stops():
 				var path: Path = Utils.measure(func() -> Variant: return find_path_between_nodes(start_position, end_node, train),
 				"find path between nodes")
+				print("connected calls for set of stops", Graph.PROFILING_COUNT)
+				Graph.PROFILING_COUNT = 0
 				if (path != null):
 					add_to_dp_map(end_node, dynamnic_programming, RunningPath.new([path]))
-#dynamnic_programming is a dictionary with key: StopNode, value: <Path or RunningPath, depending on caller>
 
 # First the map will be dp<StopNode, Path> then it'll transform into dp<StopNode, RunningPath>
 static func add_to_dp_map(

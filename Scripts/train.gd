@@ -97,6 +97,8 @@ func get_stops() -> Array[Stop]:
 
 func calculate_schedule() -> void:
 	if update_schedule_dirty:
+		print("NODE SIZE", Graph._nodes.size())
+		print("EDGES SIZE", Graph.get_num_of_edges())
 		update_schedule_dirty = false
 		schedule = Utils.measure(func() -> Variant: return Pathfinder.find_path_with_movement(self), "pathfinder")
 		#print_schedule()
