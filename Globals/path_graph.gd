@@ -421,8 +421,11 @@ func debug_verify_astar_vs_graph() -> void:
 
 	print("----- DEBUG: Verification complete -----")
 
-func debug_print_astar_network() -> void:
+func debug_print_astar_network(start_position: Stop.TrainPosition, end: StopNode) -> void:
 	print("----- Full AStar2D Network -----")
+	print("START POISITON forward: " + start_position.front_of_train.name)
+	print("START POISITON backward: " + start_position.back_of_train.name)
+	print("END POSITION: " + end.name)
 
 	# Get all point IDs in the AStar2D graph.
 	var point_ids: PackedInt64Array = Pathfinder.A_STAR.get_point_ids()

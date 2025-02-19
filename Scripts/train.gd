@@ -102,23 +102,17 @@ func calculate_schedule() -> void:
 		update_schedule_dirty = false
 		# Graph.debug_verify_astar_vs_graph()
 		schedule = Pathfinder.find_path_with_movement(self)
+		if (schedule):
+			schedule.debug_print_schedule()
 		#print_schedule()
 		schedule_follower.reset()
 		calculate_path_draw()
 		queue_redraw()
-		# Graph.print_graph()
+		Graph.print_graph()
 
 var colors: Array[Color] = [
 	Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.CYAN, Color.MAGENTA, Color.ORANGE, Color.PURPLE, Color.PINK, Color.TEAL, Color.GRAY, Color.LIME, Color.AQUA, Color.OLIVE, Color.MAROON, Color.TEAL, Color.SILVER, Color.WHITE, Color.BLACK
 ]
-
-
-func print_schedule() -> void:
-	if (schedule != null):
-		for path: Path in schedule.paths:
-			print("Start of path:")
-			for node: VirtualNode in path.nodes:
-				print(node.name)
 
 func calculate_path_draw() -> void:
 	if not schedule:

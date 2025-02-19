@@ -59,9 +59,9 @@ static func add_stop_node_connection_to_graph(node: StopNode) -> Array[VirtualNo
 
 	# Add start to end of track
 	if (node.is_forward()):
-		junction_node = node.track.end_junction.get_junction_node(node.track, false, false)
+		junction_node = node.track.end_junction.get_junction_node(node.track, false, true)
 	else:
-		junction_node = node.track.start_junction.get_junction_node(node.track, true, false)
+		junction_node = node.track.start_junction.get_junction_node(node.track, true, true)
 	Graph.add_edge(node, junction_node, 
 	VirtualNode.calculate_distance_between_two_connectable_nodes(node, junction_node))
 
@@ -78,8 +78,8 @@ class TempPointsAndConnections:
 
 static func astar_runner(start_position: Stop.TrainPosition, end: StopNode, train: Train) -> Path:
 	var temp_data: TempPointsAndConnections = connect_stop_nodes_to_graph(start_position, end, train)
-	# Graph.debug_print_astar_network()
-	var path: PackedInt64Array = calcualte_path(start_position, end)
+	# Graph.debug_print_astar_network(start_position, end)
+	var path: PackedInt64Array = calcualte_path(start_position.front_of_train, end)
 	var possible_path: Path
 	if (path == null || path.size() == 0):
 		possible_path = null
@@ -91,8 +91,8 @@ static func astar_runner(start_position: Stop.TrainPosition, end: StopNode, trai
 	remove_temp_stop_connections(temp_data)
 	return possible_path
 
-static func calcualte_path(start_position: Stop.TrainPosition, end: StopNode) -> PackedInt64Array:
-	return A_STAR.get_id_path(start_position.front_of_train.identifier, end.identifier)
+static func calcualte_path(start: StopNode, end: StopNode) -> PackedInt64Array:
+	return A_STAR.get_id_path(start.identifier, end.identifier)
 
 
 # This can potenetially be really slow, as we have to add a connection for every exit node in the graph
@@ -133,7 +133,6 @@ static func remove_temp_stop_connections(temp_data: TempPointsAndConnections) ->
 # Make all the (temp) connections for stop nodes
 static func connect_stop_nodes_to_graph(start_position: Stop.TrainPosition, end_node: StopNode, train: Train) -> TempPointsAndConnections:
 	var temp_data: TempPointsAndConnections = TempPointsAndConnections.new()
-	# var added_connections: Array[Array]	= []
 	var start: StopNode = start_position.front_of_train
 
 	# Add points
