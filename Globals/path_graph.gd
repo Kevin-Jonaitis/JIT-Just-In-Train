@@ -33,7 +33,7 @@ var string_to_int_map: Dictionary[String, int] = {}
 var int_to_string_map: Dictionary[int, String] = {}
 # Use cantor pairing to map two nodes to a unique int
 # Contains both turnaround edges and regular edges
-# Turnaround edges last only the length of time of the train
+# Turnaround edges last only the length of time of the search for all stops for a train
 var edges_to_cost_map: Dictionary[int, float] = {}
 
 #TODO: This should probably be unique per usecase
@@ -98,7 +98,6 @@ func get_num_of_edges() -> int:
 	return count
 
 func get_connected_edges(node: VirtualNode, train: Train, get_turnarounds: bool = true) -> Array[Edge]:
-	PROFILING_COUNT += 1
 	assert(train, "Train must be provided")
 	var connected_edges: Array[Edge] = []
 	if outgoing_edges.has(node.name):
@@ -293,25 +292,25 @@ func _find_edge_to(edges_array: Array, target_name: String) -> Edge:
 
 func verify_edges() -> void:
 	pass
-	# Verify the values in the outgoing arrays match the incoming arrays
-	for node_name: String in outgoing_edges.keys():
-		var edges_array: Array = outgoing_edges[node_name]
-		assert(_nodes.has(node_name), "Outgoing edge says it has a node but it's not in nodes!")
+	# # Verify the values in the outgoing arrays match the incoming arrays
+	# for node_name: String in outgoing_edges.keys():
+	# 	var edges_array: Array = outgoing_edges[node_name]
+	# 	assert(_nodes.has(node_name), "Outgoing edge says it has a node but it's not in nodes!")
 
-		# Use a dictionary to track which 'to' nodes we've seen for this 'from' node.
-		var seen_targets: Dictionary = {}
+	# 	# Use a dictionary to track which 'to' nodes we've seen for this 'from' node.
+	# 	var seen_targets: Dictionary = {}
 
 
-		for edge: Edge in edges_array:
-			var to_name: String = edge.to_node.name
+	# 	for edge: Edge in edges_array:
+	# 		var to_name: String = edge.to_node.name
 
-			# Verify that we haven't already seen an edge going to the same target.
-			assert(not seen_targets.has(to_name), "Duplicate edge found: " + node_name + " -> " + to_name)
-			seen_targets[to_name] = true
+	# 		# Verify that we haven't already seen an edge going to the same target.
+	# 		assert(not seen_targets.has(to_name), "Duplicate edge found: " + node_name + " -> " + to_name)
+	# 		seen_targets[to_name] = true
 
-			assert(_nodes.has(edge.to_node.name), "Outgoing edge says it's going to a node but it's not in the list of _nodes!")
-			assert(_incoming_edges.has(edge.to_node.name), "Outgoing edge has no incoming edge")
-			assert(_incoming_edges[edge.to_node.name].find(node_name) != -1, "Outgoing edge has no incoming edge") 
+	# 		assert(_nodes.has(edge.to_node.name), "Outgoing edge says it's going to a node but it's not in the list of _nodes!")
+	# 		assert(_incoming_edges.has(edge.to_node.name), "Outgoing edge has no incoming edge")
+	# 		assert(_incoming_edges[edge.to_node.name].find(node_name) != -1, "Outgoing edge has no incoming edge") 
 	
 
 # -------------------------------------------------------------------

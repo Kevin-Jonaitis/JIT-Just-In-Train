@@ -50,8 +50,6 @@ static func find_path_between_set_nodes(train: Train, stops: Array[Stop], dynamn
 		for start_position: Stop.TrainPosition in current_stop.stop_option:
 			for end_node: StopNode in next_stop.get_front_stops():
 				var path: Path = new_astar_runner(start_position, end_node, train)
-				print("connected calls for set of stops", Graph.PROFILING_COUNT)
-				Graph.PROFILING_COUNT = 0
 				if (path != null):
 					add_to_dp_map(end_node, dynamnic_programming, RunningPath.new([path]))
 

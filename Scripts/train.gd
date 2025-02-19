@@ -106,7 +106,7 @@ func calculate_schedule() -> void:
 		schedule_follower.reset()
 		calculate_path_draw()
 		queue_redraw()
-		Graph.print_graph()
+		# Graph.print_graph()
 
 var colors: Array[Color] = [
 	Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.CYAN, Color.MAGENTA, Color.ORANGE, Color.PURPLE, Color.PINK, Color.TEAL, Color.GRAY, Color.LIME, Color.AQUA, Color.OLIVE, Color.MAROON, Color.TEAL, Color.SILVER, Color.WHITE, Color.BLACK
