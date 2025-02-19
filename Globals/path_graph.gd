@@ -57,8 +57,6 @@ func map_name_to_number(string: String) -> int:
 # Node Management
 # -------------------------------------------------------------------
 
-
-
 func cantor_pair(a: int, b: int) -> int:
 	var s: int = a + b
 	return int((s * (s + 1)) / 2.0) + b
@@ -96,7 +94,7 @@ func get_turnaround_loop_for_train_at_node(train: Train, node: VirtualNode) -> E
 	return loops[node.name] as Edge
 
 
-# Used for performance outread
+# Used for performance printing
 func get_num_of_edges() -> int:
 	var count: int = 0
 	for node_name: String in outgoing_edges.keys():
@@ -264,7 +262,7 @@ func _is_loop_valid(start_node_name: String, loop_edge: Edge) -> bool:
 
 
 func _calculate_and_set_turnaround_loop(node: JunctionNode, train: Train) -> void:
-	assert(node.is_exit_node(), "Turnaround loops are only valid for exit _nodes")
+	assert(node.is_exit_node(), "Turnaround loops are only valid for exit nodes")
 	var reverse_edge: Edge = node.get_reverse_edge(train)
 	var train_key: String = train.name
 	# If no turnaround loops exist for this train yet, create a new dictionary.

@@ -5,21 +5,40 @@ class_name Path
 
 
 var nodes: Array[VirtualNode]  = []
-var track_segments: Array[TrackSegment] = []
+var track_segments: Array[TrackSegment] = []:
+	get:
+		if not calculated_track_segments:
+			calculated_track_segments = true
+			track_segments = create_track_segments()
+		return track_segments
 
 var uuid: String = Utils.generate_unique_id()
 
-var length: float
+var length: float:
+	get:
+		if not calculated_length:
+			length = calculate_length(nodes)
+			calculated_length = true
+		return length
 
-var reverse_nodes: Array[VirtualNode] = []
+var reverse_nodes: Array[VirtualNode] = []:
+	get:
+		if not calculated_reverse_nodes:
+			reverse_nodes = parse_reverse_nodes()
+			calculated_reverse_nodes = true
+		return reverse_nodes
+
+var calculated_length: bool = false
+var calculated_track_segments : bool = false
+var calculated_reverse_nodes: bool = false
 
 func _init(new_nodes: Array[VirtualNode]) -> void:
 	# assert(new_nodes[0] is StopNode, "The first node should always be a stop node")
 	#assert(new_nodes[-1] is StopNode, "The last node should always be a stop node")
 	self.nodes = new_nodes
-	self.length = calculate_length(nodes)
-	self.create_track_segments()
-	self.reverse_nodes = parse_reverse_nodes()
+	# self.length = calculate_length(nodes)
+	# self.create_track_segments()
+	# self.reverse_nodes = parse_reverse_nodes()
 
 
 func parse_reverse_nodes() -> Array[VirtualNode]:
@@ -150,10 +169,10 @@ class TrackSegment:
 # Create track segments for each path of travel
 # If we are "reversing", we should create two track segments: one from the junction to the reverse point
 # And another from the reverse point back to the junction
-func create_track_segments() -> void:
-	track_segments.clear()
+func create_track_segments() -> Array[TrackSegment]:
+	var track_segments: Array[TrackSegment] = []
 	if nodes.size() < 2:
-		return
+		return []
 
 	var current_track: Track = nodes[0].track
 	var start_pos: float = nodes[0].get_track_position()
@@ -171,6 +190,7 @@ func create_track_segments() -> void:
 	var last_end_position: float = nodes[nodes.size() - 1].get_track_position()
 	var last_segment: TrackSegment = TrackSegment.new(current_track, start_pos, last_end_position)
 	track_segments.append(last_segment)
+	return track_segments
 
 static func is_reverse_spot(node_one: VirtualNode, node_two: VirtualNode) -> bool:
 	if (node_one is StopNode and node_two is StopNode && node_one.track.uuid == node_two.track.uuid &&
