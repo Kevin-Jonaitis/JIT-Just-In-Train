@@ -48,22 +48,6 @@ func get_exit_node_same_track_side() -> JunctionNode:
 	assert(!exit_node.is_entry_node(), "This should be an exit node")
 	return exit_node
 
-static func deduce_if_loopback_edge(node_one_identifier: int, node_two_indetifier: int) -> bool:
-	var nodeOne: VirtualNode = Graph.map_identifier_to_node(node_one_identifier)
-	var nodeTwo: VirtualNode = Graph.map_identifier_to_node(node_two_indetifier)
-	if (nodeOne == nodeTwo):
-		return false
-	if (nodeOne is JunctionNode and nodeTwo is JunctionNode):
-		var junctionOne: JunctionNode = nodeOne as JunctionNode
-		var junctionTwo: JunctionNode = nodeTwo as JunctionNode
-		if (junctionOne.junction == junctionTwo.junction && 
-		junctionOne.track == junctionTwo.track && 
-		junctionOne.is_exit_node() && junctionTwo.is_entry_node() && 
-		junctionOne.is_connected_at_start() == junctionTwo.is_connected_at_start()):
-			return true
-
-	return false
-
 func get_track_position() -> float:
 	if connected_at_start_of_track:
 		return 0

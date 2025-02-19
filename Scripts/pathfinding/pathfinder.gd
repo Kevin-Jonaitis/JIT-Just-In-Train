@@ -49,7 +49,7 @@ static func find_path_between_set_nodes(train: Train, stops: Array[Stop], dynamn
 		var next_stop: Stop = stops[i + 1]
 		for start_position: Stop.TrainPosition in current_stop.stop_option:
 			for end_node: StopNode in next_stop.get_front_stops():
-				var path: Path = new_astar_runner(start_position, end_node, train)
+				var path: Path = astar_runner(start_position, end_node, train)
 				if (path != null):
 					add_to_dp_map(end_node, dynamnic_programming, RunningPath.new([path]))
 
@@ -76,7 +76,7 @@ class TempPointsAndConnections:
 	# 	self.connections = connections_
 
 
-static func new_astar_runner(start_position: Stop.TrainPosition, end: StopNode, train: Train) -> Path:
+static func astar_runner(start_position: Stop.TrainPosition, end: StopNode, train: Train) -> Path:
 	var temp_data: TempPointsAndConnections = connect_stop_nodes_to_graph(start_position, end, train)
 	# Graph.debug_print_astar_network()
 	var path: PackedInt64Array = calcualte_path(start_position, end)
@@ -111,8 +111,7 @@ static func convert_path_to_virtual_nodes(path: PackedInt64Array, train: Train) 
 	var virtual_nodes: Array[VirtualNode] = []
 	for i: int in range(path.size()):
 		# Check if we go through a reverse node by checking if the previous and next node are the same
-		if (i < path.size() - 1 && JunctionNode.deduce_if_loopback_edge(path[i], path[i + 1])):
-			# This could be cleaner, we do a double lookup here and in the "deduce" call
+		if (i < path.size() - 1 && Graph.check_if_loopback(path[i], path[i + 1], train)):
 			var current_node: VirtualNode = Graph.map_identifier_to_node(path[i])
 			var next_node: VirtualNode = Graph.map_identifier_to_node(path[i + 1])
 			virtual_nodes.append(current_node)

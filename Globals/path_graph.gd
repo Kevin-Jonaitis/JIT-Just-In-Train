@@ -13,11 +13,6 @@ var _incoming_edges: Dictionary[String, Array] = {}
 # Turnaround loops: node_name (String) -> Edge (loop back to itself)
 var turnaround_loops: Dictionary[String, Edge] = {}
 
-# Needs to be kept in sync with _nodes
-# I'll probably regret this later
-# Later me: I did regret it, it's slow
-# var exit_nodes: Array[JunctionNode] = []
-
 # Turnaround loops by train: train name (String) -> Dictionary 
 #   (inner Dictionary: node name (String) -> Edge)
 var turnaround_loops_by_train: Dictionary[String, Dictionary] = {}
@@ -28,13 +23,24 @@ var update_turnaround_loops_dirty: bool = false
 static var PROFILING_COUNT : int = 0
 
 
-# var existing_ids: Dictionary[int, bool] = {}
 var string_to_int_map: Dictionary[String, int] = {}
 var int_to_string_map: Dictionary[int, String] = {}
 # Use cantor pairing to map two nodes to a unique int
 # Contains both turnaround edges and regular edges
 # Turnaround edges last only the length of time of the search for all stops for a train
 var edges_to_cost_map: Dictionary[int, float] = {}
+
+
+# Check if the astar names indicate a loopback edge
+func check_if_loopback(node_a: int, node_b: int, train: Train) -> bool:
+	var node_a_name: String = int_to_string_map[node_a]
+	var node_b_name: String = int_to_string_map[node_b]
+	var node_to_edge: Dictionary = turnaround_loops_by_train[train.name]
+	if (node_to_edge.has(node_a_name)):
+		var edge: Edge = node_to_edge[node_a_name]
+		if (edge.to_node.name == node_b_name):
+			return true
+	return false
 
 #TODO: This should probably be unique per usecase
 func map_name_to_number(string: String) -> int:
