@@ -17,12 +17,12 @@ config/icon="res://icon.png"
 
 [autoload]
 
-MapManager="*res://Scripts/map_manager.gd"
-Utils="*res://Globals/utils.gd"
-EventBus="*res://Globals/event_bus.gd"
-ObjectFetcher="*res://Globals/object_fetcher.gd"
-Graph="*res://Globals/path_graph.gd"
-DeferredQueue="*res://Globals/deferred_queue.gd"
+MapManager="*res://Scripts/world/map_manager.gd"
+Utils="*res://Scripts/globals/utils.gd"
+EventBus="*res://Scripts/globals/event_bus.gd"
+ObjectFetcher="*res://Scripts/globals/object_fetcher.gd"
+Graph="*res://Scripts/globals/path_graph.gd"
+DeferredQueue="*res://Scripts/globals/deferred_queue.gd"
 
 [debug]
 

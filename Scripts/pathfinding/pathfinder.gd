@@ -28,10 +28,9 @@ static func find_path_with_movement(
 		return find_path(train, stops)
 
 static func find_path(train: Train, stops: Array[Stop]) -> Schedule:
-	var dynamnic_programming: Dictionary = {}
 	var added_connections: Array[Array] = connect_reverse_nodes_for_train(train)
-	find_path_between_set_nodes(train, stops, dynamnic_programming)
-	var schedule: Schedule = calculate_running_best_path(dynamnic_programming, stops, train)
+	var dp: Dictionary[String, RunningPath] = find_path_between_set_nodes(train, stops)
+	var schedule: Schedule = calculate_running_best_path(dp, stops, train)
 	remove_reverse_connections(added_connections)
 
 	return schedule
@@ -43,7 +42,8 @@ static func remove_reverse_connections(added_connections: Array[Array]) -> void:
 		Graph.remove_reverse_connection_from_astar(connection[0], connection[1])
 
 
-static func find_path_between_set_nodes(train: Train, stops: Array[Stop], dynamnic_programming: Dictionary) -> void:
+static func find_path_between_set_nodes(train: Train, stops: Array[Stop]) -> Dictionary[String, RunningPath]:
+	var dynamnic_programming: Dictionary[String, RunningPath] = {}
 	for i: int in range(stops.size() - 1):
 		var current_stop: Stop = stops[i]
 		var next_stop: Stop = stops[i + 1]
@@ -52,6 +52,7 @@ static func find_path_between_set_nodes(train: Train, stops: Array[Stop], dynamn
 				var path: Path = astar_runner(start_position, end_node, train)
 				if (path != null):
 					add_to_dp_map(end_node, dynamnic_programming, RunningPath.new([path]))
+	return dynamnic_programming
 
 
 static func add_stop_node_connection_to_graph(node: StopNode) -> Array[VirtualNode]:
@@ -71,10 +72,6 @@ class TempPointsAndConnections:
 	var points: Array[VirtualNode] = []
 	var connections: Array[Array]  = [] # tuple of start and end VirtualNode
 
-	# func _init(points_: Array[VirtualNode], connections_: Array[Array]) -> void:
-	# 	self.points = points_
-	# 	self.connections = connections_
-
 
 static func astar_runner(start_position: Stop.TrainPosition, end: StopNode, train: Train) -> Path:
 	var temp_data: TempPointsAndConnections = connect_stop_nodes_to_graph(start_position, end, train)
@@ -93,7 +90,6 @@ static func astar_runner(start_position: Stop.TrainPosition, end: StopNode, trai
 
 static func calcualte_path(start: StopNode, end: StopNode) -> PackedInt64Array:
 	return A_STAR.get_id_path(start.identifier, end.identifier)
-
 
 # This can potenetially be really slow, as we have to add a connection for every exit node in the graph
 # It runs O(n) where n is the number of nodes in the graph
@@ -195,11 +191,10 @@ static func connect_possible_stop_nodes(current: StopNode, end_node: StopNode) -
 	return null
 
 
-
-# First the map will be dp<StopNode, Path> then it'll transform into dp<StopNode, RunningPath>
+#map<NodeName, RunningPath>
 static func add_to_dp_map(
 	end_node: StopNode, 
-	dynamnic_programming: Dictionary, 
+	dynamnic_programming: Dictionary[String, RunningPath], 
 	path: RunningPath
 ) -> void:
 
@@ -212,14 +207,13 @@ static func add_to_dp_map(
 		dynamnic_programming[end_node.name] = path
 
 static func calculate_running_best_path(
-	dynamnic_programming: Dictionary, 
+	dynamnic_programming: Dictionary[String, RunningPath], 
 	stops: Array[Stop],
 	train: Train
 ) -> Schedule:
-	# Map<StopNode, RunningPath<Path>>
 	#StopNode is the last node, and RunningPath is the series of Paths to get us to that node
 	# We use a _different_ map here to keep the best running path
-	var running_map: Dictionary = {}
+	var running_map: Dictionary[String, RunningPath] = {}
 	
 	for i: int in range(stops.size() - 1):
 		# Initalize the map
@@ -256,7 +250,7 @@ static func calculate_running_best_path(
 
 static func check_for_overlap(
 	running_map: Dictionary,
-	dynamnic_programming: Dictionary, 
+	dynamnic_programming: Dictionary[String, RunningPath], 
 	current_stop_options: Array[StopNode], 
 	next_stop_options: Array[StopNode],
 	can_move_backwards: bool
@@ -333,147 +327,3 @@ class RunningPath:
 		for path: Path in paths:
 			total += path.nodes.size()
 		return total
-		
-
-static func check_if_overlap_and_add_to_map(
-	dynamnic_programming: Dictionary, 
-	start_path: RunningPath, 
-	end_path: RunningPath
-) -> void:
-	if (start_path == null or end_path == null):
-		return
-	if (start_path.get_last_stop().name == end_path.get_first_stop().name):
-		# Can run twice for each end_path
-		var combined_array: Array[Path] = []
-		combined_array.append_array(start_path.paths)
-		combined_array.append_array(end_path.paths)
-		var running_path_list: RunningPath = RunningPath.new(combined_array)
-		add_to_dp_map(end_path.get_last_stop(), dynamnic_programming, running_path_list)
-
-static func get_node_position(node: VirtualNode) -> Vector2:
-	if (node is StopNode):
-		var node_cast : StopNode = node
-		return node_cast.get_vector_pos()
-	elif (node is JunctionNode):
-		var node_cast : JunctionNode = node
-		return node_cast.junction.position
-
-	assert(false, "We should never get here")
-	return Vector2.ZERO
-
-static func heuristic(a: VirtualNode, b: VirtualNode) -> float:
-	return get_node_position(a).distance_to(get_node_position(b))
-
-static func possible_edge_to_end_node(current: VirtualNode, end_node: StopNode) -> Edge:
-	if current.track == end_node.track:
-		if current is StopNode:
-			var current_cast: StopNode = current
-			if (current_cast.is_forward() && end_node.is_forward()):
-				if current_cast.get_track_position() < end_node.get_track_position():
-					var distance: float = end_node.get_track_position() - current_cast.get_track_position() 
-					return Edge.new(end_node, distance)
-			elif (!current_cast.is_forward() && !end_node.is_forward()):
-				if current.get_track_position() > end_node.get_track_position():
-					var distance: float = current_cast.get_track_position() - end_node.get_track_position()
-					return Edge.new(end_node, distance)		
-		if current is JunctionNode:
-			var current_cast: JunctionNode = current
-			if (current_cast.is_exit_node()):
-				if current_cast.connected_at_start_of_track && end_node.is_forward():
-					return Edge.new(end_node, end_node.get_track_position())
-				if !current_cast.connected_at_start_of_track && !end_node.is_forward():
-					return Edge.new(end_node, current_cast.track.length - current_cast.get_track_position())
-	return null
-
-# If this is a stop node, get the junctions it'd be connected to
-static func get_connected_junction_edges_for_stop_node(current: StopNode) -> Array[Edge]:
-	var junction_node: JunctionNode
-	if (current.is_forward()):
-		junction_node = current.track.start_junction.get_junction_node(current.track, true, false)
-	else:
-		junction_node = current.track.end_junction.get_junction_node(current.track, false, false)
-	
-	var connected_edges: Array[Edge] = Graph.get_connected_edges(junction_node, current.train)
-	return connected_edges
-
-# Copilot generated(it is A* as requested, and looks like code from A* algorithm wiki page)
-static func find_path_between_nodes(
-	start_position: Stop.TrainPosition, 
-	end: StopNode, 
-	train: Train) -> Path:
-	var start: StopNode = start_position.front_of_train
-	var start_name: String = start.name
-
-	print("Start node: ", start.name)
-	print("End node: ", end.name)
-	print("")
-
-
-	var open_set: PriorityQueue = PriorityQueue.new()
-	var came_from: Dictionary = {}
-	var g_score: Dictionary = {}
-	var f_score: Dictionary = {}
-	var visited: Dictionary = {}
-
-	g_score[start.name] = 0.0
-	f_score[start.name] = heuristic(start, end)
-	open_set.insert(start, f_score[start.name] as float)
-
-	while not open_set.is_empty():
-		var current: VirtualNode = open_set.extract_min()
-		var current_name: String = current.name
-		print("Current: ", current_name, ", start: ", start.name, "m end: ", end.name)
-		if current_name == end.name:
-			return reconstruct_path(came_from, current)
-
-		if visited.has(current_name):
-			continue
-
-		visited[current_name] = true
-		# We do it all for you, buddy
-		var edges: Array[Edge] = Graph.get_connected_edges(current, train)
-
-		# Allow reversing at the start node
-		if (current_name == start_name && train.can_reverse):
-			assert(start is StopNode, "This should be a stop node; otherwise adding a connection to a node will be permanent")
-			assert(start_position.back_of_train.is_reverse_node, "Back of train should be a reverse node!!")
-			edges.append(Edge.new(start_position.back_of_train, Edge.COST_TO_REVERSE))
-			edges.append_array(get_connected_junction_edges_for_stop_node(current as StopNode))
-		if (current_name == start_position.back_of_train.name):
-			edges.append_array(get_connected_junction_edges_for_stop_node(current as StopNode))
-
-		# Add the end stop node edge if it's viable
-		var possible_end_edge: Edge = possible_edge_to_end_node(current, end)
-		if (possible_end_edge):
-			edges.append(possible_end_edge)
-
-		for edge: Edge in edges:
-			var neighbor: VirtualNode = edge.to_node
-			var cost_to_neighbor: float = edge.cost
-			if visited.has(neighbor.name):
-				continue
-			var tentative_g: float = g_score[current_name] + cost_to_neighbor
-			if tentative_g < g_score.get(neighbor.name, INF):
-				came_from[neighbor.name] = { "node": current, "path": edge.intermediate_nodes }
-				g_score[neighbor.name] = tentative_g
-				f_score[neighbor.name] = tentative_g + heuristic(neighbor, end)
-				open_set.insert(neighbor, f_score[neighbor.name] as float)
-
-	return null
-
-static func reconstruct_path(
-	came_from: Dictionary, 
-	current: VirtualNode
-) -> Path:
-	var path_nodes: Array[VirtualNode] = [current]
-	while came_from.has(current.name):
-		var prev: Dictionary = came_from[current.name]
-		var prev_node: VirtualNode = prev.node
-		var prev_path: Array[VirtualNode] = prev.path
-		assert(prev_path != null, "Should always be defined, at the very least an empty array")
-		if (prev_path.size() > 0):
-			for i: int in range(prev_path.size() - 1, -1, -1):
-				path_nodes.insert(0, prev_path[i])
-		path_nodes.insert(0, prev_node)
-		current = prev_node
-	return Path.new(path_nodes)

@@ -1,8 +1,8 @@
 [gd_scene load_steps=6 format=4 uid="uid://boyh6jyitkbyg"]
 
-[ext_resource type="Script" uid="uid://d2clbp7523vyi" path="res://Scripts/world_map.gd" id="1_lpgb4"]
+[ext_resource type="Script" uid="uid://d2clbp7523vyi" path="res://Scripts/world/world_map.gd" id="1_lpgb4"]
 [ext_resource type="Texture2D" uid="uid://csn38pf3031tg" path="res://Assets/lpc-terrains/terrain-v7.png" id="2_irbmt"]
-[ext_resource type="Script" uid="uid://2714766s16d2" path="res://Scripts/gridlines.gd" id="3_14yl7"]
+[ext_resource type="Script" uid="uid://2714766s16d2" path="res://Scripts/world/gridlines.gd" id="3_14yl7"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_u5hae"]
 texture = ExtResource("2_irbmt")

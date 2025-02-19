@@ -18,7 +18,7 @@ func _init(junction_: Junction, track_: Track, connected_at_start_: bool, is_ent
 	self.identifier = Graph.map_name_to_number(name)
 	self.is_exit_node_bool = name.ends_with("-exit")
 
-#<junction_name>-<track-name>-<entry/exit/null>
+#<junction_name>-<track-name>-<t_start/end)-<entry/exit/null>
 static func generate_name(junction_: Junction, track_: Track, connected_at_start_: bool, is_entry: bool) -> String:
 	var track_end : String
 	# If this track loops back onto the same junction, we need to be able to differentiate
@@ -42,20 +42,17 @@ func get_entry_node_same_track_side() -> JunctionNode:
 	assert(entry_node.is_entry_node(), "This should be an exit node")
 	return entry_node
 
-func get_exit_node_same_track_side() -> JunctionNode:
-	assert(self.is_entry_node(), "What are you doing getting an exit node on NOT an entry node??")
-	var exit_node: JunctionNode = Graph._nodes.get(generate_name(junction, track, connected_at_start_of_track, true))
-	assert(!exit_node.is_entry_node(), "This should be an exit node")
-	return exit_node
+# func get_exit_node_same_track_side() -> JunctionNode:
+# 	assert(self.is_entry_node(), "What are you doing getting an exit node on NOT an entry node??")
+# 	var exit_node: JunctionNode = Graph._nodes.get(generate_name(junction, track, connected_at_start_of_track, true))
+# 	assert(!exit_node.is_entry_node(), "This should be an exit node")
+# 	return exit_node
 
 func get_track_position() -> float:
 	if connected_at_start_of_track:
 		return 0
 	else:
 		return track.length
-
-func is_connected_at_start() -> bool:
-	return connected_at_start_of_track 
 
 func is_entry_node() -> bool:
 	return !is_exit_node_bool
@@ -70,6 +67,12 @@ func get_vector_pos() -> Vector2:
 		return track.get_start_position()
 	else:
 		return track.get_end_position()
+
+func get_distance_from_front_track() -> float:
+	if (connected_at_start_of_track):
+		return 0
+	else:
+		return track.get_length()
 
 
 # We only get the FIRST valid reverse edge. This saves processing time, and anyways
@@ -97,12 +100,6 @@ func get_reverse_edge(train: Train) -> Edge:
 	return edge
 
 
-func get_distance_from_front_track() -> float:
-	if (connected_at_start_of_track):
-		return 0
-	else:
-		return track.get_length()
-
 func generate_path_with_reverse_nodes_added(path: Path) -> Path:
 	var nodes: Array[VirtualNode] = path.nodes
 	var new_nodes_to_add: Array[VirtualNode] = []
@@ -115,7 +112,6 @@ func generate_path_with_reverse_nodes_added(path: Path) -> Path:
 # We just need one turnaround point
 func generate_path_of_length_from_start(start_node: VirtualNode, train: Train, remaining_length: float) -> Path:
 	assert(remaining_length >= 0, "This should never happen, how did we recurse below 0")
-	# var paths_to_return : Array[Path] = []
 	# Only get connected nodes; don't bother getting reverse edges for connected
 	# nodes as the train length will go down for each "further" intersection, and therefore
 	# will never be long enough to reverse	

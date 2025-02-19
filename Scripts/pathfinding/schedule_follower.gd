@@ -5,8 +5,6 @@ class_name ScheduleFollower
 # How factorio does pathfinding:
 # https://wiki.factorio.com/Railway/Train_path_finding
 
-# Only true if the start and the end are the same
-
 # Pixels per second
 var velocity : float = 100
 

@@ -182,7 +182,6 @@ func remove_reverse_connection_from_astar(from_node: VirtualNode, to_node: Virtu
 	Pathfinder.A_STAR.disconnect_points(from_node.identifier, to_node.identifier, false)
 	remove_edge_from_cost_map(from_node, to_node)
 
-# NOT TESTED, HOPEFULLY THIS WORKS
 func remove_edge(from_node: VirtualNode, to_node: VirtualNode) -> void:
 	var from_name: String = from_node.name
 	var to_name: String = to_node.name

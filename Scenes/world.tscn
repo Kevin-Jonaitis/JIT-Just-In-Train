@@ -1,7 +1,7 @@
 [gd_scene load_steps=18 format=3 uid="uid://o671incsty73"]
 
 [ext_resource type="Script" uid="uid://bf1rv43fffhyb" path="res://Scripts/fps.gd" id="1_brhbh"]
-[ext_resource type="Script" uid="uid://b12klbnkdqrlx" path="res://Scripts/world.gd" id="1_l3f68"]
+[ext_resource type="Script" uid="uid://b12klbnkdqrlx" path="res://Scripts/world/world.gd" id="1_l3f68"]
 [ext_resource type="Script" uid="uid://bh7oorjba6gsm" path="res://Scripts/mouse_tracker.gd" id="2_ocwby"]
 [ext_resource type="PackedScene" uid="uid://bd4106ayhxdc0" path="res://Scenes/train_builder.tscn" id="2_vvcpl"]
 [ext_resource type="PackedScene" uid="uid://boyh6jyitkbyg" path="res://Scenes/world_map.tscn" id="3_5byin"]
