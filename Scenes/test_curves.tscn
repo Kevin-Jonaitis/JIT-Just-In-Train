@@ -8,5 +8,6 @@
 [node name="World" parent="." instance=ExtResource("1_ajwrv")]
 
 [node name="Camera2D" type="Camera2D" parent="."]
+visible = false
 position = Vector2(577, 324)
 script = ExtResource("4_let3w")

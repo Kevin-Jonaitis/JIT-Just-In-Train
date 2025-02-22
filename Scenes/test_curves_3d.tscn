@@ -1,0 +1,84 @@
+[gd_scene load_steps=13 format=3 uid="uid://ct8qnsxwo6gaq"]
+
+[ext_resource type="Script" uid="uid://dw703jxjsc0hp" path="res://Scripts/camera_3d.gd" id="1_dh1k4"]
+[ext_resource type="Material" uid="uid://fm7waw84uo7i" path="res://Assets/sandy_material.tres" id="1_umjyt"]
+[ext_resource type="PackedScene" uid="uid://bbwkypti4pf4f" path="res://Assets/Hyper Casual Trains/Lokomotive A.fbx" id="2_gkmdd"]
+[ext_resource type="PackedScene" uid="uid://dgkg12sw0ivfp" path="res://Assets/Hyper Casual Trains/Wagon Coal.fbx" id="3_r4sc5"]
+[ext_resource type="PackedScene" uid="uid://c7x5wt0rrftde" path="res://Assets/Hyper Casual Trains/Rails A.fbx" id="4_436s2"]
+[ext_resource type="PackedScene" uid="uid://8wj30ekqmuki" path="res://Assets/Hyper Casual Trains/Rails B.fbx" id="5_vbeuq"]
+[ext_resource type="ArrayMesh" uid="uid://qur1sjr0ougv" path="res://Assets/Hyper Casual Trains/railsmesh.tres" id="7_03nuc"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_734rm"]
+lightmap_size_hint = Vector2i(252, 252)
+size = Vector2(1000, 1000)
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_vbeuq"]
+
+[sub_resource type="Sky" id="Sky_dh1k4"]
+sky_material = SubResource("ProceduralSkyMaterial_vbeuq")
+
+[sub_resource type="Environment" id="Environment_03nuc"]
+background_mode = 2
+sky = SubResource("Sky_dh1k4")
+ssao_enabled = true
+ssil_enabled = true
+
+[sub_resource type="Curve3D" id="Curve3D_dh1k4"]
+_data = {
+"points": PackedVector3Array(0, 0, 0, 1, 0, 0, 67.6513, 74.8661, 42.8925, 0, 0, 0, 0, 0, 0, 121.69, 68.0387, 55.1019, 0, 0, 0, 0, 0, 0, 150.019, 61.2337, 59.2905, 0, 0, 0, 0, 0, 0, 155.358, 51.1743, 54.0614, 0, 0, 0, 0, 0, 0, 154.322, 39.1917, 45.5212, 0, 0, 0, 0, 0, 0, 178.673, 29.4281, 46.4373, 0, 0, 0, 0, 0, 0, 196.452, 39.4875, 58.8926, 0, 0, 0, 0, 0, 0, 196.079, 51.766, 67.1957, 0, 0, 0, 0, 0, 0, 185.997, 65.3759, 73.3767, 0, 0, 0, 0, 0, 0, 151.761, 24.6132, 53.1029, 0, 0, 0, 0, 0, 0, 104.55, 24.3779, 33.7922, 0, 0, 0, 0, 0, 0, 93.187, 37.6731, 36.7117, 0, 0, 0, 0, 0, 0, 74.2057, 46.9488, 34.2586),
+"tilts": PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+}
+point_count = 13
+
+[node name="TestCurves3D" type="Node3D"]
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(0.124993, 0.208478, -0.970007, -0.0538953, 0.977657, 0.203178, 0.990693, 0.026883, 0.133436, -27.6367, 9.37293, 2.97827)
+fov = 68.9283
+script = ExtResource("1_dh1k4")
+
+[node name="Ground" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.0882, -3.8934, -0.897358)
+mesh = SubResource("PlaneMesh_734rm")
+surface_material_override/0 = ExtResource("1_umjyt")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.935098, -0.0487296, -0.351022, 0.348938, -0.0464433, 0.935994, -0.0619132, -0.997732, -0.0264255, -3.48269, 47.788, -10.2487)
+shadow_enabled = true
+directional_shadow_mode = 1
+
+[node name="Lokomotive A" parent="." instance=ExtResource("2_gkmdd")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.8462, 0.00161171, -0.112995)
+
+[node name="Wagon Coal" parent="." instance=ExtResource("3_r4sc5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.446, 0.893256, 9.85593)
+
+[node name="Rails A" parent="." instance=ExtResource("4_436s2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.9904, 0, -3.34437)
+
+[node name="Rails B" parent="." instance=ExtResource("5_vbeuq")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.23516, 0, 17.3594)
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_03nuc")
+
+[node name="CSGPolygon3D" type="CSGPolygon3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25.2555, 8.01775, -6.9813)
+mode = 2
+path_node = NodePath("../Path3D")
+path_interval_type = 1
+path_interval = 1.0
+path_simplify_angle = 0.0
+path_rotation = 2
+path_rotation_accurate = false
+path_local = false
+path_continuous_u = true
+path_u_distance = 1.0
+path_joined = false
+
+[node name="Path3D" type="Path3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6007, 8.78843, 0)
+curve = SubResource("Curve3D_dh1k4")
+
+[node name="CSGMesh3D" type="CSGMesh3D" parent="."]
+mesh = ExtResource("7_03nuc")

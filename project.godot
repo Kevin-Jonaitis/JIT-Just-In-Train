@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="JIT: Just In Train"
-run/main_scene="res://Scenes/test_curves.tscn"
+run/main_scene="uid://ct8qnsxwo6gaq"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.png"
 
@@ -46,6 +46,10 @@ project/assembly_name="JIT- Just In Train"
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/gut/plugin.cfg")
+
+[filesystem]
+
+import/blender/enabled=false
 
 [global_group]
 
@@ -133,8 +137,3 @@ interact_mode={
 [network]
 
 limits/debugger/max_chars_per_second=1000000
-
-[rendering]
-
-renderer/rendering_method="gl_compatibility"
-renderer/rendering_method.mobile="gl_compatibility"
