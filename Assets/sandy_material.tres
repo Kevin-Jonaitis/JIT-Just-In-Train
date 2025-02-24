@@ -1,8 +1,4 @@
-[gd_resource type="StandardMaterial3D" load_steps=5 format=3 uid="uid://fm7waw84uo7i"]
-
-[ext_resource type="Texture2D" uid="uid://b30gollhk48yk" path="res://Assets/textures/sandy_gravel_02_diff_4k.png" id="1_q6lyb"]
-[ext_resource type="Texture2D" uid="uid://cqo1wlpd734by" path="res://Assets/textures/sandy_gravel_02_ao_4k.png" id="2_x7bjk"]
-[ext_resource type="Texture2D" uid="uid://dqm0uva5y0fus" path="res://Assets/textures/sandy_gravel_02_nor_dx_4k.png" id="3_785cg"]
+[gd_resource type="StandardMaterial3D" load_steps=2 format=3 uid="uid://fm7waw84uo7i"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_13y2o"]
 cull_mode = 1
@@ -14,12 +10,9 @@ grow_amount = 0.03
 [resource]
 next_pass = SubResource("StandardMaterial3D_13y2o")
 specular_mode = 1
-albedo_color = Color(0.970366, 0.607017, 0.172151, 0)
-albedo_texture = ExtResource("1_q6lyb")
+albedo_color = Color(0.54221, 0.331239, 0, 0)
 metallic_specular = 0.0
 normal_enabled = true
-normal_texture = ExtResource("3_785cg")
 ao_enabled = true
-ao_texture = ExtResource("2_x7bjk")
 uv1_scale = Vector3(5, 5, 5)
 texture_filter = 1

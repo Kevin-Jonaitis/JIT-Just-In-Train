@@ -1,12 +1,8 @@
-[gd_scene load_steps=13 format=3 uid="uid://ct8qnsxwo6gaq"]
+[gd_scene load_steps=9 format=3 uid="uid://ct8qnsxwo6gaq"]
 
 [ext_resource type="Script" uid="uid://dw703jxjsc0hp" path="res://Scripts/camera_3d.gd" id="1_dh1k4"]
-[ext_resource type="Material" uid="uid://fm7waw84uo7i" path="res://Assets/sandy_material.tres" id="1_umjyt"]
-[ext_resource type="PackedScene" uid="uid://bbwkypti4pf4f" path="res://Assets/Hyper Casual Trains/Lokomotive A.fbx" id="2_gkmdd"]
-[ext_resource type="PackedScene" uid="uid://dgkg12sw0ivfp" path="res://Assets/Hyper Casual Trains/Wagon Coal.fbx" id="3_r4sc5"]
-[ext_resource type="PackedScene" uid="uid://c7x5wt0rrftde" path="res://Assets/Hyper Casual Trains/Rails A.fbx" id="4_436s2"]
-[ext_resource type="PackedScene" uid="uid://8wj30ekqmuki" path="res://Assets/Hyper Casual Trains/Rails B.fbx" id="5_vbeuq"]
-[ext_resource type="ArrayMesh" uid="uid://qur1sjr0ougv" path="res://Assets/Hyper Casual Trains/railsmesh.tres" id="7_03nuc"]
+[ext_resource type="Material" uid="uid://p3mhytxfjmio" path="res://Assets/sandy_gravel.tres" id="2_r4sc5"]
+[ext_resource type="ArrayMesh" uid="uid://c3tlrc78gcd8i" path="res://Assets/rail.res" id="3_436s2"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_734rm"]
 lightmap_size_hint = Vector2i(252, 252)
@@ -38,26 +34,14 @@ fov = 68.9283
 script = ExtResource("1_dh1k4")
 
 [node name="Ground" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.0882, -3.8934, -0.897358)
+transform = Transform3D(10, 0, 0, 0, 10, 0, 0, 0, 10, 0, 0, 0)
+material_override = ExtResource("2_r4sc5")
 mesh = SubResource("PlaneMesh_734rm")
-surface_material_override/0 = ExtResource("1_umjyt")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.935098, -0.0487296, -0.351022, 0.348938, -0.0464433, 0.935994, -0.0619132, -0.997732, -0.0264255, -3.48269, 47.788, -10.2487)
 shadow_enabled = true
 directional_shadow_mode = 1
-
-[node name="Lokomotive A" parent="." instance=ExtResource("2_gkmdd")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.8462, 0.00161171, -0.112995)
-
-[node name="Wagon Coal" parent="." instance=ExtResource("3_r4sc5")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -19.446, 0.893256, 9.85593)
-
-[node name="Rails A" parent="." instance=ExtResource("4_436s2")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15.9904, 0, -3.34437)
-
-[node name="Rails B" parent="." instance=ExtResource("5_vbeuq")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.23516, 0, 17.3594)
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_03nuc")
@@ -81,4 +65,4 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6007, 8.78843, 0)
 curve = SubResource("Curve3D_dh1k4")
 
 [node name="CSGMesh3D" type="CSGMesh3D" parent="."]
-mesh = ExtResource("7_03nuc")
+mesh = ExtResource("3_436s2")
