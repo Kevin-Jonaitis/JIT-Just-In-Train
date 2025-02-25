@@ -16,6 +16,7 @@ var interact_or_edit_mode: bool = false
 
 func _ready() -> void:
 	train_builder.set_train_builder_disabled()
+	RenderingServer.set_debug_generate_wireframes(true) 
 
 func _unhandled_input(event: InputEvent) -> void:
 

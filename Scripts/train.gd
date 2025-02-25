@@ -106,7 +106,7 @@ func calculate_schedule() -> void:
 		# 	schedule.debug_print_schedule()
 		#print_schedule()
 		schedule_follower.reset()
-		calculate_path_draw()
+		# calculate_path_draw()
 		queue_redraw()
 		# Graph.print_graph()
 
@@ -114,28 +114,28 @@ var colors: Array[Color] = [
 	Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.CYAN, Color.MAGENTA, Color.ORANGE, Color.PURPLE, Color.PINK, Color.TEAL, Color.GRAY, Color.LIME, Color.AQUA, Color.OLIVE, Color.MAROON, Color.TEAL, Color.SILVER, Color.WHITE, Color.BLACK
 ]
 
-func calculate_path_draw() -> void:
-	if not schedule:
-		return
-	trains.queue_redraw()
-	for path: Path in schedule.paths:
-		var color: Color = colors[randi() % colors.size()]
-		for segment: Path.TrackSegment in path.track_segments:
-			var start_pos: float = segment.start_track_pos
-			var end_pos: float = segment.end_track_pos
-			var step: int = 5 if start_pos < end_pos else -5 # 5 px
-			for i: int in range(start_pos, end_pos, step):
-				var point_a: Vector2 = segment.track.get_point_at_offset(i)
-				var point_b: Vector2 = segment.track.get_point_at_offset(i + step)
-				trains.drawableFunctionsToCallLater.append(func() -> void: trains.draw_line(point_a, point_b, color, 4))
+# func calculate_path_draw() -> void:
+# 	if not schedule:
+# 		return
+# 	trains.queue_redraw()
+# 	for path: Path in schedule.paths:
+# 		var color: Color = colors[randi() % colors.size()]
+# 		for segment: Path.TrackSegment in path.track_segments:
+# 			var start_pos: float = segment.start_track_pos
+# 			var end_pos: float = segment.end_track_pos
+# 			var step: int = 5 if start_pos < end_pos else -5 # 5 px
+# 			for i: int in range(start_pos, end_pos, step):
+# 				var point_a: Vector2 = segment.track.get_point_at_offset(i)
+# 				var point_b: Vector2 = segment.track.get_point_at_offset(i + step)
+# 				trains.drawableFunctionsToCallLater.append(func() -> void: trains.draw_line(point_a, point_b, color, 4))
 
-func _draw() -> void:
-	for stop: Stop in _stops:
-		for stop_option: Stop.TrainPosition in stop.stop_option:
-			var front_stop: StopNode = stop_option.front_of_train
-			var end_stop: StopNode = stop_option.back_of_train
-			var offset_vector: Vector2 = Vector2(5, 5)
+# func _draw() -> void:
+# 	for stop: Stop in _stops:
+# 		for stop_option: Stop.TrainPosition in stop.stop_option:
+# 			var front_stop: StopNode = stop_option.front_of_train
+# 			var end_stop: StopNode = stop_option.back_of_train
+# 			var offset_vector: Vector2 = Vector2(5, 5)
 
-			draw_circle(front_stop.get_vector_pos(), 3, Color.WHITE, true)
-			draw_circle(end_stop.get_vector_pos(), 3, Color.RED, true)
-			draw_line(front_stop.get_vector_pos() + offset_vector, end_stop.get_vector_pos() + offset_vector, Color.BLACK, 4)
+# 			draw_circle(front_stop.get_vector_pos(), 3, Color.WHITE, true)
+# 			draw_circle(end_stop.get_vector_pos(), 3, Color.RED, true)
+# 			draw_line(front_stop.get_vector_pos() + offset_vector, end_stop.get_vector_pos() + offset_vector, Color.BLACK, 4)

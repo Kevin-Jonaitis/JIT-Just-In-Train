@@ -1,3 +1,3 @@
-extends Node2D
+# extends Node2D
 
-class_name Tracks
+# class_name Tracks
