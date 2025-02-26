@@ -2,7 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://cqycvtbraqa6n" path="res://Assets/imported/sandy_gravel_02_4k.gltf/textures/sandy_gravel_02_diff_4k.jpg" id="1_m0muq"]
 [ext_resource type="Texture2D" uid="uid://gt7j3spkh8kd" path="res://Assets/imported/sandy_gravel_02_4k.gltf/textures/sandy_gravel_02_arm_4k.jpg" id="2_aeeh6"]
-[ext_resource type="Shader" path="res://Scenes/gridlines.gdshader" id="3_aeeh6"]
+[ext_resource type="Shader" uid="uid://dvxrab6uer7oa" path="res://Scenes/gridlines.gdshader" id="3_aeeh6"]
 [ext_resource type="Texture2D" uid="uid://ckl20pb85srtb" path="res://Assets/imported/sandy_gravel_02_4k.gltf/textures/sandy_gravel_02_nor_gl_4k.jpg" id="3_kcspx"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_aeeh6"]

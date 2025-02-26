@@ -1,16 +1,17 @@
-[gd_scene load_steps=19 format=3 uid="uid://bo61ftst6mm73"]
+[gd_scene load_steps=20 format=3 uid="uid://bo61ftst6mm73"]
 
-[ext_resource type="Script" path="res://Scripts/camera_3d.gd" id="1_dh1k4"]
+[ext_resource type="Script" uid="uid://dw703jxjsc0hp" path="res://Scripts/camera_3d.gd" id="1_dh1k4"]
 [ext_resource type="Script" uid="uid://cdja3kyeyg4q2" path="res://3d/mouse_tracker_3d.gd" id="2_dh1k4"]
 [ext_resource type="Material" uid="uid://p3mhytxfjmio" path="res://Assets/sandy_gravel.tres" id="2_r4sc5"]
 [ext_resource type="ArrayMesh" uid="uid://c3tlrc78gcd8i" path="res://Assets/rail.res" id="3_436s2"]
-[ext_resource type="Script" path="res://Scripts/track_builder_3d.gd" id="3_dh1k4"]
+[ext_resource type="Script" uid="uid://dkenavabc5uno" path="res://Scripts/track_builder_3d.gd" id="3_dh1k4"]
 [ext_resource type="Script" uid="uid://ct7nknt5qlk15" path="res://3d/tracks.gd" id="4_03nuc"]
 [ext_resource type="PackedScene" uid="uid://drjboh0dai1bc" path="res://Assets/imported/Rails A.fbx" id="4_436s2"]
 [ext_resource type="Script" uid="uid://b80rmxayma5du" path="res://3d/trains.gd" id="5_mwpqo"]
 [ext_resource type="Script" uid="uid://bx3we6mgiapf2" path="res://3d/junctions.gd" id="6_qva4k"]
 [ext_resource type="Texture2D" uid="uid://fndbqout21sd" path="res://Assets/imported/smile.png" id="10_tmgjn"]
-[ext_resource type="Script" uid="uid://dldxp3ydxn18d" path="res://addons/lines_and_trails_3d/line_3d.gd" id="11_l4xbo"]
+[ext_resource type="Script" uid="uid://brqqd6a5il3by" path="res://addons/lines_and_trails_3d/line_3d.gd" id="11_l4xbo"]
+[ext_resource type="Script" uid="uid://dat4dm1pytyav" path="res://addons/lines_and_trails_3d/trail_3d.gd" id="12_ldvnk"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_734rm"]
 lightmap_size_hint = Vector2i(252, 252)
@@ -142,11 +143,18 @@ visible = false
 transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 4, 0.5, 4.5)
 visible = false
 
+[node name="Trail3D" type="MeshInstance3D" parent="."]
+process_priority = 9999
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.9635, 2.82408, 10.2876)
+script = ExtResource("12_ldvnk")
+max_section_length = 0.454
+width = 0.664
+color = Color(0.878649, 0.929453, 2.31028e-06, 1)
+metadata/_custom_type_script = "uid://dat4dm1pytyav"
+
 [node name="Line3D" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45.2296, 0, 0)
 script = ExtResource("11_l4xbo")
-width = 1.436
-billboard_mode = 0
+width = 0.717
 material_type = 0
-points = PackedVector3Array(0, 3, 0, 10, 3, 10)
-metadata/_custom_type_script = "uid://dldxp3ydxn18d"
+points = PackedVector3Array(0, 0, 0, 5, 5, 5)
+metadata/_custom_type_script = "uid://brqqd6a5il3by"
