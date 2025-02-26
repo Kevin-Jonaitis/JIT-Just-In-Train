@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="JIT: Just In Train"
-run/main_scene="uid://ct8qnsxwo6gaq"
+run/main_scene="uid://bo61ftst6mm73"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.png"
 
