@@ -140,7 +140,3 @@ interact_mode={
 [network]
 
 limits/debugger/max_chars_per_second=1000000
-
-[rendering]
-
-environment/defaults/default_clear_color=Color(0, 0, 0, 1)

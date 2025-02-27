@@ -1,8 +1,8 @@
 [gd_scene load_steps=20 format=3 uid="uid://bo61ftst6mm73"]
 
 [ext_resource type="Script" uid="uid://dw703jxjsc0hp" path="res://Scripts/camera_3d.gd" id="1_dh1k4"]
+[ext_resource type="Material" uid="uid://du8evelo05fgv" path="res://Assets/sandy_with_grid.tres" id="1_ldvnk"]
 [ext_resource type="Script" uid="uid://cdja3kyeyg4q2" path="res://3d/mouse_tracker_3d.gd" id="2_dh1k4"]
-[ext_resource type="Material" uid="uid://p3mhytxfjmio" path="res://Assets/sandy_gravel.tres" id="2_r4sc5"]
 [ext_resource type="ArrayMesh" uid="uid://c3tlrc78gcd8i" path="res://Assets/rail.res" id="3_436s2"]
 [ext_resource type="Script" uid="uid://dkenavabc5uno" path="res://Scripts/track_builder_3d.gd" id="3_dh1k4"]
 [ext_resource type="Script" uid="uid://ct7nknt5qlk15" path="res://3d/tracks.gd" id="4_03nuc"]
@@ -13,23 +13,8 @@
 [ext_resource type="Script" uid="uid://brqqd6a5il3by" path="res://addons/lines_and_trails_3d/line_3d.gd" id="11_l4xbo"]
 [ext_resource type="Script" uid="uid://dat4dm1pytyav" path="res://addons/lines_and_trails_3d/trail_3d.gd" id="12_ldvnk"]
 
-[sub_resource type="PlaneMesh" id="PlaneMesh_734rm"]
-lightmap_size_hint = Vector2i(252, 252)
+[sub_resource type="PlaneMesh" id="PlaneMesh_elx2p"]
 size = Vector2(1000, 1000)
-subdivide_width = 32
-subdivide_depth = 32
-
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_vbeuq"]
-sky_top_color = Color(1, 1, 1, 1)
-
-[sub_resource type="Sky" id="Sky_dh1k4"]
-sky_material = SubResource("ProceduralSkyMaterial_vbeuq")
-
-[sub_resource type="Environment" id="Environment_03nuc"]
-background_mode = 2
-sky = SubResource("Sky_dh1k4")
-ssao_enabled = true
-ssil_enabled = true
 
 [sub_resource type="Curve3D" id="Curve3D_dh1k4"]
 bake_interval = 1.0
@@ -45,16 +30,25 @@ size = Vector3(2, 2, 1)
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_l4xbo"]
 albedo_texture = ExtResource("10_tmgjn")
 
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_vbeuq"]
+sky_top_color = Color(1, 1, 1, 1)
+
+[sub_resource type="Sky" id="Sky_dh1k4"]
+sky_material = SubResource("ProceduralSkyMaterial_vbeuq")
+
+[sub_resource type="Environment" id="Environment_03nuc"]
+background_mode = 2
+sky = SubResource("Sky_dh1k4")
+ssao_enabled = true
+ssil_enabled = true
+
 [node name="TestCurves3D" type="Node3D"]
 
-[node name="World" type="Node3D" parent="."]
+[node name="Ground" type="MeshInstance3D" parent="."]
+material_override = ExtResource("1_ldvnk")
+mesh = SubResource("PlaneMesh_elx2p")
 
-[node name="Ground" type="MeshInstance3D" parent="World"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.370409, 0.120537, 0.160922)
-material_overlay = ExtResource("2_r4sc5")
-mesh = SubResource("PlaneMesh_734rm")
-skeleton = NodePath("../..")
-metadata/_edit_lock_ = true
+[node name="World" type="Node3D" parent="."]
 
 [node name="MouseTracker3D" type="Node3D" parent="World"]
 script = ExtResource("2_dh1k4")
@@ -72,7 +66,7 @@ script = ExtResource("5_mwpqo")
 script = ExtResource("6_qva4k")
 
 [node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.275637, 0.961262, 0, -0.961262, 0.275637, 0.542, 20, -0.156)
+transform = Transform3D(1, 0, 0, 0, 0.275637, 0.961262, 0, -0.961262, 0.275637, 0.542, 50, -0.156)
 fov = 68.9283
 script = ExtResource("1_dh1k4")
 
@@ -80,9 +74,6 @@ script = ExtResource("1_dh1k4")
 transform = Transform3D(0.935098, -0.0487296, -0.351022, 0.348938, -0.0464433, 0.935994, -0.0619132, -0.997732, -0.0264254, -273.376, 217.454, -21.5664)
 shadow_enabled = true
 directional_shadow_mode = 1
-
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
-environment = SubResource("Environment_03nuc")
 
 [node name="CSGPolygon3D" type="CSGPolygon3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -33.7843, 5.85125, 0)
@@ -110,9 +101,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 0)
 visible = false
 
 [node name="Cube" type="MeshInstance3D" parent="."]
-visible = false
 mesh = SubResource("BoxMesh_436s2")
-skeleton = NodePath("../World/Ground")
+skeleton = NodePath("")
 
 [node name="Smiley" type="CSGSphere3D" parent="."]
 transform = Transform3D(-0.243, 0, -0.97, 0, 1, 0, 0.97, 0, -0.243, -45.2358, 4.21146, 0)
@@ -153,8 +143,13 @@ color = Color(0.878649, 0.929453, 2.31028e-06, 1)
 metadata/_custom_type_script = "uid://dat4dm1pytyav"
 
 [node name="Line3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21.4441, 0.34333, 0)
 script = ExtResource("11_l4xbo")
 width = 0.717
+billboard_mode = 0
 material_type = 0
-points = PackedVector3Array(0, 0, 0, 5, 5, 5)
+points = PackedVector3Array(0, 0, 0, 10, 0, 10)
 metadata/_custom_type_script = "uid://brqqd6a5il3by"
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_03nuc")
