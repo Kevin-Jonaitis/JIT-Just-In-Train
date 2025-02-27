@@ -241,10 +241,17 @@ func get_ground_mouse_position_vec2() -> OptionalVector2:
 	var camera: Camera3D = get_viewport().get_camera_3d()
 	if camera:
 		var from: Vector3 = camera.project_ray_origin(mouse_pos)
-		var dir: Vector3 = camera.project_ray_normal(mouse_pos)
-		var pos: Variant = GROUND_PLANE.intersects_ray(from, dir * 10000.0)
+		var dir: Vector3 = from + camera.project_ray_normal(mouse_pos)* 10000.0
+		var pos: Variant = GROUND_PLANE.intersects_ray(from, dir )
 		if pos:
 			var pos_cast: Vector3 = pos as Vector3
 			return OptionalVector2.new(Vector2(pos_cast.x, pos_cast.z))
 	
 	return null
+
+# A cheap way of z stacking. 
+func get_y_layer(y_layer_index: int) -> float:
+	return y_layer_index * 0.01
+	
+func convert_to_3d(vec_2d: Vector2, y_index: int) -> Vector3:
+	return Vector3(vec_2d.x, get_y_layer(y_index), vec_2d.y)

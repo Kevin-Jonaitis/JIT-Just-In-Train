@@ -5,8 +5,14 @@ class_name TrackBuilder3D
 static var track_counter: int = 0  # Initialize the counter
 
 
-var highlightColor: Color = Color(0, 0, 255, 0.5)
-var circleColor: Color = Color(0, 0, 255)
+const highlightColor: Color = Color(0, 0, 255, 0.5)
+const line_transparency_value: float = 0.3
+const line_y_index: int = 1 
+var grid_line: Line3D = Line3D.new()
+var circle_color: Color = Color(0, 0, 255)
+var circle_y_index: int = 2
+
+var grid_circle: MeshInstance3D = MeshInstance3D.new()
 
 var currentTrackPlacePoint: Vector2
 # Line that follows the track at the point
@@ -42,8 +48,9 @@ var closet_track_tangent: Variant = null
 var track_mode_flag: bool = false
 
 # Switches between minimum tangent and minimum radius modes
-var arrow_end : Sprite2D
-var arrow_start : Sprite2D
+# var arrow_end : Sprite2D
+@onready var arrow_start : Sprite3D = $ArrowStart
+@onready var arrow_end : Sprite3D = $ArrowEnd
 var track: Track
 
 # @onready var track_intersection_searcher: TrackIntersectionSearcher = TrackIntersectionSearcher.new(self)
@@ -59,7 +66,6 @@ var wall_im_mesh: ImmediateMesh
 var test_mesh_instance: MeshInstance3D
 var my_extruded_mesh: ImmediateMesh
 
-var grid_line: Line3D = Line3D.new()
 
 
 # Sharpest turning radius and other constants
@@ -94,21 +100,15 @@ var curve_type_flag: bool = true:
 
 
 func _ready() -> void:
-	arrow_start = Sprite2D.new()
-	arrow_end = Sprite2D.new()
-	arrow_start.scale = Vector2(0.03, 0.03)
-	arrow_end.scale = Vector2(0.03, 0.03)
-	arrow_start.z_index = 1000 # Just set them on top always. Hacky. I should probably just have these be actual nodes
-	arrow_end.z_index = 1000
+	# arrow_start = Sprite2D.new()
+	# arrow_end = Sprite2D.new()
+	# arrow_start.scale = Vector2(0.03, 0.03)
+	# arrow_end.scale = Vector2(0.03, 0.03)
+	# arrow_start.z_index = 1000 # Just set them on top always. Hacky. I should probably just have these be actual nodes
+	# arrow_end.z_index = 1000
 	arrow_start.set_texture(track_direction_arrow)
 	arrow_end.set_texture(track_direction_arrow)
 	create_track_node_tree()
-
-	grid_line.width = 0.3
-	grid_line.name = "HighlightLine"
-	grid_line.billboard_mode = Line3D.BillboardMode.NONE
-	add_child(grid_line)
-
 
 	# Mesh stuff:
 	# Create a MeshInstance3D node
@@ -125,8 +125,23 @@ func _ready() -> void:
 	my_extruded_mesh = ImmediateMesh.new()
 	test_mesh_instance = MeshInstance3D.new()
 	test_mesh_instance.mesh = my_extruded_mesh
-	add_child(test_mesh_instance)
 
+	# Grid line stuff
+	grid_line.width = 0.3
+	grid_line.name = "HighlightLine"
+	grid_line.billboard_mode = Line3D.BillboardMode.NONE
+	
+
+	grid_circle.mesh = SphereMesh.new()
+	grid_circle.scale = Vector3(1, 1, 1)
+	grid_circle.name = "HighlightSphere"
+	var sphere_material : StandardMaterial3D = StandardMaterial3D.new()
+	sphere_material.albedo_color = circle_color
+	grid_circle.material_overlay = sphere_material
+
+	add_child(grid_line)
+	add_child(grid_circle)
+	add_child(test_mesh_instance)
 	add_child(wall_mesh_instance)
 
 # Setups a new track(with arrows)
@@ -162,10 +177,14 @@ func calculate_tangents(point_a: Vector2, point_b: Vector2) -> Array[Vector2]:
 		right_normal
 	]
 
-
-func rotate_sprite(unit_tangent: Vector2, sprite: Sprite2D) -> void:
-	sprite.rotation = unit_tangent.angle()
-
+func rotate_sprite_3d(unit_tangent: Vector2,sprite: Sprite3D) -> void:
+	var angle_2d: float = unit_tangent.angle()
+	var y_rotation: float = angle_2d
+	# Y needs to be negative so that we're roating around the correct way
+	# Honestly, to see why these values are correct, I just played around with the nodes
+	# and the values here until it worked. So don't try and reason it too hard. It depends on a 
+	# lot of initials(direction sprite is facing, SpriteBase3D.axis)
+	sprite.rotation = Vector3(0, -y_rotation + PI, 0)
 
 func intialize_and_set_start_point() -> void:
 	trackStartingPosition = currentTrackPlacePoint
@@ -289,20 +308,15 @@ func draw_walls_and_centerpoint(point_position: Vector2, theta: float) -> void:
 	
 	# Calculate wall endpoints using half cell size
 	var halfDistance: float = MapManager3D.cellSize / 2.0
-	var wallStart: Vector2 = point_position + (perpendicular * halfDistance)
-	var wallEnd: Vector2 = point_position - (perpendicular * halfDistance)
+	var wall_start: Vector2 = point_position + (perpendicular * halfDistance)
+	var wall_end: Vector2 = point_position - (perpendicular * halfDistance)
 
-	
-	# grid_line.points = [Vector3(wallStart.x, 0, wallStart.y), Vector3(wallEnd.x, 0, wallEnd.y)]
-
-	# draw_line_mesh(wall_im_mesh, [Vector2(0,0), Vector2(0,5), Vector2(5,5)])
 	# Draw debug visuals
-	# drawableFunctionsToCallLater.append(func() -> void: draw_line(wallStart, wallEnd, highlightColor, 3))
-	# drawableFunctionsToCallLater.append(func() -> void: draw_circle(currentTrackPlacePoint, 4, highlightColor, false, 4))
+	TrackDrawer.set_line_attributes(grid_line, [wall_start, wall_end], line_y_index, highlightColor, line_transparency_value)
+	grid_circle.position = Vector3(currentTrackPlacePoint.x, Utils.get_y_layer(circle_y_index), currentTrackPlacePoint.y)
 	
 
 func draw_wall_and_calculate_centerpoint_and_tangent(mousePos: Vector2) -> Array:
-	var track_position: Variant = null 
 	var wallToHighlight: Array[Vector2] = []
 	# var tileGridPosition: Vector2 = MapManager.getGround().local_to_map(mousePos)
 	# var _tileCenterLocalPosition: Vector2 = MapManager.getGround().map_to_local((tileGridPosition))
@@ -310,54 +324,36 @@ func draw_wall_and_calculate_centerpoint_and_tangent(mousePos: Vector2) -> Array
 	var _halfDistance: float = MapManager3D.cellSize / 2.0
 	var closetWallAndMidpoint: Array = get_closest_wall_and_midpoint(mousePos)	
 	wallToHighlight = Array(closetWallAndMidpoint[0] as Array, TYPE_VECTOR2, "", "")
-	track_position = closetWallAndMidpoint[1];
+	var track_position: Vector2 = closetWallAndMidpoint[1]
 
-	var points: Array[Vector3] = [Vector3(wallToHighlight[0].x, 1, wallToHighlight[0].y), Vector3(wallToHighlight[1].x, 1, wallToHighlight[1].y)]
-	grid_line.points = points
-	grid_line.curve_normals = calculate_normals_from_points(points)
-	# grid_line.points = [Vector3(0, 1, 0), Vector3(3, 1, 3)]
-	grid_line.rebuild()
-	# drawableFunctionsToCallLater.append(func() -> void: draw_line(wallToHighlight[0], wallToHighlight[1], highlightColor, 3))
-	# drawableFunctionsToCallLater.append(func() -> void: draw_circle(track_position as Vector2, 4, highlightColor, false, 4))
+	# Draw debug items
+	TrackDrawer.set_line_attributes(grid_line, [wallToHighlight[0], wallToHighlight[1]], line_y_index, highlightColor, line_transparency_value)
+	grid_circle.position = Vector3(track_position.x, Utils.get_y_layer(circle_y_index), track_position.y)
+
 	var tangents: Array = calculate_tangents(wallToHighlight[0], wallToHighlight[1])
 
 
 
 	return [track_position, tangents]
-	
-# WE ASSUME THAT ALL POINTS LINE ON THE SAME FLAT(XZ) plane,
-# hence husing Vector3 as our reference
-func calculate_normals_from_points(points: Array[Vector3]) -> PackedVector3Array:
-	var normals: PackedVector3Array = []
-	for i: int in range(points.size() - 1):
-		var direction: Vector3 = points[i + 1] - points[i]
-		direction.cross(Vector3.UP).normalized()
-		var normal: Vector3 = Vector3(-direction.z, 0, direction.x).normalized()
-		normals.append(normal)
-	# Add the last normal
-	if points.size() > 1:
-		var last_direction: Vector3 = points[-1] - points[-2]
-		last_direction.cross(Vector3.UP).normalized()
-		#We should reverse the direction for the last normal
-		var last_normal: Vector3 = Vector3(-last_direction.z, 0, last_direction.x).normalized()
-		normals.append(last_normal)
-	return normals
+
 
 func update_arrow_end() -> void:
 	arrow_end.visible = true
 	# Determine the arrow's tangent point, it's opposite of the track tangent
 	var arrowPoint: Vector2 = -1 * currentPointTangent
 	# Rotate the arrow sprite to point in the opposite direction of the track's tangent
-	rotate_sprite(Vector2.from_angle(trackEndingAngle), arrow_end)
-	arrow_end.position = trackEndingPosition - (arrowPoint * (MapManager3D.cellSize / 2.0))
+	rotate_sprite_3d(Vector2.from_angle(trackEndingAngle), arrow_end)
+	var vec2 : Vector2 = trackEndingPosition - (arrowPoint * (MapManager3D.cellSize / 2.0))
+	arrow_end.position = Utils.convert_to_3d(vec2, 1)
 
 
 func update_arrow_start() -> void:
 	arrow_start.visible = true
 	# Determine the arrow's tangent point, it's opposite of the track tangent
 	var arrowPoint: Vector2 = -1 * currentPointTangent
-	rotate_sprite(-1 * arrowPoint, arrow_start)
-	arrow_start.position = currentTrackPlacePoint + (arrowPoint * (MapManager3D.cellSize / 2.0))
+	rotate_sprite_3d(-1 * arrowPoint, arrow_start)
+	arrow_start.position = Utils.convert_to_3d(currentTrackPlacePoint + (arrowPoint * (MapManager3D.cellSize / 2.0)), 1)
+	pass
 
 
 func round_to_nearest_odd_multiple_of_y(x: float, y: float) -> float:
@@ -366,8 +362,9 @@ func round_to_nearest_odd_multiple_of_y(x: float, y: float) -> float:
 
 
 func get_closest_wall_and_midpoint(mouse_position: Vector2) -> Array:
-	var tile_center: Vector2 = Vector2(round_to_nearest_odd_multiple_of_y(mouse_position.x, MapManager3D.cellSize / 2.0), 
-	round_to_nearest_odd_multiple_of_y(mouse_position.y, MapManager3D.cellSize / 2.0))
+	var tile_center: Vector2 = Vector2(
+		round_to_nearest_odd_multiple_of_y(mouse_position.x, MapManager3D.cellSize / 2.0), 
+		round_to_nearest_odd_multiple_of_y(mouse_position.y, MapManager3D.cellSize / 2.0))
 
 	# var tile_center: Vector2 = mouse_position
 	var half_distance: float = MapManager3D.cellSize / 2.0
