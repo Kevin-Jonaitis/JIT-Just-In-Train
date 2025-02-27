@@ -238,12 +238,11 @@ func get_ground_mouse_position() -> OptionalVector3:
 #  Converts the mouse position to a Vector2 on the ground plane
 func get_ground_mouse_position_vec2() -> OptionalVector2:
 	var mouse_pos: Vector2 = get_viewport().get_mouse_position()
-	
 	var camera: Camera3D = get_viewport().get_camera_3d()
 	if camera:
 		var from: Vector3 = camera.project_ray_origin(mouse_pos)
 		var dir: Vector3 = camera.project_ray_normal(mouse_pos)
-		var pos: Variant = GROUND_PLANE.intersects_ray(from, from + dir * 1000.0)
+		var pos: Variant = GROUND_PLANE.intersects_ray(from, dir * 10000.0)
 		if pos:
 			var pos_cast: Vector3 = pos as Vector3
 			return OptionalVector2.new(Vector2(pos_cast.x, pos_cast.z))

@@ -59,6 +59,8 @@ var wall_im_mesh: ImmediateMesh
 var test_mesh_instance: MeshInstance3D
 var my_extruded_mesh: ImmediateMesh
 
+var grid_line: Line3D = Line3D.new()
+
 
 # Sharpest turning radius and other constants
 # var minAllowedRadius = 45
@@ -101,6 +103,11 @@ func _ready() -> void:
 	arrow_start.set_texture(track_direction_arrow)
 	arrow_end.set_texture(track_direction_arrow)
 	create_track_node_tree()
+
+	grid_line.width = 0.3
+	grid_line.name = "HighlightLine"
+	grid_line.billboard_mode = Line3D.BillboardMode.NONE
+	add_child(grid_line)
 
 
 	# Mesh stuff:
@@ -285,6 +292,9 @@ func draw_walls_and_centerpoint(point_position: Vector2, theta: float) -> void:
 	var wallStart: Vector2 = point_position + (perpendicular * halfDistance)
 	var wallEnd: Vector2 = point_position - (perpendicular * halfDistance)
 
+	
+	# grid_line.points = [Vector3(wallStart.x, 0, wallStart.y), Vector3(wallEnd.x, 0, wallEnd.y)]
+
 	# draw_line_mesh(wall_im_mesh, [Vector2(0,0), Vector2(0,5), Vector2(5,5)])
 	# Draw debug visuals
 	# drawableFunctionsToCallLater.append(func() -> void: draw_line(wallStart, wallEnd, highlightColor, 3))
@@ -302,13 +312,36 @@ func draw_wall_and_calculate_centerpoint_and_tangent(mousePos: Vector2) -> Array
 	wallToHighlight = Array(closetWallAndMidpoint[0] as Array, TYPE_VECTOR2, "", "")
 	track_position = closetWallAndMidpoint[1];
 
-
+	var points: Array[Vector3] = [Vector3(wallToHighlight[0].x, 1, wallToHighlight[0].y), Vector3(wallToHighlight[1].x, 1, wallToHighlight[1].y)]
+	grid_line.points = points
+	grid_line.curve_normals = calculate_normals_from_points(points)
+	# grid_line.points = [Vector3(0, 1, 0), Vector3(3, 1, 3)]
+	grid_line.rebuild()
 	# drawableFunctionsToCallLater.append(func() -> void: draw_line(wallToHighlight[0], wallToHighlight[1], highlightColor, 3))
 	# drawableFunctionsToCallLater.append(func() -> void: draw_circle(track_position as Vector2, 4, highlightColor, false, 4))
 	var tangents: Array = calculate_tangents(wallToHighlight[0], wallToHighlight[1])
 
+
+
 	return [track_position, tangents]
 	
+# WE ASSUME THAT ALL POINTS LINE ON THE SAME FLAT(XZ) plane,
+# hence husing Vector3 as our reference
+func calculate_normals_from_points(points: Array[Vector3]) -> PackedVector3Array:
+	var normals: PackedVector3Array = []
+	for i: int in range(points.size() - 1):
+		var direction: Vector3 = points[i + 1] - points[i]
+		direction.cross(Vector3.UP).normalized()
+		var normal: Vector3 = Vector3(-direction.z, 0, direction.x).normalized()
+		normals.append(normal)
+	# Add the last normal
+	if points.size() > 1:
+		var last_direction: Vector3 = points[-1] - points[-2]
+		last_direction.cross(Vector3.UP).normalized()
+		#We should reverse the direction for the last normal
+		var last_normal: Vector3 = Vector3(-last_direction.z, 0, last_direction.x).normalized()
+		normals.append(last_normal)
+	return normals
 
 func update_arrow_end() -> void:
 	arrow_end.visible = true
@@ -327,10 +360,16 @@ func update_arrow_start() -> void:
 	arrow_start.position = currentTrackPlacePoint + (arrowPoint * (MapManager3D.cellSize / 2.0))
 
 
+func round_to_nearest_odd_multiple_of_y(x: float, y: float) -> float:
+	var k: float = round((x / y - 1.0) / 2.0)
+	return y * (2.0 * k + 1.0)
+
+
 func get_closest_wall_and_midpoint(mouse_position: Vector2) -> Array:
-	# var tileGridPosition: Vector2 = MapManager3D.getGround().local_to_map(mouse_position)
-	# var tile_center: Vector2 = MapManager3D.getGround().map_to_local(tileGridPosition)
-	var tile_center: Vector2 = mouse_position
+	var tile_center: Vector2 = Vector2(round_to_nearest_odd_multiple_of_y(mouse_position.x, MapManager3D.cellSize / 2.0), 
+	round_to_nearest_odd_multiple_of_y(mouse_position.y, MapManager3D.cellSize / 2.0))
+
+	# var tile_center: Vector2 = mouse_position
 	var half_distance: float = MapManager3D.cellSize / 2.0
 	
 	# Define the wall edges as start and end points

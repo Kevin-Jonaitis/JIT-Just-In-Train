@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3 uid="uid://bo61ftst6mm73"]
+[gd_scene load_steps=21 format=3 uid="uid://bo61ftst6mm73"]
 
 [ext_resource type="Script" uid="uid://dw703jxjsc0hp" path="res://Scripts/camera_3d.gd" id="1_dh1k4"]
 [ext_resource type="Material" uid="uid://du8evelo05fgv" path="res://Assets/sandy_with_grid.tres" id="1_ldvnk"]
@@ -16,6 +16,8 @@
 [sub_resource type="PlaneMesh" id="PlaneMesh_elx2p"]
 size = Vector2(1000, 1000)
 
+[sub_resource type="SphereMesh" id="SphereMesh_ldvnk"]
+
 [sub_resource type="Curve3D" id="Curve3D_dh1k4"]
 bake_interval = 1.0
 _data = {
@@ -25,7 +27,7 @@ _data = {
 point_count = 3
 
 [sub_resource type="BoxMesh" id="BoxMesh_436s2"]
-size = Vector3(2, 2, 1)
+size = Vector3(2, 2, 2)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_l4xbo"]
 albedo_texture = ExtResource("10_tmgjn")
@@ -56,6 +58,11 @@ script = ExtResource("2_dh1k4")
 [node name="TrackBuilder3D" type="Node3D" parent="World/MouseTracker3D"]
 script = ExtResource("3_dh1k4")
 
+[node name="MouseSphere" type="MeshInstance3D" parent="World/MouseTracker3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.2303, 0, 0)
+mesh = SubResource("SphereMesh_ldvnk")
+skeleton = NodePath("../../..")
+
 [node name="Tracks" type="Node3D" parent="World"]
 script = ExtResource("4_03nuc")
 
@@ -66,7 +73,7 @@ script = ExtResource("5_mwpqo")
 script = ExtResource("6_qva4k")
 
 [node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.275637, 0.961262, 0, -0.961262, 0.275637, 0.542, 50, -0.156)
+transform = Transform3D(1, 0, 0, 0, 0.332161, 0.943223, 0, -0.943223, 0.332161, 0.542, 50, -0.156)
 fov = 68.9283
 script = ExtResource("1_dh1k4")
 
@@ -99,6 +106,11 @@ mesh = ExtResource("3_436s2")
 [node name="Rails A" parent="." instance=ExtResource("4_436s2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 0)
 visible = false
+
+[node name="TestCube" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0, -40)
+mesh = SubResource("BoxMesh_436s2")
+skeleton = NodePath("")
 
 [node name="Cube" type="MeshInstance3D" parent="."]
 mesh = SubResource("BoxMesh_436s2")
@@ -143,7 +155,7 @@ color = Color(0.878649, 0.929453, 2.31028e-06, 1)
 metadata/_custom_type_script = "uid://dat4dm1pytyav"
 
 [node name="Line3D" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21.4441, 0.34333, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21.3683, 0.30582, 0.100105)
 script = ExtResource("11_l4xbo")
 width = 0.717
 billboard_mode = 0
@@ -153,3 +165,19 @@ metadata/_custom_type_script = "uid://brqqd6a5il3by"
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_03nuc")
+
+[node name="TestLine" type="MeshInstance3D" parent="."]
+skeleton = NodePath("")
+script = ExtResource("11_l4xbo")
+width = 1.0
+billboard_mode = 0
+points = PackedVector3Array(0, 1, 4, 4, 1, 4)
+metadata/_custom_type_script = "uid://brqqd6a5il3by"
+
+[node name="TestLineBroken" type="MeshInstance3D" parent="."]
+script = ExtResource("11_l4xbo")
+width = 1.0
+billboard_mode = 0
+points = PackedVector3Array(0, 1, 0, 0, 1, 4)
+curve_normals = PackedVector3Array(-1, 0, 0, -1, 0, 0)
+metadata/_custom_type_script = "uid://brqqd6a5il3by"

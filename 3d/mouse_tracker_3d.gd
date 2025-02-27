@@ -17,6 +17,8 @@ var interact_or_edit_mode: bool = false
 # func _ready() -> void:
 # 	train_builder.set_train_builder_disabled()
 
+@onready var mouse_sphere: MeshInstance3D = $MouseSphere
+
 
 func _unhandled_input(event: InputEvent) -> void:
 	trackBuilder3D.test_call()
@@ -68,6 +70,7 @@ func handle_edit_mode(event: InputEvent) -> void:
 	# 	train_builder.handle_input(event)
 
 func handle_track_building(event: InputEvent) -> void:
+	draw_sphere_for_mouse_position()
 	if  (not (event is InputEventMouseMotion || event.is_action_type())):
 		return
 	if (event is InputEventMouseMotion):
@@ -100,3 +103,9 @@ func handle_track_building(event: InputEvent) -> void:
 # 	for function: Callable in drawableFunctionsToCallLater:
 # 		function.call()
 # 	drawableFunctionsToCallLater.clear()
+
+func draw_sphere_for_mouse_position() -> void:
+	var maybe_mouse_pos: OptionalVector2 = Utils.get_ground_mouse_position_vec2()
+	if (maybe_mouse_pos):
+		var mouse_pos: Vector2 = maybe_mouse_pos.value
+		mouse_sphere.global_position = Vector3(mouse_pos.x, 0.1, mouse_pos.y)
