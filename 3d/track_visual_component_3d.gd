@@ -13,11 +13,20 @@ var crosstie_distance: float = 7
 #@onready var _curve_points_multimesh : MultiMeshInstance2D = $CurvePoints
 #@onready var _circle_mesh_instance : MeshInstance2D = $Circle
 
+# Rectangle
+var my_polygon: Array[Vector2] = [
+		Vector2(-0.5, -0.5), #Bottom Left
+		Vector2(0.5,-0.5), #Bottom Right
+		Vector2(0.5,0.5), #Top Right
+		Vector2(-0.5,0.5)] #Top Left
+	
+
+@onready var rail : MeshInstance3D = $Rail
 
 @onready var parentTrack : Track = get_parent() as Track
 
 @onready var backing: Line2D = $Backing
-@onready var rail: Line2D = $Rail
+# @onready var rail: Line2D = $Rail
 
 func _ready() -> void:
 	# TODO: 3D FIX
@@ -53,7 +62,16 @@ func update_track_points(points_: Array[Vector2], length: float, get_coord_at_of
 	var last_point_value: Vector2 = points_[points_.size() - 1]
 	draw_points.insert(0, points_[0] - (startTangent * 0.2))
 	draw_points.append(last_point_value - (endTangent * 0.2))
+
+	var vector_3_path: PackedVector3Array = []
+	for point: Vector2 in points_:
+		vector_3_path.append(Vector3(point.x, 0.001, point.y))
+
+	assert(rail.mesh is ImmediateMesh, "Rail mesh must be an ImmediateMesh")
+
+	TrackDrawer.extrude_polygon_along_path(my_polygon, vector_3_path, rail.mesh)
 	
+	#TODO: DO TRACK DRAWING HERE
 
 	#set_points(draw_points)
 	# TODO: 3D fix

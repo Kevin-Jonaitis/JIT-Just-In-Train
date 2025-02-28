@@ -18,7 +18,8 @@ static func extrude_polygon_along_path(
 	for i: int in range(points_count):
 		var face_transform: Transform3D = Transform3D()			
 		if (i == 0):
-			face_transform = face_transform.looking_at(path_points[i + 1], Vector3.UP)
+			var direction: Vector3 = (path_points[1] - path_points[0])
+			face_transform = face_transform.looking_at(direction, Vector3.UP)
 			face_transform = face_transform.translated(path_points[i])
 			transforms.append(face_transform)
 		elif i < points_count - 1:
@@ -128,7 +129,7 @@ static func set_line_attributes(line: Line3D, points_2d: Array[Vector2], y_index
 	line.points = points
 	line.color = color
 	line.curve_normals = calculate_normals_from_points(points)
-	line.transparency = 0.1
+	# line.transparency = 0.1
 	line.billboard_mode = Line3D.BillboardMode.NONE
 	line.rebuild()
 	

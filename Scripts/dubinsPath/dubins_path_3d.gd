@@ -11,7 +11,8 @@ var paths: Array[DubinPath] = []
 var drawable_paths: Dictionary[String, Line3D] = {}
 const PATH_COLORS: Array[Color] = [Color.PURPLE, Color.AQUA, Color.BLACK, Color.YELLOW, Color.ORANGE, Color.GREEN]
 const LINE_WIDTH: float = 0.5
-const LINE_Y_INDEX : int = 1
+const LINE_Y_INDEX : int = 2
+const TOP_LINE_INDEX : int = 7
 
 
 ## Use images here point names and thetas refererd to:
@@ -59,30 +60,32 @@ func calculate_and_draw_paths(start_pos: Vector2, start_angle: float, end_pos: V
 	if (draw_paths):
 		draw_tangent_circles(start_pos, start_angle, end_pos, end_angle, min_turn_radius)
 		draw_dubin_paths()
-		draw_path(shortest_path, Color.WHITE)
+		draw_path(shortest_path, Color.WHITE, TOP_LINE_INDEX)
 		# queue_redraw()
 	return true;
 
 
 func draw_dubin_paths() -> void:
 	var path_colors: Array[Color] = [Color.PURPLE, Color.AQUA, Color.BLACK, Color.YELLOW, Color.ORANGE, Color.GREEN]
-	var color_index: int = 0;
+	var index: int = 0;
 	for path: DubinPath in paths:
-		draw_path(path, path_colors[color_index])
-		color_index += 1
+		draw_path(path, path_colors[index], index)
+		index += 1
 
 func clear_drawables() -> void:
 	for line: Line3D in drawable_paths.values():
-		line.clear()
+		line.hide() # Hide rather than clear, it's more performant
+		# line.clear()
 	# drawableFunctionsToCallLater.clear()
 	# queue_redraw()
 
-func draw_path(path: DubinPath, color: Color) -> void:
+func draw_path(path: DubinPath, color: Color, y_index: int) -> void:
 	if (path.get_points().size() < 2):
 		print("WE HAVE TOO SHORT OF A PATH")
 	var line: Line3D = drawable_paths[path.name]
 	assert(path != null, "We should always have a path based on the name")
-	TrackDrawer.set_line_attributes(line, path.get_points(), LINE_Y_INDEX, color, 1.0)
+	TrackDrawer.set_line_attributes(line, path.get_points(), y_index, color, 1.0)
+	line.show()
 	# drawableFunctionsToCallLater.append(
 	# 			func() -> void: draw_polyline(PackedVector2Array(path.get_points()), color, 3))
 

@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=3 uid="uid://bo61ftst6mm73"]
+[gd_scene load_steps=26 format=3 uid="uid://bo61ftst6mm73"]
 
 [ext_resource type="Script" uid="uid://dw703jxjsc0hp" path="res://Scripts/camera_3d.gd" id="1_dh1k4"]
 [ext_resource type="Material" uid="uid://du8evelo05fgv" path="res://Assets/sandy_with_grid.tres" id="1_ldvnk"]
@@ -13,6 +13,8 @@
 [ext_resource type="Texture2D" uid="uid://fndbqout21sd" path="res://Assets/imported/smile.png" id="10_tmgjn"]
 [ext_resource type="Script" uid="uid://brqqd6a5il3by" path="res://addons/lines_and_trails_3d/line_3d.gd" id="11_l4xbo"]
 [ext_resource type="Script" uid="uid://dat4dm1pytyav" path="res://addons/lines_and_trails_3d/trail_3d.gd" id="12_ldvnk"]
+[ext_resource type="PackedScene" path="res://bad_broken.tscn" id="14_80pny"]
+[ext_resource type="Script" uid="uid://bf1rv43fffhyb" path="res://Scripts/fps.gd" id="14_i7f5g"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_elx2p"]
 size = Vector2(1000, 1000)
@@ -43,7 +45,6 @@ sky_material = SubResource("ProceduralSkyMaterial_vbeuq")
 background_mode = 2
 sky = SubResource("Sky_dh1k4")
 ssao_enabled = true
-ssil_enabled = true
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ldvnk"]
 albedo_color = Color(0.231469, 1, 0.943212, 1)
@@ -208,3 +209,11 @@ metadata/_custom_type_script = "uid://brqqd6a5il3by"
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 7.41338)
 mesh = SubResource("SphereMesh_elx2p")
+
+[node name="LSL" parent="." instance=ExtResource("14_80pny")]
+material_type = 0
+
+[node name="FPS" type="Label" parent="."]
+offset_right = 40.0
+offset_bottom = 22.3333
+script = ExtResource("14_i7f5g")
