@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://dsekv08vlpjf4"]
+
+[ext_resource type="Script" uid="uid://37daqa3m3sb6" path="res://3d/track_visual_component_3d.gd" id="1_6r6ns"]
+
+[node name="TrackVisualComponent3D" type="Node3D"]
+script = ExtResource("1_6r6ns")

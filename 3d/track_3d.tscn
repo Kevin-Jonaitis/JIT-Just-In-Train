@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3 uid="uid://hothb1y8x8v0"]
+
+[ext_resource type="Script" uid="uid://fxb63ycqbn3s" path="res://3d/track_3d.gd" id="1_n82nj"]
+[ext_resource type="PackedScene" uid="uid://dsekv08vlpjf4" path="res://3d/track_visual_component_3d.tscn" id="2_pahnv"]
+
+[node name="Track" type="Node3D"]
+script = ExtResource("1_n82nj")
+
+[node name="TrackVisualComponent3D" parent="." instance=ExtResource("2_pahnv")]

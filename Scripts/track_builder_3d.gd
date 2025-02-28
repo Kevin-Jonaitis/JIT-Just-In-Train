@@ -51,7 +51,7 @@ var track_mode_flag: bool = false
 # var arrow_end : Sprite2D
 @onready var arrow_start : Sprite3D = $ArrowStart
 @onready var arrow_end : Sprite3D = $ArrowEnd
-var track: Track
+var track: Track3D
 
 # @onready var track_intersection_searcher: TrackIntersectionSearcher = TrackIntersectionSearcher.new(self)
 #TODO: This could be better
@@ -138,7 +138,7 @@ func _ready() -> void:
 # Setups a new track(with arrows)
 # Should be called after a cancel or solidify of a track, to create a new one
 func create_track_node_tree() -> void:
-	track = Track.new_Track("TempUserTrack" + str(track_counter), curve_type_flag, tracks, false)
+	track = Track3D.new_Track("TempUserTrack" + str(track_counter), curve_type_flag, tracks, false)
 	# Need the counter, because (probably) this track is added before the other one is free, so there's a name conflict if we just use tempUserTrack
 	
 	arrow_start.visible = false
@@ -193,7 +193,8 @@ func solidifyTrack() -> void:
 func reset_track_builder() -> void:
 	if (track.dubins_path):
 		track.dubins_path.clear_drawables()
-	track.track_visual_component.modulate = Color(1,1,1,1)
+	# TODO: 3D FIX
+	# track.track_visual_component.modulate = Color(1,1,1,1)
 	trackStartingPosition = null
 	trackEndingPosition = null
 	starting_overlay = null
@@ -399,10 +400,11 @@ func compute_path() -> void:
 
 	self.validTrack = valid
 
-	if valid:
-		track.track_visual_component.modulate = Color8(0, 77, 255, int(0.79 * 255))  # Half-transparent blue
-	else:
-		track.track_visual_component.modulate = Color(1, 0, 0, 0.5)  # Half-transparent red
+	# TODO: 3D FIX
+	# if valid:
+	# 	track.track_visual_component.modulate = Color8(0, 77, 255, int(0.79 * 255))  # Half-transparent blue
+	# else:
+	# 	track.track_visual_component.modulate = Color(1, 0, 0, 0.5)  # Half-transparent red
 
 
 # func draw_circle_at_point(point: Vector2) -> void:
