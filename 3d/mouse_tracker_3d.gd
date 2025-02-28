@@ -13,7 +13,7 @@ var track_or_train: bool = true
 
 # Interact_or_edit mode
 var interact_or_edit_mode: bool = false
-
+const MIN_TURN_RADIUS_STEP: float = 1
 # func _ready() -> void:
 # 	train_builder.set_train_builder_disabled()
 
@@ -91,9 +91,9 @@ func handle_track_building(event: InputEvent) -> void:
 	elif (event.is_action_pressed("flip_track_direction")):
 		trackBuilder3D.flip_track_direction()
 	elif(event.is_action("increase_size") && event.is_pressed()):
-		trackBuilder3D.minAllowedRadius += 10
+		trackBuilder3D.minAllowedRadius += MIN_TURN_RADIUS_STEP
 	elif(event.is_action("decrease_size") && event.is_pressed()):
-		trackBuilder3D.minAllowedRadius -= 10
+		trackBuilder3D.minAllowedRadius -= MIN_TURN_RADIUS_STEP
 
 	## Always recompute the track on any inputEvent
 	if (trackBuilder3D.trackStartingPosition):

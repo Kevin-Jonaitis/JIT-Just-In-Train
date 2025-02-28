@@ -120,7 +120,6 @@ static func extrude_polygon_along_path(
 	return immediate_mesh
 
 
-
 static func set_line_attributes(line: Line3D, points_2d: Array[Vector2], y_index: int, color: Color, transparency: float) -> void:
 	var y_value: float = Utils.get_y_layer(y_index)
 	var points: PackedVector3Array = []
@@ -130,6 +129,7 @@ static func set_line_attributes(line: Line3D, points_2d: Array[Vector2], y_index
 	line.color = color
 	line.curve_normals = calculate_normals_from_points(points)
 	line.transparency = 0.1
+	line.billboard_mode = Line3D.BillboardMode.NONE
 	line.rebuild()
 	
 

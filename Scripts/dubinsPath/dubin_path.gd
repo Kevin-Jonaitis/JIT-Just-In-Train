@@ -25,7 +25,7 @@ var segments: Array[Segment]
 
 # This works great with a value of 20, if we were to use that for simply collision boxes
 # and snapping points
-static var bake_interval: int = 5
+static var bake_interval: float = 0.5
 
 const EPSILON: float = 1e-4
 var calcualtedPoints: bool = false

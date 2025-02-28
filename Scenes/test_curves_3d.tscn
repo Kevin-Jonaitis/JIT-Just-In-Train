@@ -196,10 +196,11 @@ points = PackedVector3Array(0, 1, 4, 4, 1, 4)
 metadata/_custom_type_script = "uid://brqqd6a5il3by"
 
 [node name="TestLineBroken" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 11.7168)
 script = ExtResource("11_l4xbo")
 width = 1.0
 billboard_mode = 0
-material_type = 2
+material_type = 0
 points = PackedVector3Array(0, 1, 0, 0, 1, 4)
 curve_normals = PackedVector3Array(-1, 0, 0, -1, 0, 0)
 metadata/_custom_type_script = "uid://brqqd6a5il3by"

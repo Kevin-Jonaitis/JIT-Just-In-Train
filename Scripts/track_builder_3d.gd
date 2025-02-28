@@ -70,15 +70,14 @@ var my_extruded_mesh: ImmediateMesh
 
 # Sharpest turning radius and other constants
 # var minAllowedRadius = 45
-var minAllowedRadius: float = 100:
+var minAllowedRadius: float = 10:
 	set(value):
-		if value < 15:
+		if value < 5:
 			return
-		if value > 1000:
+		if value > 100:
 			return
 		minAllowedRadius = value
 		
-var ratio_distance_to_baked_points: float = 5.0
 
 func _draw() -> void:
 	for function: Callable in drawableFunctionsToCallLater:
@@ -100,12 +99,6 @@ var curve_type_flag: bool = true:
 
 
 func _ready() -> void:
-	# arrow_start = Sprite2D.new()
-	# arrow_end = Sprite2D.new()
-	# arrow_start.scale = Vector2(0.03, 0.03)
-	# arrow_end.scale = Vector2(0.03, 0.03)
-	# arrow_start.z_index = 1000 # Just set them on top always. Hacky. I should probably just have these be actual nodes
-	# arrow_end.z_index = 1000
 	arrow_start.set_texture(track_direction_arrow)
 	arrow_end.set_texture(track_direction_arrow)
 	create_track_node_tree()
@@ -129,8 +122,6 @@ func _ready() -> void:
 	# Grid line stuff
 	grid_line.width = 0.3
 	grid_line.name = "HighlightLine"
-	grid_line.billboard_mode = Line3D.BillboardMode.NONE
-	
 
 	grid_circle.mesh = SphereMesh.new()
 	grid_circle.scale = Vector3(1, 1, 1)
@@ -150,8 +141,6 @@ func create_track_node_tree() -> void:
 	track = Track.new_Track("TempUserTrack" + str(track_counter), curve_type_flag, tracks, false)
 	# Need the counter, because (probably) this track is added before the other one is free, so there's a name conflict if we just use tempUserTrack
 	
-	add_child(arrow_start)
-	add_child(arrow_end)
 	arrow_start.visible = false
 	arrow_end.visible = false
 
@@ -204,8 +193,6 @@ func solidifyTrack() -> void:
 func reset_track_builder() -> void:
 	if (track.dubins_path):
 		track.dubins_path.clear_drawables()
-	remove_child(arrow_start)
-	remove_child(arrow_end)
 	track.track_visual_component.modulate = Color(1,1,1,1)
 	trackStartingPosition = null
 	trackEndingPosition = null
@@ -220,7 +207,7 @@ func cancel_track() -> void:
 		return
 	reset_track_builder()
 
-	track.queue_free()
+	track.free()
 	track = null	
 
 	create_track_node_tree()
@@ -295,6 +282,7 @@ func determine_tangent_from_switches(tangents: Array) -> void:
 		currentPointTangent = tangents[0] if tangentSwitchEndpoint else tangents[1]
 	else:
 		printerr("Unknown state, tracking starting position and track ending position both set")
+	pass
 
 func draw_walls_and_centerpoint(point_position: Vector2, theta: float) -> void:
 	# Convert angle to unit vector
@@ -340,9 +328,9 @@ func draw_wall_and_calculate_centerpoint_and_tangent(mousePos: Vector2) -> Array
 func update_arrow_end() -> void:
 	arrow_end.visible = true
 	# Determine the arrow's tangent point, it's opposite of the track tangent
-	var arrowPoint: Vector2 = -1 * currentPointTangent
+	var arrowPoint: Vector2 = 1 * currentPointTangent
 	# Rotate the arrow sprite to point in the opposite direction of the track's tangent
-	rotate_sprite_3d(Vector2.from_angle(trackEndingAngle), arrow_end)
+	rotate_sprite_3d(-1 * Vector2.from_angle(trackEndingAngle), arrow_end)
 	var vec2 : Vector2 = trackEndingPosition - (arrowPoint * (MapManager3D.cellSize / 2.0))
 	arrow_end.position = Utils.convert_to_3d(vec2, 1)
 
@@ -350,7 +338,7 @@ func update_arrow_end() -> void:
 func update_arrow_start() -> void:
 	arrow_start.visible = true
 	# Determine the arrow's tangent point, it's opposite of the track tangent
-	var arrowPoint: Vector2 = -1 * currentPointTangent
+	var arrowPoint: Vector2 = 1 * currentPointTangent
 	rotate_sprite_3d(-1 * arrowPoint, arrow_start)
 	arrow_start.position = Utils.convert_to_3d(currentTrackPlacePoint + (arrowPoint * (MapManager3D.cellSize / 2.0)), 1)
 	pass

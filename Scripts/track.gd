@@ -62,7 +62,7 @@ func build_track(starting_overlay: TrackOrJunctionOverlap, ending_overlay: Track
 func assert_name_unique(name_: String) -> void:
 	for maybe_track: Node in get_parent().get_children():
 		if maybe_track != self and maybe_track.name == name_:
-			assert(false, "Train name must be unique!")
+			assert(false, "Track name must be unique!")
 
 @export_category("Curve Builder")
 @export var edit_curve: bool = false:
@@ -82,7 +82,7 @@ func assert_name_unique(name_: String) -> void:
 			return
 		return bezier_curve.curve
 @export var bezier_curve: Path2D
-var dubins_path: DubinPath2D
+var dubins_path: DubinPath3D
 
 # Exposed so I can view the property in the debugger
 var length: float:
@@ -191,7 +191,7 @@ func update_stored_curves(curve_type_flag: bool) -> void:
 		if bezier_curve:
 			cleanup_bezier_curve()
 		if !dubins_path:
-			dubins_path = DubinPath2D.new()
+			dubins_path = DubinPath3D.new()
 			dubins_path.name = "DubinsPath"
 			add_child(dubins_path)
 	else:

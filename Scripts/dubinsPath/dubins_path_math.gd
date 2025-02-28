@@ -4,6 +4,7 @@ class_name DubinsPathMath
 const MIN_RADIUS: float = 0.0
 const POINTS: Array = []
 const CURVATURES: Array = []
+const PATH_TYPES: Array[String] = ["LSL", "RSR", "LSR", "RSL", "RLR", "LRL"]
 
 ## Use images here point names and thetas refererd to:
 ## https://www.habrador.com/tutorials/unity-dubins-paths/2-basic-dubins-paths/
@@ -56,14 +57,13 @@ static func get_perpendicular_circle_centers(point: Vector2, angle: float, radiu
 # min_turn_radius: float - minimum turning radius
 static func compute_dubins_paths(start_pos: Vector2, start_angle: float, end_pos: Vector2, end_angle: float, min_turn_radius: float) -> Array[DubinPath]:
 	# var path_types = ["LSR"]
-	var path_types: Array[String] = ["LSL", "RSR", "LSR", "RSL", "RLR", "LRL"]
 
 	var paths: Array[DubinPath] = []
 	
 	var circles_start: TangentCircles = get_perpendicular_circle_centers(start_pos, start_angle, min_turn_radius)
 	var circles_end: TangentCircles = get_perpendicular_circle_centers(end_pos, end_angle, min_turn_radius)
 
-	for path_type: String in path_types:
+	for path_type: String in PATH_TYPES:
 		var path: DubinPath = compute_path(min_turn_radius, path_type, circles_start, circles_end)
 		if (path == null || path.segments.size() == 0): # Check to see if we actually found a path
 			continue
