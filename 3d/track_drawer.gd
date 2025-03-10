@@ -16,6 +16,17 @@ static func extrude_polygon_along_path(
 	if polygon_2d.is_empty() or path_points.size() < 2:
 		return
 
+	# Precompute the UVs for the starting polygon.
+	var polygon_uvs: Array[Vector2] = compute_polygon_uvs(polygon_2d)
+
+	# Compute the total length of the path.
+	var total_length: float = 0.0
+	var cumulative_dist : Array[float] = [0]
+	for i: int in range(1, path_points.size()):
+		total_length += path_points[i - 1].distance_to(path_points[i])
+		cumulative_dist.append(total_length)
+
+
 	# 2) Create a Transform3D array for each segment of the path
 	var transforms: Array[Transform3D] = []
 
@@ -59,6 +70,7 @@ static func extrude_polygon_along_path(
 		for v2: Vector2 in polygon_2d:
 			var v3: Vector3 = Vector3(v2.x, v2.y, 0.0) # WE ASSUME THE POLYGON IS 2D and "UPRIGHT" on the X AXIS
 			current_global_points.append(t * v3)
+			pass
 
 		# print("CURRENT GLOBAL POINTS:")
 		# print(current_global_points)
@@ -69,31 +81,46 @@ static func extrude_polygon_along_path(
 			for j: int in range(ring_size):
 				var j_next: int = (j + 1) % ring_size
 
+				
 				var vA: Vector3 = prev_global_points[j]
 				var vB: Vector3 = prev_global_points[j_next]
 				var vC: Vector3 = current_global_points[j_next]
 				var vD: Vector3 = current_global_points[j]
+				
+				var u_previous: float = cumulative_dist[i - 1] / total_length
+				var u_next: float = cumulative_dist[i] / total_length
+				var v_previous: Vector2 = polygon_uvs[j]
+				var v_next: Vector2 = polygon_uvs[j_next]
+
+				var vA_uv: Vector2 = Vector2(u_previous, v_previous.y)
+				var vB_uv: Vector2 = Vector2(u_previous, v_next.y)
+				var vC_uv: Vector2 = Vector2(u_next, v_previous.y)
+				var vD_uv: Vector2 = Vector2(u_next, v_next.y)
+
+				# Retrieve the precomputed v coordinate from polygon_uvs.
+				# Create the final UV: u from the path, v from the polygon.
+				
 				var normal1: Vector3 = (vC - vA).cross(vB - vA).normalized()
 			
 				immediate_mesh.surface_set_normal(normal1)
-				immediate_mesh.surface_set_uv(Vector2(i, 0))
+				immediate_mesh.surface_set_uv(vA_uv)
 				immediate_mesh.surface_add_vertex(vA)
 				immediate_mesh.surface_set_normal(normal1)
-				immediate_mesh.surface_set_uv(Vector2(i, 1))
+				immediate_mesh.surface_set_uv(vB_uv)
 				immediate_mesh.surface_add_vertex(vB)
 				immediate_mesh.surface_set_normal(normal1)
-				immediate_mesh.surface_set_uv(Vector2(i, 2))
+				immediate_mesh.surface_set_uv(vC_uv)
 				immediate_mesh.surface_add_vertex(vC)
 
 				var normal2: Vector3 = (vA - vC).cross(vD - vC).normalized()
 				immediate_mesh.surface_set_normal(normal2)
-				immediate_mesh.surface_set_uv(Vector2(i, 0))
+				immediate_mesh.surface_set_uv(vC_uv)
 				immediate_mesh.surface_add_vertex(vC)
 				immediate_mesh.surface_set_normal(normal2)
-				immediate_mesh.surface_set_uv(Vector2(i, 1))
+				immediate_mesh.surface_set_uv(vD_uv)
 				immediate_mesh.surface_add_vertex(vD)
 				immediate_mesh.surface_set_normal(normal2)
-				immediate_mesh.surface_set_uv(Vector2(i, 2))
+				immediate_mesh.surface_set_uv(vA_uv)
 				immediate_mesh.surface_add_vertex(vA)
 
 		# Prepare for next iteration
@@ -160,6 +187,26 @@ static func extrude_polygon_along_path(
 
 	return immediate_mesh
 
+# Chat-gpt generated
+static func compute_polygon_uvs(polygon: Array[Vector2]) -> Array[Vector2]:
+	var uvs: Array[Vector2] = []
+	if polygon.size() == 0:
+		return uvs
+
+	# Compute min and max for the x-axis (for v coordinate)
+	var min_x: float = polygon[0].x
+	var max_x: float = polygon[0].x
+	for pt: Vector2 in polygon:
+		min_x = min(min_x, pt.x)
+		max_x = max(max_x, pt.x)
+
+	var range_x: float = max_x - min_x
+	for pt: Vector2 in polygon:
+		# Normalize the x value to [0,1] for the v coordinate.
+		var v: float = (pt.x - min_x) / (range_x if range_x != 0.0 else 1.0)
+		# We'll set u to 0 for now (to be overwritten by the extrusion value).
+		uvs.append(Vector2(0.0, v))
+	return uvs
 
 ## TODO: Use this?
 # Alterantive: use Surfacetool(we don't have to calculate the tagents OR normals ourselves(though the normals weren't too bad))

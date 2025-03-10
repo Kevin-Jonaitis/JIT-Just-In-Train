@@ -1,6 +1,6 @@
 [gd_resource type="StandardMaterial3D" load_steps=6 format=3 uid="uid://p3mhytxfjmio"]
 
-[ext_resource type="Texture2D" uid="uid://cqycvtbraqa6n" path="res://Assets/imported/sandy_gravel_02_4k.gltf/textures/sandy_gravel_02_diff_4k.jpg" id="1_m0muq"]
+[ext_resource type="Texture2D" uid="uid://bnc548s8vx7ph" path="res://Assets/test texture.png" id="1_aeeh6"]
 [ext_resource type="Texture2D" uid="uid://gt7j3spkh8kd" path="res://Assets/imported/sandy_gravel_02_4k.gltf/textures/sandy_gravel_02_arm_4k.jpg" id="2_aeeh6"]
 [ext_resource type="Shader" uid="uid://dvxrab6uer7oa" path="res://Scenes/gridlines.gdshader" id="3_aeeh6"]
 [ext_resource type="Texture2D" uid="uid://ckl20pb85srtb" path="res://Assets/imported/sandy_gravel_02_4k.gltf/textures/sandy_gravel_02_nor_gl_4k.jpg" id="3_kcspx"]
@@ -18,11 +18,10 @@ resource_name = "sandy_gravel"
 next_pass = SubResource("ShaderMaterial_aeeh6")
 cull_mode = 2
 albedo_color = Color(1, 0.837414, 0.661875, 1)
-albedo_texture = ExtResource("1_m0muq")
+albedo_texture = ExtResource("1_aeeh6")
 metallic_texture = ExtResource("2_aeeh6")
 metallic_texture_channel = 2
 roughness_texture = ExtResource("2_aeeh6")
 roughness_texture_channel = 1
 normal_enabled = true
 normal_texture = ExtResource("3_kcspx")
-uv1_scale = Vector3(10, 10, 10)

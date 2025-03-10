@@ -8,7 +8,6 @@
         "**/*.uid": true
     },
     "files.exclude": {
-
         "**/*.uid": true
     },
     "godotTools.editorPath.godot4": "C:\\Godot_v4.4-beta4_win64.exe"
