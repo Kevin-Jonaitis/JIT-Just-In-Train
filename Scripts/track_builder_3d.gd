@@ -63,7 +63,7 @@ var drawableFunctionsToCallLater: Array[Callable] = []
 
 var wall_mesh_instance: MeshInstance3D
 var wall_im_mesh: ImmediateMesh
-var test_mesh_instance: MeshInstance3D
+@onready var test_mesh_instance: MeshInstance3D = $TestMesh
 var my_extruded_mesh: ImmediateMesh
 
 
@@ -116,7 +116,7 @@ func _ready() -> void:
 	material.albedo_color = Color(1,1,1)  # Use the color parameter from your function
 	#wall_mesh_instance.set_surface_override_material(0, material)
 	my_extruded_mesh = ImmediateMesh.new()
-	test_mesh_instance = MeshInstance3D.new()
+	# test_mesh_instance = MeshInstance3D.new()
 	test_mesh_instance.mesh = my_extruded_mesh
 
 	# Grid line stuff
@@ -463,6 +463,8 @@ func draw_line_mesh(mesh: ImmediateMesh, points: Array[Vector2], height_from_bot
 	var e_bottom_left: Vector3 = quad_values.e_bottom_left
 
 	mesh.clear_surfaces()
+	# var material: StandardMaterial3D = StandardMaterial3D.new()
+	# material.albedo_color = Color(1, 1, 1)
 	mesh.surface_begin(Mesh.PRIMITIVE_TRIANGLES)
 
 	# --- Draw quad at point a (two triangles) ---
@@ -565,27 +567,27 @@ func test_call() -> void:
 	# 	Vector2(-0.5, -0.86602540378),
 	# 	Vector2(0.5, -0.86602540378)
 	# ]
-
+	
 	# var my_path: Array[Vector3] = [
-	# 	Vector3(0, 0, 2),
-	# 	Vector3(0, 0, 3),
-	# 	Vector3(0, 0, 4),
-	# 	Vector3(4, 0, 4),
-	# 	Vector3(8, 0, 4),
-	# 	Vector3(10, 0, 4),
-	# 	Vector3(10, 0, 4),
-	# 	# Vector3(1, 0, 3),
-	# 	# Vector3(1.5, 0, 3.5)
-	# 	# Vector3(8, 0, 12)
+	# 	Vector3(4, 0, 2),
+	# 	Vector3(4, 0, 3),
+	# 	Vector3(5, 0, 4),
+	# 	Vector3(6, 0, 5),
+	# 	Vector3(6, 0, 6),
 	# ]
 
 	var my_path: Array[Vector3] = [
 		Vector3(0, 0, 2),
-		Vector3(0, 0, 3),
-		Vector3(1, 0, 4),
-		Vector3(2, 0, 5),
-		Vector3(2, 0, 6),
+		Vector3(0, 0, 4),
+		Vector3(0, 0, 6),
+		Vector3(0, 0, 8),
 	]
+	
+	test_mesh_instance.create_debug_tangents()
 
+
+	# var material: StandardMaterial3D = StandardMaterial3D.new()
+	# material.albedo_color = Color(0,0,255)
+	# test_mesh_instance.set_surface_override_material(0, material)
 
 	TrackDrawer.extrude_polygon_along_path(my_polygon, my_path, my_extruded_mesh)

@@ -1,25 +1,53 @@
-[gd_scene load_steps=26 format=3 uid="uid://bo61ftst6mm73"]
+[gd_scene load_steps=31 format=3 uid="uid://bo61ftst6mm73"]
 
+[ext_resource type="Texture2D" uid="uid://cqycvtbraqa6n" path="res://Assets/imported/sandy_gravel_02_4k.gltf/textures/sandy_gravel_02_diff_4k.jpg" id="1_2be7a"]
 [ext_resource type="Script" uid="uid://dw703jxjsc0hp" path="res://Scripts/camera_3d.gd" id="1_dh1k4"]
-[ext_resource type="Material" uid="uid://du8evelo05fgv" path="res://Assets/sandy_with_grid.tres" id="1_ldvnk"]
 [ext_resource type="Script" uid="uid://cdja3kyeyg4q2" path="res://3d/mouse_tracker_3d.gd" id="2_dh1k4"]
+[ext_resource type="Texture2D" uid="uid://gt7j3spkh8kd" path="res://Assets/imported/sandy_gravel_02_4k.gltf/textures/sandy_gravel_02_arm_4k.jpg" id="2_iyfcu"]
 [ext_resource type="ArrayMesh" uid="uid://c3tlrc78gcd8i" path="res://Assets/rail.res" id="3_436s2"]
 [ext_resource type="Script" uid="uid://dkenavabc5uno" path="res://Scripts/track_builder_3d.gd" id="3_dh1k4"]
+[ext_resource type="Shader" uid="uid://dvxrab6uer7oa" path="res://Scenes/gridlines.gdshader" id="3_tapj0"]
 [ext_resource type="Script" uid="uid://ct7nknt5qlk15" path="res://3d/tracks.gd" id="4_03nuc"]
 [ext_resource type="PackedScene" uid="uid://drjboh0dai1bc" path="res://Assets/imported/Rails A.fbx" id="4_436s2"]
 [ext_resource type="Texture2D" uid="uid://ds5anirlx2lgn" path="res://Assets/arrow_single.png" id="4_elx2p"]
+[ext_resource type="Texture2D" uid="uid://ckl20pb85srtb" path="res://Assets/imported/sandy_gravel_02_4k.gltf/textures/sandy_gravel_02_nor_gl_4k.jpg" id="4_oya12"]
 [ext_resource type="Script" uid="uid://b80rmxayma5du" path="res://3d/trains.gd" id="5_mwpqo"]
 [ext_resource type="Script" uid="uid://bx3we6mgiapf2" path="res://3d/junctions.gd" id="6_qva4k"]
 [ext_resource type="Texture2D" uid="uid://fndbqout21sd" path="res://Assets/imported/smile.png" id="10_tmgjn"]
 [ext_resource type="Script" uid="uid://brqqd6a5il3by" path="res://addons/lines_and_trails_3d/line_3d.gd" id="11_l4xbo"]
+[ext_resource type="Material" uid="uid://p3mhytxfjmio" path="res://Assets/sandy_gravel.tres" id="12_2be7a"]
 [ext_resource type="Script" uid="uid://dat4dm1pytyav" path="res://addons/lines_and_trails_3d/trail_3d.gd" id="12_ldvnk"]
-[ext_resource type="PackedScene" path="res://bad_broken.tscn" id="14_80pny"]
 [ext_resource type="Script" uid="uid://bf1rv43fffhyb" path="res://Scripts/fps.gd" id="14_i7f5g"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_aeeh6"]
+render_priority = 1
+shader = ExtResource("3_tapj0")
+shader_parameter/gridlineOnEvery = 4.0
+shader_parameter/lineThickness = 0.2
+shader_parameter/originOffset = Vector2(0, 0)
+shader_parameter/color = Color(0, 0, 0, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_4dmv2"]
+resource_name = "sandy_gravel"
+next_pass = SubResource("ShaderMaterial_aeeh6")
+cull_mode = 2
+albedo_color = Color(1, 0.837414, 0.661875, 1)
+albedo_texture = ExtResource("1_2be7a")
+metallic_texture = ExtResource("2_iyfcu")
+metallic_texture_channel = 2
+roughness_texture = ExtResource("2_iyfcu")
+roughness_texture_channel = 1
+normal_enabled = true
+normal_texture = ExtResource("4_oya12")
+uv1_scale = Vector3(100, 100, 100)
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_elx2p"]
 size = Vector2(1000, 1000)
 
 [sub_resource type="SphereMesh" id="SphereMesh_ldvnk"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_436s2"]
+size = Vector3(2, 2, 2)
 
 [sub_resource type="Curve3D" id="Curve3D_dh1k4"]
 bake_interval = 1.0
@@ -28,9 +56,6 @@ _data = {
 "tilts": PackedFloat32Array(0, 0, 0)
 }
 point_count = 3
-
-[sub_resource type="BoxMesh" id="BoxMesh_436s2"]
-size = Vector3(2, 2, 2)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_l4xbo"]
 albedo_texture = ExtResource("10_tmgjn")
@@ -55,7 +80,7 @@ material = SubResource("StandardMaterial3D_ldvnk")
 [node name="TestCurves3D" type="Node3D"]
 
 [node name="Ground" type="MeshInstance3D" parent="."]
-material_override = ExtResource("1_ldvnk")
+material_override = SubResource("StandardMaterial3D_4dmv2")
 mesh = SubResource("PlaneMesh_elx2p")
 
 [node name="World" type="Node3D" parent="."]
@@ -78,6 +103,11 @@ pixel_size = 0.005
 axis = 1
 texture = ExtResource("4_elx2p")
 
+[node name="TestMesh" type="MeshInstance3D" parent="World/MouseTracker3D/TrackBuilder3D"]
+material_overlay = ExtResource("12_2be7a")
+gi_mode = 2
+skeleton = NodePath("../../../..")
+
 [node name="MouseSphere" type="MeshInstance3D" parent="World/MouseTracker3D"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.2303, 0, 0)
 visible = false
@@ -94,9 +124,14 @@ script = ExtResource("5_mwpqo")
 script = ExtResource("6_qva4k")
 
 [node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.332161, 0.943223, 0, -0.943223, 0.332161, 0.542, 50, -0.156)
+transform = Transform3D(1, 0, 0, 0, 0.0244322, 0.999702, 0, -0.999702, 0.0244322, 0.542, 10, 4)
 fov = 68.9283
 script = ExtResource("1_dh1k4")
+
+[node name="Cube" type="MeshInstance3D" parent="."]
+material_override = ExtResource("12_2be7a")
+mesh = SubResource("BoxMesh_436s2")
+skeleton = NodePath("")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.935098, -0.0487296, -0.351022, 0.348938, -0.0464433, 0.935994, -0.0619132, -0.997732, -0.0264254, -273.376, 217.454, -21.5664)
@@ -127,15 +162,6 @@ mesh = ExtResource("3_436s2")
 [node name="Rails A" parent="." instance=ExtResource("4_436s2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 0)
 visible = false
-
-[node name="TestCube" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0, -40)
-mesh = SubResource("BoxMesh_436s2")
-skeleton = NodePath("")
-
-[node name="Cube" type="MeshInstance3D" parent="."]
-mesh = SubResource("BoxMesh_436s2")
-skeleton = NodePath("")
 
 [node name="Smiley" type="CSGSphere3D" parent="."]
 transform = Transform3D(-0.243, 0, -0.97, 0, 1, 0, 0.97, 0, -0.243, -45.2358, 4.21146, 0)
@@ -188,6 +214,7 @@ metadata/_custom_type_script = "uid://brqqd6a5il3by"
 environment = SubResource("Environment_03nuc")
 
 [node name="TestLine" type="MeshInstance3D" parent="."]
+visible = false
 skeleton = NodePath("")
 script = ExtResource("11_l4xbo")
 width = 1.0
@@ -206,12 +233,14 @@ points = PackedVector3Array(0, 1, 0, 0, 1, 4)
 curve_normals = PackedVector3Array(-1, 0, 0, -1, 0, 0)
 metadata/_custom_type_script = "uid://brqqd6a5il3by"
 
+[node name="UnknownCube" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0, -40)
+mesh = SubResource("BoxMesh_436s2")
+skeleton = NodePath("")
+
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 7.41338)
 mesh = SubResource("SphereMesh_elx2p")
-
-[node name="LSL" parent="." instance=ExtResource("14_80pny")]
-material_type = 0
 
 [node name="FPS" type="Label" parent="."]
 offset_right = 40.0

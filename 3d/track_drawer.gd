@@ -2,6 +2,11 @@ extends RefCounted
 
 class_name TrackDrawer
 
+func calculate_face_normal(v0: Vector3, v1: Vector3, v2: Vector3) -> Vector3:
+	var edge1: Vector3 = v1 - v0
+	var edge2: Vector3 = v2 - v0
+	return edge1.cross(edge2).normalized()
+
 static func extrude_polygon_along_path(
 	polygon_2d: Array[Vector2],
 	path_points: Array[Vector3],
@@ -68,13 +73,27 @@ static func extrude_polygon_along_path(
 				var vB: Vector3 = prev_global_points[j_next]
 				var vC: Vector3 = current_global_points[j_next]
 				var vD: Vector3 = current_global_points[j]
+				var normal1: Vector3 = (vC - vA).cross(vB - vA).normalized()
 			
+				immediate_mesh.surface_set_normal(normal1)
+				immediate_mesh.surface_set_uv(Vector2(i, 0))
 				immediate_mesh.surface_add_vertex(vA)
+				immediate_mesh.surface_set_normal(normal1)
+				immediate_mesh.surface_set_uv(Vector2(i, 1))
 				immediate_mesh.surface_add_vertex(vB)
+				immediate_mesh.surface_set_normal(normal1)
+				immediate_mesh.surface_set_uv(Vector2(i, 2))
 				immediate_mesh.surface_add_vertex(vC)
 
+				var normal2: Vector3 = (vA - vC).cross(vD - vC).normalized()
+				immediate_mesh.surface_set_normal(normal2)
+				immediate_mesh.surface_set_uv(Vector2(i, 0))
 				immediate_mesh.surface_add_vertex(vC)
+				immediate_mesh.surface_set_normal(normal2)
+				immediate_mesh.surface_set_uv(Vector2(i, 1))
 				immediate_mesh.surface_add_vertex(vD)
+				immediate_mesh.surface_set_normal(normal2)
+				immediate_mesh.surface_set_uv(Vector2(i, 2))
 				immediate_mesh.surface_add_vertex(vA)
 
 		# Prepare for next iteration
@@ -97,9 +116,20 @@ static func extrude_polygon_along_path(
 		var idx0: int = polygon_indices[i]
 		var idx1: int = polygon_indices[i + 1]
 		var idx2: int = polygon_indices[i + 2]
-		immediate_mesh.surface_add_vertex(front_vertices[idx2])
-		immediate_mesh.surface_add_vertex(front_vertices[idx1])
-		immediate_mesh.surface_add_vertex(front_vertices[idx0])
+		var vA: Vector3 = front_vertices[idx2]
+		var vB: Vector3 = front_vertices[idx1]
+		var vC: Vector3 = front_vertices[idx0]
+		var normal: Vector3 = (vC - vA).cross(vB- vA).normalized()
+
+		immediate_mesh.surface_set_normal(normal)
+		immediate_mesh.surface_set_uv(Vector2(i, 0))
+		immediate_mesh.surface_add_vertex(vA)
+		immediate_mesh.surface_set_normal(normal)
+		immediate_mesh.surface_set_uv(Vector2(i, 1))
+		immediate_mesh.surface_add_vertex(vB)
+		immediate_mesh.surface_set_normal(normal)
+		immediate_mesh.surface_set_uv(Vector2(i, 2))
+		immediate_mesh.surface_add_vertex(vC)
 
 	# Back cap (at the end)
 	var back_transform: Transform3D = transforms[transforms.size() - 1]
@@ -112,14 +142,39 @@ static func extrude_polygon_along_path(
 		var idx0: int = polygon_indices[i]
 		var idx1: int = polygon_indices[i + 1]
 		var idx2: int = polygon_indices[i + 2]
-		immediate_mesh.surface_add_vertex(back_vertices[idx0])
-		immediate_mesh.surface_add_vertex(back_vertices[idx1])
-		immediate_mesh.surface_add_vertex(back_vertices[idx2])
+		var vA: Vector3 = back_vertices[idx0]
+		var vB: Vector3 = back_vertices[idx1]
+		var vC: Vector3 = back_vertices[idx2]
+		var normal: Vector3 = (vC - vA).cross(vB - vA).normalized()
+		immediate_mesh.surface_set_normal(normal)
+		immediate_mesh.surface_set_uv(Vector2(i, 0))
+		immediate_mesh.surface_add_vertex(vA)
+		immediate_mesh.surface_set_normal(normal)
+		immediate_mesh.surface_set_uv(Vector2(i, 1))
+		immediate_mesh.surface_add_vertex(vB)
+		immediate_mesh.surface_set_normal(normal)
+		immediate_mesh.surface_set_uv(Vector2(i, 2))
+		immediate_mesh.surface_add_vertex(vC)
 		
 	immediate_mesh.surface_end()
 
 	return immediate_mesh
 
+
+## TODO: Use this?
+# Alterantive: use Surfacetool(we don't have to calculate the tagents OR normals ourselves(though the normals weren't too bad))
+func compute_triangle_tangent(v0: Vector3, v1: Vector3, v2: Vector3, uv0: Vector2, uv1: Vector2, uv2: Vector2) -> Vector4:
+	var edge1: Vector3 = v1 - v0
+	var edge2: Vector3 = v2 - v0
+	var deltaUV1: Vector2 = uv1 - uv0
+	var deltaUV2: Vector2 = uv2 - uv0
+	var det: float = deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x
+	var r: float = 1.0 / det if (abs(det) > 0.0001) else  1.0
+	var tangent: Vector3 = (edge1 * deltaUV2.y - edge2 * deltaUV1.y) * r
+	tangent = tangent.normalized()
+	# The tangent is stored as a Vector4, where the w component usually represents handedness.
+	# For many cases, you can set w = 1.0 (or -1.0 if needed).
+	return Vector4(tangent.x, tangent.y, tangent.z, 1.0)
 
 static func set_line_attributes(line: Line3D, points_2d: Array[Vector2], y_index: int, color: Color, transparency: float) -> void:
 	var y_value: float = Utils.get_y_layer(y_index)
