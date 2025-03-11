@@ -5,6 +5,7 @@ class_name TrackBuilder3D
 static var track_counter: int = 0  # Initialize the counter
 
 
+# We need this code, because we need our csg polygon to follow an arbitrary path(not something specified by path3d)
 const highlightColor: Color = Color(0, 0, 255, 0.5)
 const line_transparency_value: float = 0.3
 const line_y_index: int = 1 
@@ -562,11 +563,19 @@ func test_call() -> void:
 	# 	Vector2(0.5,0.5), #Top Right
 	# 	Vector2(-0.5,0.5)] #Top Left
 
-	var my_polygon: Array[Vector2] = [
+	var my_polygon_cw: Array[Vector2] = [
 		Vector2(0.5,0.5), #Top Right
 		Vector2(0.5,-0.5), #Bottom Right
 		Vector2(-0.5, -0.5), #Bottom Left
 		Vector2(-0.5,0.5)] #Top Left
+		
+	var my_polygon_ccw: Array[Vector2] = [
+		Vector2(0.5,0.5), #Top Right
+		Vector2(-0.5,0.5), #Top Left
+		Vector2(-0.5, -0.5), #Bottom Left
+		Vector2(0.5,-0.5)] #Bottom Right
+		
+		
 	
 	# # Hexagon
 	# var my_polygon: Array[Vector2] = [
@@ -609,6 +618,6 @@ func test_call() -> void:
 	# material.albedo_color = Color(0,0,255)
 	# test_mesh_instance.set_surface_override_material(0, material)
 
-	TrackDrawer.extrude_polygon_along_path(my_polygon, my_path, my_extruded_mesh)
+	TrackDrawer.extrude_polygon_along_path(my_polygon_cw, my_path, my_extruded_mesh)
 
 	# TrackDrawer.extrude_polygon_along_path(my_polygon, my_path_two, my_extruded_mesh_two)

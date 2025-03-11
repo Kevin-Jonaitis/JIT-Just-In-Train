@@ -96,8 +96,8 @@ static func extrude_polygon_along_path(
 				var vC: Vector3 = current_global_points[j_next]
 				var vD: Vector3 = current_global_points[j]
 				
-				var u_previous: float = cumulative_dist[i - 1] / total_length
-				var u_next: float = cumulative_dist[i] / total_length
+				var u_previous: float = cumulative_dist[i - 1]
+				var u_next: float = cumulative_dist[i]
 				var v_previous: Vector2 = polygon_uvs[j]
 				var v_next: Vector2 = polygon_uvs[j_next]
 
@@ -109,7 +109,7 @@ static func extrude_polygon_along_path(
 				var vD_uv: Vector2 = Vector2(1 - u_next, v_previous.y)
 				
 				var normal1: Vector3 = (vC - vA).cross(vB - vA).normalized()
-				
+
 				immediate_mesh.surface_set_normal(normal1)
 				immediate_mesh.surface_set_uv(vA_uv)
 				immediate_mesh.surface_add_vertex(vA)
@@ -145,6 +145,30 @@ static func extrude_polygon_along_path(
 	for v2: Vector2 in polygon_2d:
 		var v3: Vector3 = Vector3(v2.x, v2.y, 0.0)
 		front_vertices.append(front_transform * v3)
+		
+
+	var min_x: float = polygon_2d[0].x
+	var min_y: float = polygon_2d[0].y
+	var max_x: float = polygon_2d[0].x
+	var max_y: float = polygon_2d[0].y
+
+	for pt: Vector2 in polygon_2d:
+		min_x = min(min_x, pt.x)
+		max_x = max(max_x, pt.x)
+		min_y = min(min_y, pt.y)
+		max_y = max(max_y, pt.y)
+		
+	# At beginning, start at 0 at the top, and start at top of range, and go down
+	var face_uvs: Array[Vector2] = []
+	for i: int in range(polygon_2d.size()):
+		var pt: Vector2 = polygon_2d[i]
+		#noramlize between range_x and range_y
+		var u_offset: float = pt.x - max_x
+		var v_offset: float = pt.y - max_y
+		var u_normalized: float = u_offset
+		var v_normalized: float = v_offset
+		
+		face_uvs.append(Vector2(u_normalized, v_normalized))
 
 	# Use the triangulation data from polygon_indices.
 	for i: int  in range(0, polygon_indices.size(), 3):
@@ -156,14 +180,17 @@ static func extrude_polygon_along_path(
 		var vC: Vector3 = front_vertices[idx2]
 		var normal: Vector3 = (vC - vA).cross(vB- vA).normalized()
 
+		var vA_uv: Vector2 = face_uvs[idx0]
+		var vB_uv: Vector2 = face_uvs[idx1]
+		var vC_uv: Vector2 = face_uvs[idx2]
 		immediate_mesh.surface_set_normal(normal)
-		immediate_mesh.surface_set_uv(Vector2(i, 0))
+		immediate_mesh.surface_set_uv(vA_uv)
 		immediate_mesh.surface_add_vertex(vA)
 		immediate_mesh.surface_set_normal(normal)
-		immediate_mesh.surface_set_uv(Vector2(i, 1))
+		immediate_mesh.surface_set_uv(vB_uv)
 		immediate_mesh.surface_add_vertex(vB)
 		immediate_mesh.surface_set_normal(normal)
-		immediate_mesh.surface_set_uv(Vector2(i, 2))
+		immediate_mesh.surface_set_uv(vC_uv)
 		immediate_mesh.surface_add_vertex(vC)
 
 	# Back cap (at the end)
@@ -182,18 +209,16 @@ static func extrude_polygon_along_path(
 		var vC: Vector3 = back_vertices[idx0]
 		var normal: Vector3 = (vC - vA).cross(vB - vA).normalized()
 		immediate_mesh.surface_set_normal(normal)
-		immediate_mesh.surface_set_uv(Vector2(i, 0))
+		immediate_mesh.surface_set_uv(face_uvs[idx2])
 		immediate_mesh.surface_add_vertex(vA)
 		immediate_mesh.surface_set_normal(normal)
-		immediate_mesh.surface_set_uv(Vector2(i, 1))
+		immediate_mesh.surface_set_uv(face_uvs[idx1])
 		immediate_mesh.surface_add_vertex(vB)
 		immediate_mesh.surface_set_normal(normal)
-		immediate_mesh.surface_set_uv(Vector2(i, 2))
+		immediate_mesh.surface_set_uv(face_uvs[idx0])
 		immediate_mesh.surface_add_vertex(vC)
 		
 	immediate_mesh.surface_end()
-
-	var test: PackedVector3Array = immediate_mesh.get_faces()
 
 	return immediate_mesh
 
@@ -210,12 +235,14 @@ static func compute_polygon_uvs(polygon: Array[Vector2]) -> Array[Vector2]:
 	for i: int in range(count):
 		if i > 0:
 			cum_length += polygon[i - 1].distance_to(polygon[i])
-		var v: float = cum_length / total_length
+		var v: float = cum_length
 		uvs.append(Vector2(0.0, v))
 
 	# Duplicate the first UV with v = 1.0 to close the loop.
-	uvs.append(Vector2(0.0, 1.0))
+	uvs.append(Vector2(0.0, total_length))
+	# uvs.append(uvs[0])
 	return uvs
+
 ## TODO: Use this?
 # Alterantive: use Surfacetool(we don't have to calculate the tagents OR normals ourselves(though the normals weren't too bad))
 func compute_triangle_tangent(v0: Vector3, v1: Vector3, v2: Vector3, uv0: Vector2, uv1: Vector2, uv2: Vector2) -> Vector4:
