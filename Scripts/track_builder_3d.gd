@@ -64,7 +64,9 @@ var drawableFunctionsToCallLater: Array[Callable] = []
 var wall_mesh_instance: MeshInstance3D
 var wall_im_mesh: ImmediateMesh
 @onready var test_mesh_instance: MeshInstance3D = $TestMesh
+@onready var test_mesh_instance_two: MeshInstance3D = $TestMeshTwo
 var my_extruded_mesh: ImmediateMesh
+var my_extruded_mesh_two: ImmediateMesh
 
 
 
@@ -116,8 +118,10 @@ func _ready() -> void:
 	material.albedo_color = Color(1,1,1)  # Use the color parameter from your function
 	#wall_mesh_instance.set_surface_override_material(0, material)
 	my_extruded_mesh = ImmediateMesh.new()
+	my_extruded_mesh_two = ImmediateMesh.new()
 	# test_mesh_instance = MeshInstance3D.new()
 	test_mesh_instance.mesh = my_extruded_mesh
+	test_mesh_instance_two.mesh = my_extruded_mesh_two
 
 	# Grid line stuff
 	grid_line.width = 0.3
@@ -552,10 +556,16 @@ func connect_two_points_internal(mesh: ImmediateMesh, quad_values: QuadValues) -
 
 func test_call() -> void:
 
+	# var my_polygon: Array[Vector2] = [
+	# 	Vector2(-0.5, -0.5), #Bottom Left
+	# 	Vector2(0.5,-0.5), #Bottom Right
+	# 	Vector2(0.5,0.5), #Top Right
+	# 	Vector2(-0.5,0.5)] #Top Left
+
 	var my_polygon: Array[Vector2] = [
-		Vector2(-0.5, -0.5), #Bottom Left
-		Vector2(0.5,-0.5), #Bottom Right
 		Vector2(0.5,0.5), #Top Right
+		Vector2(0.5,-0.5), #Bottom Right
+		Vector2(-0.5, -0.5), #Bottom Left
 		Vector2(-0.5,0.5)] #Top Left
 	
 	# # Hexagon
@@ -582,6 +592,15 @@ func test_call() -> void:
 		Vector3(0, 0, 6),
 		Vector3(0, 0, 8),
 	]
+
+
+
+	var my_path_two: Array[Vector3] = [
+		Vector3(2, 0, 2),
+		Vector3(4, 0, 2),
+		Vector3(6, 0, 2),
+		Vector3(8, 0, 2),
+	]
 	
 	test_mesh_instance.create_debug_tangents()
 
@@ -591,3 +610,5 @@ func test_call() -> void:
 	# test_mesh_instance.set_surface_override_material(0, material)
 
 	TrackDrawer.extrude_polygon_along_path(my_polygon, my_path, my_extruded_mesh)
+
+	# TrackDrawer.extrude_polygon_along_path(my_polygon, my_path_two, my_extruded_mesh_two)

@@ -32,6 +32,7 @@ func _ready() -> void:
 
 	# If the curve was pre-created in the editor, then we should show the goods
 	update_visual_with_bezier_points()
+	RenderingDevice.POLYGON_FRONT_FACE_CLOCKWISE
 
 static func new_Track(name_: String, curve_type_flag_: bool, tracks_: Tracks, visible_: bool = true) -> Track3D:
 	assert(!name_.contains("-"), "This will break pathfinding name parssing if we have a '-' in the name")

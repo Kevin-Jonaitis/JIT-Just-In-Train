@@ -35,20 +35,20 @@ static func extrude_polygon_along_path(
 		var face_transform: Transform3D = Transform3D()			
 		if (i == 0):
 			var direction: Vector3 = (path_points[1] - path_points[0])
-			face_transform = face_transform.looking_at(direction, Vector3.UP)
+			face_transform = face_transform.looking_at(direction, Vector3.UP, true)
 			face_transform = face_transform.translated(path_points[i])
 			transforms.append(face_transform)
 		elif i < points_count - 1:
 			var prev_dir: Vector3 = (path_points[i] - path_points[i - 1])
 			var next_dir: Vector3 = (path_points[i + 1] - path_points[i])
 			var direction: Vector3 = (prev_dir + next_dir)
-			face_transform = face_transform.looking_at(direction, Vector3.UP)
+			face_transform = face_transform.looking_at(direction, Vector3.UP, true)
 			face_transform = face_transform.translated(path_points[i])
 			transforms.append(face_transform)
 		elif(i == points_count - 1):
 			# For the last point, reuse orientation from the previous or just identity
 			var direction: Vector3 = (path_points[i] - path_points[i - 1])
-			face_transform = face_transform.looking_at(direction, Vector3.UP)
+			face_transform = face_transform.looking_at(direction, Vector3.UP, true)
 			face_transform = face_transform.translated(path_points[i])
 			transforms.append(face_transform) 
 		else:
@@ -71,14 +71,23 @@ static func extrude_polygon_along_path(
 			var v3: Vector3 = Vector3(v2.x, v2.y, 0.0) # WE ASSUME THE POLYGON IS 2D and "UPRIGHT" on the X AXIS
 			current_global_points.append(t * v3)
 			pass
+		# Duplicate the first vertex so the ring is closed.
+		# This is used to close the UV mapping
+		current_global_points.append(current_global_points[0])
 
-		# print("CURRENT GLOBAL POINTS:")
-		# print(current_global_points)
+		# ********************************************************************************
+		# ********************************************************************************
+		# NOTE: ALL THESE TRIANGLES ARE IN CW WINDING ORDER, WHEN THEY SHOULD BE IN CCW ORDER
+		# Therefore, THE NORMAL IS always -1 * the normal calculated, since godot expects 
+		# things in CCW order. TODO: Fix and make them in CCW order
+		# ALSO, we should feed in the 2d pologyons in CW order to have the expected outcome
+		# ********************************************************************************
+		# ********************************************************************************
 
 		# If we have a previous ring, connect them with quads -> triangles
 		if i > 0:
-			var ring_size: int = polygon_2d.size()
-			for j: int in range(ring_size):
+			var ring_size: int = polygon_2d.size() + 1  # note the extra vertex!
+			for j: int in range(ring_size):  # use ring_size-1 since j_next wraps around #TODO: Is this true? it works without it
 				var j_next: int = (j + 1) % ring_size
 
 				
@@ -92,16 +101,15 @@ static func extrude_polygon_along_path(
 				var v_previous: Vector2 = polygon_uvs[j]
 				var v_next: Vector2 = polygon_uvs[j_next]
 
-				var vA_uv: Vector2 = Vector2(u_previous, v_previous.y)
-				var vB_uv: Vector2 = Vector2(u_previous, v_next.y)
-				var vC_uv: Vector2 = Vector2(u_next, v_previous.y)
-				var vD_uv: Vector2 = Vector2(u_next, v_next.y)
-
-				# Retrieve the precomputed v coordinate from polygon_uvs.
-				# Create the final UV: u from the path, v from the polygon.
+				# Probably need to add an offset here so that the texture starts at the "beginning"
+				# But it's not worth the effort to figure it out since these textures don't really have a start/end
+				var vA_uv: Vector2 = Vector2(1 - u_previous, v_previous.y)
+				var vB_uv: Vector2 = Vector2(1 - u_previous, v_next.y)
+				var vC_uv: Vector2 = Vector2(1 - u_next, v_next.y)
+				var vD_uv: Vector2 = Vector2(1 - u_next, v_previous.y)
 				
 				var normal1: Vector3 = (vC - vA).cross(vB - vA).normalized()
-			
+				
 				immediate_mesh.surface_set_normal(normal1)
 				immediate_mesh.surface_set_uv(vA_uv)
 				immediate_mesh.surface_add_vertex(vA)
@@ -143,9 +151,9 @@ static func extrude_polygon_along_path(
 		var idx0: int = polygon_indices[i]
 		var idx1: int = polygon_indices[i + 1]
 		var idx2: int = polygon_indices[i + 2]
-		var vA: Vector3 = front_vertices[idx2]
+		var vA: Vector3 = front_vertices[idx0]
 		var vB: Vector3 = front_vertices[idx1]
-		var vC: Vector3 = front_vertices[idx0]
+		var vC: Vector3 = front_vertices[idx2]
 		var normal: Vector3 = (vC - vA).cross(vB- vA).normalized()
 
 		immediate_mesh.surface_set_normal(normal)
@@ -169,9 +177,9 @@ static func extrude_polygon_along_path(
 		var idx0: int = polygon_indices[i]
 		var idx1: int = polygon_indices[i + 1]
 		var idx2: int = polygon_indices[i + 2]
-		var vA: Vector3 = back_vertices[idx0]
+		var vA: Vector3 = back_vertices[idx2]
 		var vB: Vector3 = back_vertices[idx1]
-		var vC: Vector3 = back_vertices[idx2]
+		var vC: Vector3 = back_vertices[idx0]
 		var normal: Vector3 = (vC - vA).cross(vB - vA).normalized()
 		immediate_mesh.surface_set_normal(normal)
 		immediate_mesh.surface_set_uv(Vector2(i, 0))
@@ -185,29 +193,29 @@ static func extrude_polygon_along_path(
 		
 	immediate_mesh.surface_end()
 
+	var test: PackedVector3Array = immediate_mesh.get_faces()
+
 	return immediate_mesh
 
 # Chat-gpt generated
 static func compute_polygon_uvs(polygon: Array[Vector2]) -> Array[Vector2]:
 	var uvs: Array[Vector2] = []
-	if polygon.size() == 0:
-		return uvs
-
-	# Compute min and max for the x-axis (for v coordinate)
-	var min_x: float = polygon[0].x
-	var max_x: float = polygon[0].x
-	for pt: Vector2 in polygon:
-		min_x = min(min_x, pt.x)
-		max_x = max(max_x, pt.x)
-
-	var range_x: float = max_x - min_x
-	for pt: Vector2 in polygon:
-		# Normalize the x value to [0,1] for the v coordinate.
-		var v: float = (pt.x - min_x) / (range_x if range_x != 0.0 else 1.0)
-		# We'll set u to 0 for now (to be overwritten by the extrusion value).
+	var total_length: float = 0.0
+	var count: int = polygon.size()
+	for i: int in range(count):
+		var next_i: int = (i + 1) % count
+		total_length += polygon[i].distance_to(polygon[next_i])
+	
+	var cum_length: float = 0.0
+	for i: int in range(count):
+		if i > 0:
+			cum_length += polygon[i - 1].distance_to(polygon[i])
+		var v: float = cum_length / total_length
 		uvs.append(Vector2(0.0, v))
-	return uvs
 
+	# Duplicate the first UV with v = 1.0 to close the loop.
+	uvs.append(Vector2(0.0, 1.0))
+	return uvs
 ## TODO: Use this?
 # Alterantive: use Surfacetool(we don't have to calculate the tagents OR normals ourselves(though the normals weren't too bad))
 func compute_triangle_tangent(v0: Vector3, v1: Vector3, v2: Vector3, uv0: Vector2, uv1: Vector2, uv2: Vector2) -> Vector4:
