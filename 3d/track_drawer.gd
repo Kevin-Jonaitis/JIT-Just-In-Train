@@ -77,9 +77,13 @@ static func extrude_polygon_along_path(
 
 		# ********************************************************************************
 		# ********************************************************************************
-		# NOTE: ALL THESE TRIANGLES ARE IN CW WINDING ORDER, WHEN THEY SHOULD BE IN CCW ORDER
-		# Therefore, THE NORMAL IS always -1 * the normal calculated, since godot expects 
-		# things in CCW order. TODO: Fix and make them in CCW order
+		# NOTE: ALL THESE TRIANGLES ARE IN CW WINDING ORDER(as required by godot).
+		# The face normal points OUT of the side of the face that's wound in CW order.
+		# Note this DOESNT seem to agree with the "right-hand" coordinate system of godot; 
+		# so don't use that when determing the normal vector, only look at which side of the polygon 
+		# causes the winding order to be CW, and know the normal points out in that direction
+		# Then, for the code that calculates the _actual_ normal below, use the right-hand rule to determine
+		# which way the normal should go. I know, it's confusing.
 		# ALSO, we should feed in the 2d pologyons in CW order to have the expected outcome
 		# ********************************************************************************
 		# ********************************************************************************
@@ -109,25 +113,34 @@ static func extrude_polygon_along_path(
 				var vD_uv: Vector2 = Vector2(1 - u_next, v_previous.y)
 				
 				var normal1: Vector3 = (vC - vA).cross(vB - vA).normalized()
+				var tangent1: Plane = compute_triangle_tangent(vA, vB, vC, vA_uv, vB_uv, vC_uv)
 
 				immediate_mesh.surface_set_normal(normal1)
+				immediate_mesh.surface_set_tangent(tangent1)
 				immediate_mesh.surface_set_uv(vA_uv)
 				immediate_mesh.surface_add_vertex(vA)
 				immediate_mesh.surface_set_normal(normal1)
+				immediate_mesh.surface_set_tangent(tangent1)
 				immediate_mesh.surface_set_uv(vB_uv)
 				immediate_mesh.surface_add_vertex(vB)
 				immediate_mesh.surface_set_normal(normal1)
+				immediate_mesh.surface_set_tangent(tangent1)
 				immediate_mesh.surface_set_uv(vC_uv)
 				immediate_mesh.surface_add_vertex(vC)
 
 				var normal2: Vector3 = (vA - vC).cross(vD - vC).normalized()
+				var tangent2: Plane = compute_triangle_tangent(vC, vD, vA, vC_uv, vD_uv, vA_uv)
+
 				immediate_mesh.surface_set_normal(normal2)
+				immediate_mesh.surface_set_tangent(tangent2)
 				immediate_mesh.surface_set_uv(vC_uv)
 				immediate_mesh.surface_add_vertex(vC)
 				immediate_mesh.surface_set_normal(normal2)
+				immediate_mesh.surface_set_tangent(tangent2)
 				immediate_mesh.surface_set_uv(vD_uv)
 				immediate_mesh.surface_add_vertex(vD)
 				immediate_mesh.surface_set_normal(normal2)
+				immediate_mesh.surface_set_tangent(tangent2)
 				immediate_mesh.surface_set_uv(vA_uv)
 				immediate_mesh.surface_add_vertex(vA)
 
@@ -135,9 +148,8 @@ static func extrude_polygon_along_path(
 		prev_global_points = current_global_points.duplicate(true)
 
 
-	# Add end caps here using polygon_indices for the first and/or last transform.
-	# Front cap (at the beginning)
-	# 1) Triangulate the polygon if you want to make end caps
+	# 4) Triangulate the polygon  to make end caps
+	# Front cap
 	var polygon_indices: PackedInt32Array = Geometry2D.triangulate_polygon(polygon_2d)
 
 	var front_transform: Transform3D = transforms[0]
@@ -145,7 +157,7 @@ static func extrude_polygon_along_path(
 	for v2: Vector2 in polygon_2d:
 		var v3: Vector3 = Vector3(v2.x, v2.y, 0.0)
 		front_vertices.append(front_transform * v3)
-		
+
 
 	var min_x: float = polygon_2d[0].x
 	var min_y: float = polygon_2d[0].y
@@ -183,13 +195,17 @@ static func extrude_polygon_along_path(
 		var vA_uv: Vector2 = face_uvs[idx0]
 		var vB_uv: Vector2 = face_uvs[idx1]
 		var vC_uv: Vector2 = face_uvs[idx2]
+		var tangent: Plane = compute_triangle_tangent(vA, vB, vC, vA_uv, vB_uv, vC_uv)
 		immediate_mesh.surface_set_normal(normal)
+		immediate_mesh.surface_set_tangent(tangent)
 		immediate_mesh.surface_set_uv(vA_uv)
 		immediate_mesh.surface_add_vertex(vA)
 		immediate_mesh.surface_set_normal(normal)
+		immediate_mesh.surface_set_tangent(tangent)
 		immediate_mesh.surface_set_uv(vB_uv)
 		immediate_mesh.surface_add_vertex(vB)
 		immediate_mesh.surface_set_normal(normal)
+		immediate_mesh.surface_set_tangent(tangent)
 		immediate_mesh.surface_set_uv(vC_uv)
 		immediate_mesh.surface_add_vertex(vC)
 
@@ -199,6 +215,7 @@ static func extrude_polygon_along_path(
 	for v2: Vector2 in polygon_2d:
 		var v3: Vector3 = Vector3(v2.x, v2.y, 0.0)
 		back_vertices.append(back_transform * v3)
+
 	# Reverse the triangle winding so that the normal points outward.
 	for i: int in range(0, polygon_indices.size(), 3):
 		var idx0: int = polygon_indices[i]
@@ -207,15 +224,22 @@ static func extrude_polygon_along_path(
 		var vA: Vector3 = back_vertices[idx2]
 		var vB: Vector3 = back_vertices[idx1]
 		var vC: Vector3 = back_vertices[idx0]
+		var vA_uv: Vector2 = face_uvs[idx2]
+		var vB_uv: Vector2 = face_uvs[idx1]
+		var vC_uv: Vector2 = face_uvs[idx0]
 		var normal: Vector3 = (vC - vA).cross(vB - vA).normalized()
+		var tangent: Plane = compute_triangle_tangent(vA, vB, vC, vA_uv, vB_uv, vC_uv)
 		immediate_mesh.surface_set_normal(normal)
-		immediate_mesh.surface_set_uv(face_uvs[idx2])
+		immediate_mesh.surface_set_tangent(tangent)
+		immediate_mesh.surface_set_uv(vA_uv)
 		immediate_mesh.surface_add_vertex(vA)
 		immediate_mesh.surface_set_normal(normal)
-		immediate_mesh.surface_set_uv(face_uvs[idx1])
+		immediate_mesh.surface_set_tangent(tangent)
+		immediate_mesh.surface_set_uv(vB_uv)
 		immediate_mesh.surface_add_vertex(vB)
 		immediate_mesh.surface_set_normal(normal)
-		immediate_mesh.surface_set_uv(face_uvs[idx0])
+		immediate_mesh.surface_set_tangent(tangent)
+		immediate_mesh.surface_set_uv(vC_uv)
 		immediate_mesh.surface_add_vertex(vC)
 		
 	immediate_mesh.surface_end()
@@ -240,12 +264,11 @@ static func compute_polygon_uvs(polygon: Array[Vector2]) -> Array[Vector2]:
 
 	# Duplicate the first UV with v = 1.0 to close the loop.
 	uvs.append(Vector2(0.0, total_length))
-	# uvs.append(uvs[0])
 	return uvs
 
 ## TODO: Use this?
 # Alterantive: use Surfacetool(we don't have to calculate the tagents OR normals ourselves(though the normals weren't too bad))
-func compute_triangle_tangent(v0: Vector3, v1: Vector3, v2: Vector3, uv0: Vector2, uv1: Vector2, uv2: Vector2) -> Vector4:
+static func compute_triangle_tangent(v0: Vector3, v1: Vector3, v2: Vector3, uv0: Vector2, uv1: Vector2, uv2: Vector2) -> Plane:
 	var edge1: Vector3 = v1 - v0
 	var edge2: Vector3 = v2 - v0
 	var deltaUV1: Vector2 = uv1 - uv0
@@ -256,7 +279,7 @@ func compute_triangle_tangent(v0: Vector3, v1: Vector3, v2: Vector3, uv0: Vector
 	tangent = tangent.normalized()
 	# The tangent is stored as a Vector4, where the w component usually represents handedness.
 	# For many cases, you can set w = 1.0 (or -1.0 if needed).
-	return Vector4(tangent.x, tangent.y, tangent.z, 1.0)
+	return Plane(tangent, 1.0)
 
 static func set_line_attributes(line: Line3D, points_2d: Array[Vector2], y_index: int, color: Color, transparency: float) -> void:
 	var y_value: float = Utils.get_y_layer(y_index)

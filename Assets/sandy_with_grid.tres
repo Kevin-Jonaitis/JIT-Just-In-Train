@@ -12,6 +12,6 @@ metallic_texture = ExtResource("2_uhglr")
 metallic_texture_channel = 2
 roughness_texture = ExtResource("2_uhglr")
 roughness_texture_channel = 1
-normal_enabled = true
 normal_texture = ExtResource("4_6kvvh")
+anisotropy = 0.94
 uv1_scale = Vector3(0.1, 0.1, 0.1)

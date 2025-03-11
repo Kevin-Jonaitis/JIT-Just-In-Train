@@ -112,6 +112,11 @@ material_override = ExtResource("9_tapj0")
 gi_mode = 2
 skeleton = NodePath("../../../..")
 
+[node name="TestMesh3" type="MeshInstance3D" parent="World/MouseTracker3D/TrackBuilder3D"]
+material_override = ExtResource("9_tapj0")
+gi_mode = 2
+skeleton = NodePath("../../../..")
+
 [node name="TestMesh2" type="MeshInstance3D" parent="World/MouseTracker3D/TrackBuilder3D"]
 material_override = ExtResource("9_tapj0")
 gi_mode = 2
