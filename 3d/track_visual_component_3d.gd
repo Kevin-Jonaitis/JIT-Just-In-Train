@@ -70,15 +70,15 @@ func update_track_points(points_: Array[Vector2], length: float, get_coord_at_of
 	assert(rail.mesh is ImmediateMesh, "Rail mesh must be an ImmediateMesh")
 
 
-	var debug_path: Array[Vector3] = [
-		Vector3(2, 0, 2),
-		Vector3(4, 0, 2),
-		Vector3(6, 0, 2),
-		Vector3(8, 0, 2),
-	]
+	# var debug_path: Array[Vector3] = [
+	# 	Vector3(2, 0, 2),
+	# 	Vector3(4, 0, 2),
+	# 	Vector3(6, 0, 2),
+	# 	Vector3(8, 0, 2),
+	# ]
 	
 
-	# TrackDrawer.extrude_polygon_along_path(my_polygon, debug_path, rail.mesh)
+	TrackDrawer.extrude_polygon_along_path(TrackDrawer.RAIL_POLYGON_VERTICIES, vector_3_path, rail.mesh)
 	
 	#TODO: DO TRACK DRAWING HERE
 

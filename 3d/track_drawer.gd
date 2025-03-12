@@ -2,10 +2,32 @@ extends RefCounted
 
 class_name TrackDrawer
 
-func calculate_face_normal(v0: Vector3, v1: Vector3, v2: Vector3) -> Vector3:
-	var edge1: Vector3 = v1 - v0
-	var edge2: Vector3 = v2 - v0
-	return edge1.cross(edge2).normalized()
+static var RAIL_GLB_PATH: String = "res://Assets/imported/fixing_up_dont_change_y_flip_normals.glb"
+static var RAIL_POLYGON_SAVE_PATH: String = "res://rail_ordered.res"
+static var RAIL_POLYGON_VERTICIES: PackedVector2Array = load_vertex_resource(RAIL_POLYGON_SAVE_PATH)
+
+
+static func load_vertex_resource(path: String) -> Array[Vector2]:
+	var res: Resource = load(path)
+	if res == null:
+		PolygonGenerator.generate_polygon_from_glb(RAIL_GLB_PATH, RAIL_POLYGON_SAVE_PATH)
+	res = load(path)
+	if res is VertexPolygon:
+		var cast_res: VertexPolygon = res as VertexPolygon
+
+		# Adjust every vertex by height!
+		if cast_res.offset_height == 0:
+			assert(false, "The height _probably_ shouldn't be 0, this is an error")
+		for i: int in range(cast_res.vertices.size()):
+			var v: Vector2 = cast_res.vertices[i]
+			cast_res.vertices[i] = Vector2(v.x, v.y + cast_res.offset_height)
+			
+
+		return (res as VertexPolygon).vertices
+	else:
+		assert(false, "Failed to load vertex resource at: " + path)
+		return []
+
 
 static func extrude_polygon_along_path(
 	polygon_2d: Array[Vector2],

@@ -618,6 +618,6 @@ func test_call() -> void:
 	# material.albedo_color = Color(0,0,255)
 	# test_mesh_instance.set_surface_override_material(0, material)
 
-	TrackDrawer.extrude_polygon_along_path(my_polygon_cw, my_path, my_extruded_mesh)
+	TrackDrawer.extrude_polygon_along_path(TrackDrawer.RAIL_POLYGON_VERTICIES, my_path, my_extruded_mesh)
 
 	# TrackDrawer.extrude_polygon_along_path(my_polygon, my_path_two, my_extruded_mesh_two)

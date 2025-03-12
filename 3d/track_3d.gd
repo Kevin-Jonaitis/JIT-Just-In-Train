@@ -1,5 +1,5 @@
-@tool
 # A piece of track that Bogie nodes follow along
+@tool
 class_name Track3D
 extends Node3D
 

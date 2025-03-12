@@ -1,6 +1,9 @@
-[gd_scene load_steps=3 format=3 uid="uid://dsekv08vlpjf4"]
+[gd_scene load_steps=4 format=3 uid="uid://dsekv08vlpjf4"]
 
 [ext_resource type="Script" uid="uid://37daqa3m3sb6" path="res://3d/track_visual_component_3d.gd" id="1_6r6ns"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6r6ns"]
+albedo_color = Color(0.61136, 0.61136, 0.61136, 1)
 
 [sub_resource type="ImmediateMesh" id="ImmediateMesh_6r6ns"]
 
@@ -8,4 +11,5 @@
 script = ExtResource("1_6r6ns")
 
 [node name="Rail" type="MeshInstance3D" parent="."]
+material_override = SubResource("StandardMaterial3D_6r6ns")
 mesh = SubResource("ImmediateMesh_6r6ns")
