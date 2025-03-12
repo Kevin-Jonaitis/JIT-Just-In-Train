@@ -21,7 +21,7 @@ const MIN_TURN_RADIUS_STEP: float = 1
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	trackBuilder3D.test_call()
+	# trackBuilder3D.test_call()
 	# trackBuilder3D.draw_line_mesh(trackBuilder3D.wall_im_mesh, [Vector2(0,0), Vector2(0,1), Vector2(1,1)])
 
 

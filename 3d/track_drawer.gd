@@ -134,43 +134,93 @@ static func extrude_polygon_along_path(
 				var vC_uv: Vector2 = Vector2(1 - u_next, v_next.y)
 				var vD_uv: Vector2 = Vector2(1 - u_next, v_previous.y)
 				
-				var normal1: Vector3 = (vC - vA).cross(vB - vA).normalized()
-				var tangent1: Plane = compute_triangle_tangent(vA, vB, vC, vA_uv, vB_uv, vC_uv)
+				
+				var normals: Array[Vector3] = calculate_normals(vA, vB, vC, vD)
+				var normal1: Vector3 = normals[0]
+				var normal2: Vector3 = normals[1]
 
-				immediate_mesh.surface_set_normal(normal1)
-				immediate_mesh.surface_set_tangent(tangent1)
-				immediate_mesh.surface_set_uv(vA_uv)
-				immediate_mesh.surface_add_vertex(vA)
-				immediate_mesh.surface_set_normal(normal1)
-				immediate_mesh.surface_set_tangent(tangent1)
-				immediate_mesh.surface_set_uv(vB_uv)
-				immediate_mesh.surface_add_vertex(vB)
-				immediate_mesh.surface_set_normal(normal1)
-				immediate_mesh.surface_set_tangent(tangent1)
-				immediate_mesh.surface_set_uv(vC_uv)
-				immediate_mesh.surface_add_vertex(vC)
+				set_immediate_mesh_values(immediate_mesh, normal1, normal2, vA, vB, vC, vD, vA_uv, vB_uv, vC_uv, vD_uv)
 
-				var normal2: Vector3 = (vA - vC).cross(vD - vC).normalized()
-				var tangent2: Plane = compute_triangle_tangent(vC, vD, vA, vC_uv, vD_uv, vA_uv)
+				# immediate_mesh.surface_set_normal(normal1)
+				# # immediate_mesh.surface_set_tangent(tangent1)
+				# immediate_mesh.surface_set_uv(vA_uv)
+				# immediate_mesh.surface_add_vertex(vA)
+				# immediate_mesh.surface_set_normal(normal1)
+				# # immediate_mesh.surface_set_tangent(tangent1)
+				# immediate_mesh.surface_set_uv(vB_uv)
+				# immediate_mesh.surface_add_vertex(vB)
+				# immediate_mesh.surface_set_normal(normal1)
+				# # immediate_mesh.surface_set_tangent(tangent1)
+				# immediate_mesh.surface_set_uv(vC_uv)
+				# immediate_mesh.surface_add_vertex(vC)
 
-				immediate_mesh.surface_set_normal(normal2)
-				immediate_mesh.surface_set_tangent(tangent2)
-				immediate_mesh.surface_set_uv(vC_uv)
-				immediate_mesh.surface_add_vertex(vC)
-				immediate_mesh.surface_set_normal(normal2)
-				immediate_mesh.surface_set_tangent(tangent2)
-				immediate_mesh.surface_set_uv(vD_uv)
-				immediate_mesh.surface_add_vertex(vD)
-				immediate_mesh.surface_set_normal(normal2)
-				immediate_mesh.surface_set_tangent(tangent2)
-				immediate_mesh.surface_set_uv(vA_uv)
-				immediate_mesh.surface_add_vertex(vA)
+
+				# immediate_mesh.surface_set_normal(normal2)
+				# # immediate_mesh.surface_set_tangent(tangent2)
+				# immediate_mesh.surface_set_uv(vC_uv)
+				# immediate_mesh.surface_add_vertex(vC)
+				# immediate_mesh.surface_set_normal(normal2)
+				# # immediate_mesh.surface_set_tangent(tangent2)
+				# immediate_mesh.surface_set_uv(vD_uv)
+				# immediate_mesh.surface_add_vertex(vD)
+				# immediate_mesh.surface_set_normal(normal2)
+				# # immediate_mesh.surface_set_tangent(tangent2)
+				# immediate_mesh.surface_set_uv(vA_uv)
+				# immediate_mesh.surface_add_vertex(vA)
 
 		# Prepare for next iteration
 		prev_global_points = current_global_points.duplicate(true)
 
+	setup_end_caps(polygon_2d, path_points, immediate_mesh, transforms)
 
-	# 4) Triangulate the polygon  to make end caps
+		
+	immediate_mesh.surface_end()
+
+
+	return immediate_mesh
+
+static func calculate_normals(vA: Vector3, vB: Vector3, vC: Vector3, vD: Vector3) -> Array[Vector3]:
+	var normal1: Vector3 = (vC - vA).cross(vB - vA).normalized()
+	var normal2: Vector3 = (vA - vC).cross(vD - vC).normalized()
+	return [normal1, normal2]
+
+static func set_immediate_mesh_values(immediate_mesh: ImmediateMesh,
+normal1: Vector3, normal2: Vector3, vA: Vector3, vB: Vector3, vC: Vector3, vD: Vector3,
+vA_uv: Vector2, vB_uv: Vector2, vC_uv: Vector2, vD_uv: Vector2) -> void:
+		immediate_mesh.surface_set_normal(normal1)
+		# immediate_mesh.surface_set_tangent(tangent1)
+		immediate_mesh.surface_set_uv(vA_uv)
+		immediate_mesh.surface_add_vertex(vA)
+		immediate_mesh.surface_set_normal(normal1)
+		# immediate_mesh.surface_set_tangent(tangent1)
+		immediate_mesh.surface_set_uv(vB_uv)
+		immediate_mesh.surface_add_vertex(vB)
+		immediate_mesh.surface_set_normal(normal1)
+		# immediate_mesh.surface_set_tangent(tangent1)
+		immediate_mesh.surface_set_uv(vC_uv)
+		immediate_mesh.surface_add_vertex(vC)
+
+
+		immediate_mesh.surface_set_normal(normal2)
+		# immediate_mesh.surface_set_tangent(tangent2)
+		immediate_mesh.surface_set_uv(vC_uv)
+		immediate_mesh.surface_add_vertex(vC)
+		immediate_mesh.surface_set_normal(normal2)
+		# immediate_mesh.surface_set_tangent(tangent2)
+		immediate_mesh.surface_set_uv(vD_uv)
+		immediate_mesh.surface_add_vertex(vD)
+		immediate_mesh.surface_set_normal(normal2)
+		# immediate_mesh.surface_set_tangent(tangent2)
+		immediate_mesh.surface_set_uv(vA_uv)
+		immediate_mesh.surface_add_vertex(vA)
+
+
+static func setup_end_caps(	polygon_2d: Array[Vector2],
+	path_points: Array[Vector3],
+	immediate_mesh: ImmediateMesh,
+	transforms: Array[Transform3D]) -> void:
+	
+	# 4) Triangulate the polygon to make end caps
 	# Front cap
 	var polygon_indices: PackedInt32Array = Geometry2D.triangulate_polygon(polygon_2d)
 
@@ -217,17 +267,17 @@ static func extrude_polygon_along_path(
 		var vA_uv: Vector2 = face_uvs[idx0]
 		var vB_uv: Vector2 = face_uvs[idx1]
 		var vC_uv: Vector2 = face_uvs[idx2]
-		var tangent: Plane = compute_triangle_tangent(vA, vB, vC, vA_uv, vB_uv, vC_uv)
+		# var tangent: Plane = compute_triangle_tangent(vA, vB, vC, vA_uv, vB_uv, vC_uv)
 		immediate_mesh.surface_set_normal(normal)
-		immediate_mesh.surface_set_tangent(tangent)
+		# immediate_mesh.surface_set_tangent(tangent)
 		immediate_mesh.surface_set_uv(vA_uv)
 		immediate_mesh.surface_add_vertex(vA)
 		immediate_mesh.surface_set_normal(normal)
-		immediate_mesh.surface_set_tangent(tangent)
+		# immediate_mesh.surface_set_tangent(tangent)
 		immediate_mesh.surface_set_uv(vB_uv)
 		immediate_mesh.surface_add_vertex(vB)
 		immediate_mesh.surface_set_normal(normal)
-		immediate_mesh.surface_set_tangent(tangent)
+		# immediate_mesh.surface_set_tangent(tangent)
 		immediate_mesh.surface_set_uv(vC_uv)
 		immediate_mesh.surface_add_vertex(vC)
 
@@ -250,23 +300,19 @@ static func extrude_polygon_along_path(
 		var vB_uv: Vector2 = face_uvs[idx1]
 		var vC_uv: Vector2 = face_uvs[idx0]
 		var normal: Vector3 = (vC - vA).cross(vB - vA).normalized()
-		var tangent: Plane = compute_triangle_tangent(vA, vB, vC, vA_uv, vB_uv, vC_uv)
+		# var tangent: Plane = compute_triangle_tangent(vA, vB, vC, vA_uv, vB_uv, vC_uv)
 		immediate_mesh.surface_set_normal(normal)
-		immediate_mesh.surface_set_tangent(tangent)
+		# immediate_mesh.surface_set_tangent(tangent)
 		immediate_mesh.surface_set_uv(vA_uv)
 		immediate_mesh.surface_add_vertex(vA)
 		immediate_mesh.surface_set_normal(normal)
-		immediate_mesh.surface_set_tangent(tangent)
+		# immediate_mesh.surface_set_tangent(tangent)
 		immediate_mesh.surface_set_uv(vB_uv)
 		immediate_mesh.surface_add_vertex(vB)
 		immediate_mesh.surface_set_normal(normal)
-		immediate_mesh.surface_set_tangent(tangent)
+		# immediate_mesh.surface_set_tangent(tangent)
 		immediate_mesh.surface_set_uv(vC_uv)
 		immediate_mesh.surface_add_vertex(vC)
-		
-	immediate_mesh.surface_end()
-
-	return immediate_mesh
 
 # Chat-gpt generated
 static func compute_polygon_uvs(polygon: Array[Vector2]) -> Array[Vector2]:
