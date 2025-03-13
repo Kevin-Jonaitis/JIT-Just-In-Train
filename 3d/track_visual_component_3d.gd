@@ -67,8 +67,10 @@ func update_track_points(points_: Array[Vector2], length: float, get_coord_at_of
 	for point: Vector2 in points_:
 		vector_3_path.append(Vector3(point.x, 0.001, point.y))
 
-	assert(rail.mesh is ImmediateMesh, "Rail mesh must be an ImmediateMesh")
-
+	assert(rail.mesh is ArrayMesh, "Rail mesh must be an ImmediateMesh")
+	var mesh: ArrayMesh = rail.mesh as ArrayMesh
+	# assert(rail.mesh is ImmediateMesh, "Rail mesh must be an ImmediateMesh")
+	# var mesh: ImmediateMesh = rail.mesh as ImmediateMesh
 
 	# var debug_path: Array[Vector3] = [
 	# 	Vector3(2, 0, 2),
@@ -78,7 +80,18 @@ func update_track_points(points_: Array[Vector2], length: float, get_coord_at_of
 	# ]
 	
 
-	TrackDrawer.extrude_polygon_along_path(TrackDrawer.RAIL_POLYGON_VERTICIES, vector_3_path, rail.mesh)
+	#mesh.clear_blend_shapes()
+	
+	mesh.clear_surfaces()
+	TrackDrawer.extrude_polygon_along_path_arraymesh(TrackDrawer.RAIL_POLYGON_VERTICIES, vector_3_path, mesh)
+
+
+	# TrackDrawer.extrude_polygon_along_path(TrackDrawer.RAIL_POLYGON_VERTICIES, vector_3_path, mesh)
+	var rid : RID = mesh.get_rid()
+	var array: Array = mesh.surface_get_arrays(0)
+	var surface: Dictionary = RenderingServer.mesh_get_surface(mesh.get_rid(), 0)
+	var surface1: Dictionary = RenderingServer.mesh_get_surface(mesh.get_rid(), 0)
+	
 	
 	#TODO: DO TRACK DRAWING HERE
 

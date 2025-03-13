@@ -68,6 +68,7 @@ var wall_im_mesh: ImmediateMesh
 @onready var test_mesh_instance_two: MeshInstance3D = $TestMeshTwo
 var my_extruded_mesh: ImmediateMesh
 var my_extruded_mesh_two: ImmediateMesh
+var my_array_mesh: ArrayMesh
 
 
 
@@ -120,8 +121,10 @@ func _ready() -> void:
 	#wall_mesh_instance.set_surface_override_material(0, material)
 	my_extruded_mesh = ImmediateMesh.new()
 	my_extruded_mesh_two = ImmediateMesh.new()
+	my_array_mesh = ArrayMesh.new()
 	# test_mesh_instance = MeshInstance3D.new()
-	test_mesh_instance.mesh = my_extruded_mesh
+	# test_mesh_instance.mesh = my_extruded_mesh
+	test_mesh_instance.mesh = my_array_mesh
 	test_mesh_instance_two.mesh = my_extruded_mesh_two
 
 	# Grid line stuff
@@ -618,6 +621,14 @@ func test_call() -> void:
 	# material.albedo_color = Color(0,0,255)
 	# test_mesh_instance.set_surface_override_material(0, material)
 
-	TrackDrawer.extrude_polygon_along_path(TrackDrawer.RAIL_POLYGON_VERTICIES, my_path, my_extruded_mesh)
+	# TrackDrawer.extrude_polygon_along_path(TrackDrawer.RAIL_POLYGON_VERTICIES, my_path, my_extruded_mesh)
+
+	# my_array_mesh.clear_surfaces()
+	# my_array_mesh.clear_blend_shapes()
+	# TrackDrawer.extrude_polygon_along_path_arraymesh(TrackDrawer.RAIL_POLYGON_VERTICIES,
+	#  my_path_two, my_array_mesh)
+
+	# TrackDrawer.extrude_polygon_along_path(TrackDrawer.RAIL_POLYGON_VERTICIES,
+	#  my_path_two, my_extruded_mesh_two)
 
 	# TrackDrawer.extrude_polygon_along_path(my_polygon, my_path_two, my_extruded_mesh_two)

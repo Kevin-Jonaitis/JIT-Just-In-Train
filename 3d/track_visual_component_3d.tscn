@@ -5,11 +5,11 @@
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6r6ns"]
 albedo_color = Color(0.61136, 0.61136, 0.61136, 1)
 
-[sub_resource type="ImmediateMesh" id="ImmediateMesh_6r6ns"]
+[sub_resource type="ArrayMesh" id="ArrayMesh_6r6ns"]
 
 [node name="TrackVisualComponent3D" type="Node3D"]
 script = ExtResource("1_6r6ns")
 
 [node name="Rail" type="MeshInstance3D" parent="."]
 material_override = SubResource("StandardMaterial3D_6r6ns")
-mesh = SubResource("ImmediateMesh_6r6ns")
+mesh = SubResource("ArrayMesh_6r6ns")

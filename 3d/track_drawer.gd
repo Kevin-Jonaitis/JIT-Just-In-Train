@@ -173,11 +173,15 @@ static func extrude_polygon_along_path(
 
 	setup_end_caps(polygon_2d, path_points, immediate_mesh, transforms)
 
-		
-	immediate_mesh.surface_end()
+	
+	# immediate_mesh.surface_end()
+	SURFACE_END(immediate_mesh)
 
 
 	return immediate_mesh
+
+static func SURFACE_END(immediate_mesh: ImmediateMesh) -> void:
+	immediate_mesh.surface_end()
 
 static func calculate_normals(vA: Vector3, vB: Vector3, vC: Vector3, vD: Vector3) -> Array[Vector3]:
 	var normal1: Vector3 = (vC - vA).cross(vB - vA).normalized()
@@ -351,7 +355,7 @@ static func compute_triangle_tangent(v0: Vector3, v1: Vector3, v2: Vector3, uv0:
 
 static func set_line_attributes(line: Line3D, points_2d: Array[Vector2], y_index: int, color: Color, transparency: float) -> void:
 	var y_value: float = Utils.get_y_layer(y_index)
-	var points: PackedVector3Array = []
+	var points: PackedVector3Array = PackedVector3Array()
 	for point : Vector2 in points_2d:
 		points.append(Vector3(point.x, y_value, point.y))
 	line.points = points
@@ -365,7 +369,7 @@ static func set_line_attributes(line: Line3D, points_2d: Array[Vector2], y_index
 # WE ASSUME THAT ALL POINTS LINE ON THE SAME FLAT(XZ) plane,
 # hence husing Vector3 as our reference
 static func calculate_normals_from_points(points: Array[Vector3]) -> PackedVector3Array:
-	var normals: PackedVector3Array = []
+	var normals: PackedVector3Array = PackedVector3Array()
 	for i: int in range(points.size() - 1):
 		var direction: Vector3 = points[i + 1] - points[i]
 		direction.cross(Vector3.UP).normalized()
@@ -379,3 +383,237 @@ static func calculate_normals_from_points(points: Array[Vector3]) -> PackedVecto
 		var last_normal: Vector3 = Vector3(-last_direction.z, 0, last_direction.x).normalized()
 		normals.append(last_normal)
 	return normals
+
+# Utility function to add a single triangle's data (unindexed) to the arrays.
+# We store each triangle as 3 consecutive vertices, normals, and UVs.
+static func add_triangle(
+	vertex_array: PackedVector3Array,
+	normal_array: PackedVector3Array,
+	uv_array: PackedVector2Array,
+	v0: Vector3, n0: Vector3, uv0: Vector2,
+	v1: Vector3, n1: Vector3, uv1: Vector2,
+	v2: Vector3, n2: Vector3, uv2: Vector2
+) -> void:
+	vertex_array.push_back(v0)
+	normal_array.push_back(n0)
+	uv_array.push_back(uv0)
+
+	vertex_array.push_back(v1)
+	normal_array.push_back(n1)
+	uv_array.push_back(uv1)
+
+	vertex_array.push_back(v2)
+	normal_array.push_back(n2)
+	uv_array.push_back(uv2)
+
+
+# Triangulate the polygon and apply front/back transforms for end caps.
+# No nested functions here – everything top-level.
+static func build_end_caps(
+	polygon_2d: Array[Vector2],
+	polygon_uvs: Array[Vector2],
+	transforms: Array[Transform3D],
+	vertex_array: PackedVector3Array,
+	normal_array: PackedVector3Array,
+	uv_array: PackedVector2Array
+) -> void:
+	var poly_indices: PackedInt32Array = Geometry2D.triangulate_polygon(polygon_2d)
+	if poly_indices.size() < 3:
+		return
+
+	# -- FRONT CAP --
+	var front_transform: Transform3D = transforms[0]
+	var front_vertices : Array[Vector3] = []
+	for i: int in range(polygon_2d.size()):
+		var v2: Vector2 = polygon_2d[i]
+		front_vertices.append(front_transform * (Vector3(v2.x, v2.y, 0.0)))
+
+	# Build each triangle in normal orientation (invert = false).
+	for i: int in range(0, poly_indices.size(), 3):
+		var idx0: int = poly_indices[i]
+		var idx1: int = poly_indices[i + 1]
+		var idx2: int = poly_indices[i + 2]
+		var vA: Vector3 = front_vertices[idx0]
+		var vB: Vector3 = front_vertices[idx1]
+		var vC: Vector3 = front_vertices[idx2]
+		var uvA: Vector2 = polygon_uvs[idx0]
+		var uvB: Vector2 = polygon_uvs[idx1]
+		var uvC: Vector2 = polygon_uvs[idx2]
+		var normal: Vector3 = (vC - vA).cross(vB - vA).normalized()
+
+		add_triangle(
+			vertex_array, normal_array, uv_array,
+			vA, normal, uvA,
+			vB, normal, uvB,
+			vC, normal, uvC
+		)
+
+	# -- BACK CAP (invert so normals face outward) --
+	var back_transform: Transform3D = transforms[transforms.size() - 1]
+	var back_vertices : Array[Vector3] = []
+	for i: int in range(polygon_2d.size()):
+		var v2b: Vector2 = polygon_2d[i]
+		back_vertices.append(back_transform * Vector3(v2b.x, v2b.y, 0.0))
+
+	for i: int in range(0, poly_indices.size(), 3):
+		var idx0b: int = poly_indices[i]
+		var idx1b: int = poly_indices[i + 1]
+		var idx2b: int = poly_indices[i + 2]
+		var vA_b: Vector3 = back_vertices[idx2b]
+		var vB_b: Vector3 = back_vertices[idx1b]
+		var vC_b: Vector3 = back_vertices[idx0b]
+		var uvA_b: Vector2 = polygon_uvs[idx2b]
+		var uvB_b: Vector2 = polygon_uvs[idx1b]
+		var uvC_b: Vector2 = polygon_uvs[idx0b]
+		var normal_b: Vector3 = (vC_b - vA_b).cross(vB_b - vA_b).normalized()
+
+		add_triangle(
+			vertex_array, normal_array, uv_array,
+			vA_b, normal_b, uvA_b,
+			vB_b, normal_b, uvB_b,
+			vC_b, normal_b, uvC_b
+		)
+
+
+# # Compute basic UVs for each polygon vertex. You can adapt this to your needs.
+# static func compute_polygon_uvs(polygon: Array[Vector2]) -> Array[Vector2]:
+# 	var result_uv: Array[Vector2] = []
+# 	for i: int in range(polygon.size()):
+# 		var pt: Vector2 = polygon[i]
+# 		# Example: store (x, y) as is.
+# 		result_uv.append(Vector2(pt.x, pt.y))
+# 	return result_uv
+
+
+# Build ring transforms for each path point.
+static func build_ring_transforms(path_points: Array[Vector3]) -> Array[Transform3D]:
+	var transforms: Array[Transform3D] = []
+	if path_points.size() < 2:
+		return transforms
+
+	for i: int in range(path_points.size()):
+		var face_transform: Transform3D = Transform3D.IDENTITY
+		if i == 0 and path_points.size() > 1:
+			var direction: Vector3 = path_points[1] - path_points[0]
+			face_transform = face_transform.looking_at(direction, Vector3.UP, true)
+			face_transform = face_transform.translated(path_points[i])
+		elif i < path_points.size() - 1:
+			var prev_dir: Vector3 = path_points[i] - path_points[i - 1]
+			var next_dir: Vector3 = path_points[i + 1] - path_points[i]
+			var direction2: Vector3 = (prev_dir + next_dir)
+			face_transform = face_transform.looking_at(direction2, Vector3.UP, true)
+			face_transform = face_transform.translated(path_points[i])
+		elif i == path_points.size() - 1:
+			var direction_last: Vector3 = path_points[i] - path_points[i - 1]
+			face_transform = face_transform.looking_at(direction_last, Vector3.UP, true)
+			face_transform = face_transform.translated(path_points[i])
+		transforms.append(face_transform)
+
+	return transforms
+
+
+# MAIN FUNCTION
+# Build an ArrayMesh from extruding a 2D polygon along a path, unindexed geometry.
+static func extrude_polygon_along_path_arraymesh(
+	polygon_2d: Array[Vector2],
+	path_points: Array[Vector3],
+	out_mesh: ArrayMesh
+) -> void:
+
+	# if polygon_2d.is_empty() or path_points.size() < 2:
+	# 	return out_mesh
+
+	# 1) Precompute polygon UVs
+	var polygon_uvs: Array[Vector2] = compute_polygon_uvs(polygon_2d)
+
+	# 2) Compute cumulative distances (for potential UV logic)
+	var total_length: float = 0.0
+	var cumulative_dist: Array[float] = [0.0]
+	for i: int in range(1, path_points.size()):
+		total_length += path_points[i - 1].distance_to(path_points[i])
+		cumulative_dist.append(total_length)
+
+	# 3) Build ring transforms
+	var transforms: Array[Transform3D] = build_ring_transforms(path_points)
+
+	# 4) Prepare arrays (unindexed)
+	var vertex_array: PackedVector3Array = PackedVector3Array()
+	var normal_array: PackedVector3Array = PackedVector3Array()
+	var uv_array: PackedVector2Array = PackedVector2Array()
+
+	var prev_global_points: Array[Vector3] = []
+	var current_global_points: Array[Vector3] = []
+
+	# Build side walls
+	for ring_i: int in range(transforms.size()):
+		current_global_points.clear()
+		var t: Transform3D = transforms[ring_i]
+
+		# Convert each 2D vertex
+		for j: int in range(polygon_2d.size()):
+			var v2: Vector2 = polygon_2d[j]
+			current_global_points.append(t * Vector3(v2.x, v2.y, 0.0))
+		# Duplicate first vertex
+		current_global_points.append(current_global_points[0])
+
+		if ring_i > 0:
+			var ring_size: int = polygon_2d.size() + 1
+			for j: int in range(ring_size):
+				var j_next: int = (j + 1) % ring_size
+
+				var vA: Vector3 = prev_global_points[j]
+				var vB: Vector3 = prev_global_points[j_next]
+				var vC: Vector3 = current_global_points[j_next]
+				var vD: Vector3 = current_global_points[j]
+
+				# Example UV logic (u from cumulative_dist, v from polygon_uvs)
+				var u_prev: float = cumulative_dist[ring_i - 1]
+				var u_next: float = cumulative_dist[ring_i]
+				var v_prev_uv: Vector2 = polygon_uvs[j]
+				var v_next_uv: Vector2 = polygon_uvs[j_next]
+
+				var vA_uv: Vector2 = Vector2(1.0 - u_prev, v_prev_uv.y)
+				var vB_uv: Vector2 = Vector2(1.0 - u_prev, v_next_uv.y)
+				var vC_uv: Vector2 = Vector2(1.0 - u_next, v_next_uv.y)
+				var vD_uv: Vector2 = Vector2(1.0 - u_next, v_prev_uv.y)
+
+				# Triangle 1: (vA, vB, vC)
+				var normal1: Vector3 = (vC - vA).cross(vB - vA).normalized()
+				add_triangle(
+					vertex_array, normal_array, uv_array,
+					vA, normal1, vA_uv,
+					vB, normal1, vB_uv,
+					vC, normal1, vC_uv
+				)
+
+				# Triangle 2: (vC, vD, vA)
+				var normal2: Vector3 = (vA - vC).cross(vD - vC).normalized()
+				add_triangle(
+					vertex_array, normal_array, uv_array,
+					vC, normal2, vC_uv,
+					vD, normal2, vD_uv,
+					vA, normal2, vA_uv
+				)
+
+		prev_global_points = current_global_points.duplicate(true)
+
+	# Build end caps
+	build_end_caps(polygon_2d, polygon_uvs, transforms,
+		vertex_array, normal_array, uv_array
+	)
+
+	# Create the ArrayMesh from the final arrays
+	var arrays: Array = []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = vertex_array
+	arrays[Mesh.ARRAY_NORMAL] = normal_array
+	arrays[Mesh.ARRAY_TEX_UV] = uv_array
+	# No index array => unindexed triangle list
+
+	set_the_arrays(out_mesh, arrays)
+	# out_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	# return out_mesh
+
+
+static func set_the_arrays(mesh: ArrayMesh, arrays: Array) -> void:
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
