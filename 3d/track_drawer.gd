@@ -391,7 +391,7 @@ static func add_triangle_indexed(
 	normal_array: PackedVector3Array,
 	uv_array: PackedVector2Array,
 	index_array: PackedInt32Array,
-	vec_map: Dictionary[Vector3, int],
+	vec_map: Dictionary[Vector3, Dictionary],
 	v0: Vector3, n0: Vector3, uv0: Vector2,
 	v1: Vector3, n1: Vector3, uv1: Vector2,
 	v2: Vector3, n2: Vector3, uv2: Vector2
@@ -437,7 +437,7 @@ static func build_end_caps(
 	normal_array: PackedVector3Array,
 	uv_array: PackedVector2Array,
 	index_array: PackedInt32Array,
-	vertex_map: Dictionary[Vector3, int]
+	vertex_map: Dictionary[Vector3, Dictionary]
 ) -> void:
 	var poly_indices: PackedInt32Array = Geometry2D.triangulate_polygon(polygon_2d)
 	if poly_indices.size() < 3:
@@ -557,7 +557,7 @@ static func extrude_polygon_along_path_arraymesh(
 	out_mesh: ArrayMesh
 ) -> void:
 
-	var vertex_map: Dictionary[Vector3, int] = {}
+	var vertex_map: Dictionary[Vector3, Dictionary] = {}
 
 	# if polygon_2d.is_empty() or path_points.size() < 2:
 	# 	return out_mesh
@@ -591,6 +591,11 @@ static func extrude_polygon_along_path_arraymesh(
 	var vB_uv: Vector2
 	var vC_uv: Vector2
 	var vD_uv: Vector2
+	var previous_simplify_dir: Vector3 = Vector3.ZERO  # (declare this outside the loop)
+	const ANGLE_DIFF : float = 0.0872665 # 5 degrees in radians
+	var angle_simplify_dot: float = cos(ANGLE_DIFF) 
+	var previous_ring_i: int = 0
+
 
 
 	# Build side walls
@@ -606,6 +611,19 @@ static func extrude_polygon_along_path_arraymesh(
 		current_global_points.append(current_global_points[0])
 
 		if ring_i > 0:
+
+			var prev_point: Vector3 = transforms[ring_i - 1].origin
+			var curr_point: Vector3 = transforms[ring_i].origin
+			var current_extrusion_dir: Vector3 = (curr_point - prev_point).normalized()
+			#// If the turn is very slight (dot product near 1), then skip creating a new ring:
+			if ANGLE_DIFF > 0.0 and ring_i > 1 and ring_i != transforms.size() - 1 and previous_simplify_dir.dot(current_extrusion_dir) > angle_simplify_dot:
+				# You can either "skip" this ring completely or merge it with the previous one.
+				# For example, simply skip adding faces for this ring:
+				continue
+			else:
+				previous_simplify_dir = current_extrusion_dir
+
+
 			var ring_size: int = polygon_2d.size() + 1
 			for j: int in range(ring_size):
 				var j_next: int = (j + 1) % ring_size
@@ -616,7 +634,7 @@ static func extrude_polygon_along_path_arraymesh(
 				vD = current_global_points[j]
 
 				# Example UV logic (u from cumulative_dist, v from polygon_uvs)
-				var u_prev: float = cumulative_dist[ring_i - 1]
+				var u_prev: float = cumulative_dist[previous_ring_i]
 				var u_next: float = cumulative_dist[ring_i]
 				var v_prev_uv: Vector2 = polygon_uvs[j]
 				var v_next_uv: Vector2 = polygon_uvs[j_next]
@@ -645,6 +663,7 @@ static func extrude_polygon_along_path_arraymesh(
 					vD, normal2, vD_uv,
 					vA, normal2, vA_uv
 				)
+			previous_ring_i = ring_i # Used so we know the previous value incase we skip over some due to our polygon simplification
 
 		prev_global_points = current_global_points.duplicate(true)
 
@@ -660,7 +679,7 @@ static func extrude_polygon_along_path_arraymesh(
 	arrays[Mesh.ARRAY_VERTEX] = vertex_array
 	arrays[Mesh.ARRAY_NORMAL] = normal_array
 	arrays[Mesh.ARRAY_TEX_UV] = uv_array
-	# arrays[Mesh.ARRAY_INDEX] = index_array
+	arrays[Mesh.ARRAY_INDEX] = index_array
 	# No index array => unindexed triangle list
 
 	set_the_arrays(out_mesh, arrays)
@@ -669,25 +688,38 @@ static func extrude_polygon_along_path_arraymesh(
 
 static func get_vertex_index(
 	pos: Vector3, norm: Vector3, uv: Vector2,
-	vertex_map: Dictionary[Vector3, int],
+	vertex_map: Dictionary,  # Maps a key (String) to a Dictionary: { "index": int, "sum_normal": Vector3, "sum_uv": Vector2, "count": int }
 	vertex_array: PackedVector3Array,
 	normal_array: PackedVector3Array,
 	uv_array: PackedVector2Array
 ) -> int:
-	# Create a key for this vertex based on its attributes.
-	# var key: String = str(pos.x, ",", pos.y, ",", pos.z, "|", norm.x, ",", norm.y, ",", norm.z, "|", uv.x, ",", uv.y)
+	# Create a key by rounding the position values to 3 decimal places.
+	# This means vertices within 0.001 units will be considered identical.
+	# var key: String = str(int(pos.x * 1000), ",", int(pos.y * 1000), ",", int(pos.z * 1000))
 	if vertex_map.has(pos):
-		var index: int = vertex_map[pos]
-		normal_array[index] = normal_array[index] * norm
-		uv_array[index] = uv_array[index] * uv
-		return vertex_map[pos]
+		var data: Dictionary = vertex_map[pos]
+		data["sum_normal"] += norm
+		data["sum_uv"] += uv
+		data["count"] += 1
+		var avg_normal: Vector3 = ((data["sum_normal"] / data["count"]) as Vector3).normalized()
+		var avg_uv: Vector2 = data["sum_uv"] / data["count"]
+		var idx: int = data["index"]
+		normal_array[idx] = avg_normal
+		uv_array[idx] = avg_uv
+		return idx
 	else:
 		var new_index: int = vertex_array.size()
 		vertex_array.push_back(pos)
-		normal_array.push_back(norm)
+		normal_array.push_back(norm.normalized())
 		uv_array.push_back(uv)
-		vertex_map[pos] = new_index
+		vertex_map[pos] = {
+			"index": new_index,
+			"sum_normal": norm,
+			"sum_uv": uv,
+			"count": 1
+		}
 		return new_index
+
 
 static func set_the_arrays(mesh: ArrayMesh, arrays: Array) -> void:
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)

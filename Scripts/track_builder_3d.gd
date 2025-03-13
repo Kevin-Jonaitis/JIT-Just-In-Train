@@ -404,7 +404,9 @@ func compute_path() -> void:
 		trackEndingAngle, 
 		minAllowedRadius,
 		track_mode_flag,
-		curve_type_flag)
+		curve_type_flag,
+		false ## draw paths!!
+		)
 
 	self.validTrack = valid
 
@@ -612,6 +614,9 @@ func test_call() -> void:
 		Vector3(4, 0, 2),
 		Vector3(6, 0, 2),
 		Vector3(8, 0, 2),
+		Vector3(10, 0, 2),
+		Vector3(12, 0, 2),
+		Vector3(14, 0, 2),
 	]
 	
 	test_mesh_instance.create_debug_tangents()
@@ -628,13 +633,13 @@ func test_call() -> void:
 	# TrackDrawer.extrude_polygon_along_path_arraymesh(TrackDrawer.RAIL_POLYGON_VERTICIES,
 	#  my_path_two, my_array_mesh)
 
-	TrackDrawer.extrude_polygon_along_path_arraymesh(my_polygon_cw, my_path_two, my_array_mesh)
+	# TrackDrawer.extrude_polygon_along_path_arraymesh(my_polygon_cw, my_path_two, my_array_mesh)
 	# TrackDrawer.extrude_polygon_along_path(my_polygon_cw, my_path_two, my_extruded_mesh_two)
 
-	var rid : RID = my_array_mesh.get_rid()
-	var array: Array = my_array_mesh.surface_get_arrays(0)
-	var surface: Dictionary = RenderingServer.mesh_get_surface(my_array_mesh.get_rid(), 0)
-	var surface1: Dictionary = RenderingServer.mesh_get_surface(my_array_mesh.get_rid(), 0)
+	# var rid : RID = my_array_mesh.get_rid()
+	# var array: Array = my_array_mesh.surface_get_arrays(0)
+	# var surface: Dictionary = RenderingServer.mesh_get_surface(my_array_mesh.get_rid(), 0)
+	# var surface1: Dictionary = RenderingServer.mesh_get_surface(my_array_mesh.get_rid(), 0)
 	
 
 	# TrackDrawer.extrude_polygon_along_path(TrackDrawer.RAIL_POLYGON_VERTICIES,

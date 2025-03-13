@@ -66,11 +66,12 @@ func calculate_and_draw_paths(start_pos: Vector2, start_angle: float, end_pos: V
 
 
 func draw_dubin_paths() -> void:
-	var path_colors: Array[Color] = [Color.PURPLE, Color.AQUA, Color.BLACK, Color.YELLOW, Color.ORANGE, Color.GREEN]
-	var index: int = 0;
-	for path: DubinPath in paths:
-		draw_path(path, path_colors[index], index)
-		index += 1
+	pass
+	# var path_colors: Array[Color] = [Color.PURPLE, Color.AQUA, Color.BLACK, Color.YELLOW, Color.ORANGE, Color.GREEN]
+	# var index: int = 0;
+	# for path: DubinPath in paths:
+	# 	draw_path(path, path_colors[index], index)
+	# 	index += 1
 
 func clear_drawables() -> void:
 	for line: Line3D in drawable_paths.values():
