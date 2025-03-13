@@ -610,6 +610,8 @@ func test_call() -> void:
 	var my_path_two: Array[Vector3] = [
 		Vector3(2, 0, 2),
 		Vector3(4, 0, 2),
+		Vector3(6, 0, 2),
+		Vector3(8, 0, 2),
 	]
 	
 	test_mesh_instance.create_debug_tangents()
@@ -627,6 +629,7 @@ func test_call() -> void:
 	#  my_path_two, my_array_mesh)
 
 	TrackDrawer.extrude_polygon_along_path_arraymesh(my_polygon_cw, my_path_two, my_array_mesh)
+	# TrackDrawer.extrude_polygon_along_path(my_polygon_cw, my_path_two, my_extruded_mesh_two)
 
 	var rid : RID = my_array_mesh.get_rid()
 	var array: Array = my_array_mesh.surface_get_arrays(0)

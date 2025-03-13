@@ -386,14 +386,30 @@ static func calculate_normals_from_points(points: Array[Vector3]) -> PackedVecto
 
 # Utility function to add a single triangle's data (unindexed) to the arrays.
 # We store each triangle as 3 consecutive vertices, normals, and UVs.
-static func add_triangle(
+static func add_triangle_indexed(
 	vertex_array: PackedVector3Array,
 	normal_array: PackedVector3Array,
 	uv_array: PackedVector2Array,
+	index_array: PackedInt32Array,
+	vec_map: Dictionary[Vector3, int],
 	v0: Vector3, n0: Vector3, uv0: Vector2,
 	v1: Vector3, n1: Vector3, uv1: Vector2,
 	v2: Vector3, n2: Vector3, uv2: Vector2
 ) -> void:
+
+	# var idx_A: int = get_vertex_index(v0, n0, uv0, vec_map, vertex_array, normal_array, uv_array)
+	# var idx_B: int = get_vertex_index(v1, n1, uv1, vec_map, vertex_array, normal_array, uv_array)
+	# var idx_C: int = get_vertex_index(v2, n2, uv2, vec_map, vertex_array, normal_array, uv_array)
+	# index_array.push_back(idx_A)
+	# index_array.push_back(idx_B)
+	# index_array.push_back(idx_C)
+
+
+
+	# We'll just append these 3 new vertices to the end for now:
+	var base_index: int = vertex_array.size()
+
+	# Push the vertex data:
 	vertex_array.push_back(v0)
 	normal_array.push_back(n0)
 	uv_array.push_back(uv0)
@@ -406,6 +422,10 @@ static func add_triangle(
 	normal_array.push_back(n2)
 	uv_array.push_back(uv2)
 
+	# Now add the indices referencing them:
+	index_array.push_back(base_index)
+	index_array.push_back(base_index + 1)
+	index_array.push_back(base_index + 2)
 
 # Triangulate the polygon and apply front/back transforms for end caps.
 # No nested functions here – everything top-level.
@@ -415,11 +435,37 @@ static func build_end_caps(
 	transforms: Array[Transform3D],
 	vertex_array: PackedVector3Array,
 	normal_array: PackedVector3Array,
-	uv_array: PackedVector2Array
+	uv_array: PackedVector2Array,
+	index_array: PackedInt32Array,
+	vertex_map: Dictionary[Vector3, int]
 ) -> void:
 	var poly_indices: PackedInt32Array = Geometry2D.triangulate_polygon(polygon_2d)
 	if poly_indices.size() < 3:
 		return
+
+
+	var min_x: float = polygon_2d[0].x
+	var min_y: float = polygon_2d[0].y
+	var max_x: float = polygon_2d[0].x
+	var max_y: float = polygon_2d[0].y
+
+	for pt: Vector2 in polygon_2d:
+		min_x = min(min_x, pt.x)
+		max_x = max(max_x, pt.x)
+		min_y = min(min_y, pt.y)
+		max_y = max(max_y, pt.y)
+		
+	# At beginning, start at 0 at the top, and start at top of range, and go down
+	var face_uvs: Array[Vector2] = []
+	for i: int in range(polygon_2d.size()):
+		var pt: Vector2 = polygon_2d[i]
+		#noramlize between range_x and range_y
+		var u_offset: float = pt.x - max_x
+		var v_offset: float = pt.y - max_y
+		var u_normalized: float = u_offset
+		var v_normalized: float = v_offset
+		
+		face_uvs.append(Vector2(u_normalized, v_normalized))
 
 	# -- FRONT CAP --
 	var front_transform: Transform3D = transforms[0]
@@ -436,13 +482,14 @@ static func build_end_caps(
 		var vA: Vector3 = front_vertices[idx0]
 		var vB: Vector3 = front_vertices[idx1]
 		var vC: Vector3 = front_vertices[idx2]
-		var uvA: Vector2 = polygon_uvs[idx0]
-		var uvB: Vector2 = polygon_uvs[idx1]
-		var uvC: Vector2 = polygon_uvs[idx2]
+		var uvA: Vector2 = face_uvs[idx0]
+		var uvB: Vector2 = face_uvs[idx1]
+		var uvC: Vector2 = face_uvs[idx2]
 		var normal: Vector3 = (vC - vA).cross(vB - vA).normalized()
 
-		add_triangle(
-			vertex_array, normal_array, uv_array,
+		add_triangle_indexed(
+			vertex_array, normal_array, uv_array, index_array,
+			vertex_map,
 			vA, normal, uvA,
 			vB, normal, uvB,
 			vC, normal, uvC
@@ -462,28 +509,18 @@ static func build_end_caps(
 		var vA_b: Vector3 = back_vertices[idx2b]
 		var vB_b: Vector3 = back_vertices[idx1b]
 		var vC_b: Vector3 = back_vertices[idx0b]
-		var uvA_b: Vector2 = polygon_uvs[idx2b]
-		var uvB_b: Vector2 = polygon_uvs[idx1b]
-		var uvC_b: Vector2 = polygon_uvs[idx0b]
+		var uvA_b: Vector2 = face_uvs[idx2b]
+		var uvB_b: Vector2 = face_uvs[idx1b]
+		var uvC_b: Vector2 = face_uvs[idx0b]
 		var normal_b: Vector3 = (vC_b - vA_b).cross(vB_b - vA_b).normalized()
 
-		add_triangle(
-			vertex_array, normal_array, uv_array,
+		add_triangle_indexed(
+			vertex_array, normal_array, uv_array, index_array,
+			vertex_map,
 			vA_b, normal_b, uvA_b,
 			vB_b, normal_b, uvB_b,
 			vC_b, normal_b, uvC_b
 		)
-
-
-# # Compute basic UVs for each polygon vertex. You can adapt this to your needs.
-# static func compute_polygon_uvs(polygon: Array[Vector2]) -> Array[Vector2]:
-# 	var result_uv: Array[Vector2] = []
-# 	for i: int in range(polygon.size()):
-# 		var pt: Vector2 = polygon[i]
-# 		# Example: store (x, y) as is.
-# 		result_uv.append(Vector2(pt.x, pt.y))
-# 	return result_uv
-
 
 # Build ring transforms for each path point.
 static func build_ring_transforms(path_points: Array[Vector3]) -> Array[Transform3D]:
@@ -520,6 +557,8 @@ static func extrude_polygon_along_path_arraymesh(
 	out_mesh: ArrayMesh
 ) -> void:
 
+	var vertex_map: Dictionary[Vector3, int] = {}
+
 	# if polygon_2d.is_empty() or path_points.size() < 2:
 	# 	return out_mesh
 
@@ -540,6 +579,7 @@ static func extrude_polygon_along_path_arraymesh(
 	var vertex_array: PackedVector3Array = PackedVector3Array()
 	var normal_array: PackedVector3Array = PackedVector3Array()
 	var uv_array: PackedVector2Array = PackedVector2Array()
+	var index_array: PackedInt32Array = PackedInt32Array()
 
 	var prev_global_points: Array[Vector3] = []
 	var current_global_points: Array[Vector3] = []
@@ -588,8 +628,9 @@ static func extrude_polygon_along_path_arraymesh(
 
 				# Triangle 1: (vA, vB, vC)
 				var normal1: Vector3 = (vC - vA).cross(vB - vA).normalized()
-				add_triangle(
-					vertex_array, normal_array, uv_array,
+				add_triangle_indexed(
+					vertex_array, normal_array, uv_array, index_array,
+					vertex_map,
 					vA, normal1, vA_uv,
 					vB, normal1, vB_uv,
 					vC, normal1, vC_uv
@@ -597,8 +638,9 @@ static func extrude_polygon_along_path_arraymesh(
 
 				# Triangle 2: (vC, vD, vA)
 				var normal2: Vector3 = (vA - vC).cross(vD - vC).normalized()
-				add_triangle(
-					vertex_array, normal_array, uv_array,
+				add_triangle_indexed(
+					vertex_array, normal_array, uv_array, index_array,
+					vertex_map,
 					vC, normal2, vC_uv,
 					vD, normal2, vD_uv,
 					vA, normal2, vA_uv
@@ -608,7 +650,8 @@ static func extrude_polygon_along_path_arraymesh(
 
 	# Build end caps
 	build_end_caps(polygon_2d, polygon_uvs, transforms,
-		vertex_array, normal_array, uv_array
+		vertex_array, normal_array, uv_array, index_array,
+		vertex_map
 	)
 
 	# Create the ArrayMesh from the final arrays
@@ -617,12 +660,34 @@ static func extrude_polygon_along_path_arraymesh(
 	arrays[Mesh.ARRAY_VERTEX] = vertex_array
 	arrays[Mesh.ARRAY_NORMAL] = normal_array
 	arrays[Mesh.ARRAY_TEX_UV] = uv_array
+	# arrays[Mesh.ARRAY_INDEX] = index_array
 	# No index array => unindexed triangle list
 
 	set_the_arrays(out_mesh, arrays)
 	# out_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 	# return out_mesh
 
+static func get_vertex_index(
+	pos: Vector3, norm: Vector3, uv: Vector2,
+	vertex_map: Dictionary[Vector3, int],
+	vertex_array: PackedVector3Array,
+	normal_array: PackedVector3Array,
+	uv_array: PackedVector2Array
+) -> int:
+	# Create a key for this vertex based on its attributes.
+	# var key: String = str(pos.x, ",", pos.y, ",", pos.z, "|", norm.x, ",", norm.y, ",", norm.z, "|", uv.x, ",", uv.y)
+	if vertex_map.has(pos):
+		var index: int = vertex_map[pos]
+		normal_array[index] = normal_array[index] * norm
+		uv_array[index] = uv_array[index] * uv
+		return vertex_map[pos]
+	else:
+		var new_index: int = vertex_array.size()
+		vertex_array.push_back(pos)
+		normal_array.push_back(norm)
+		uv_array.push_back(uv)
+		vertex_map[pos] = new_index
+		return new_index
 
 static func set_the_arrays(mesh: ArrayMesh, arrays: Array) -> void:
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)

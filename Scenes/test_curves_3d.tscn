@@ -1,4 +1,4 @@
-[gd_scene load_steps=33 format=3 uid="uid://bo61ftst6mm73"]
+[gd_scene load_steps=35 format=3 uid="uid://bo61ftst6mm73"]
 
 [ext_resource type="Texture2D" uid="uid://cqycvtbraqa6n" path="res://Assets/imported/sandy_gravel_02_4k.gltf/textures/sandy_gravel_02_diff_4k.jpg" id="1_2be7a"]
 [ext_resource type="Script" uid="uid://dw703jxjsc0hp" path="res://Scripts/camera_3d.gd" id="1_dh1k4"]
@@ -13,6 +13,7 @@
 [ext_resource type="Texture2D" uid="uid://ckl20pb85srtb" path="res://Assets/imported/sandy_gravel_02_4k.gltf/textures/sandy_gravel_02_nor_gl_4k.jpg" id="4_oya12"]
 [ext_resource type="Script" uid="uid://b80rmxayma5du" path="res://3d/trains.gd" id="5_mwpqo"]
 [ext_resource type="Script" uid="uid://bx3we6mgiapf2" path="res://3d/junctions.gd" id="6_qva4k"]
+[ext_resource type="Texture2D" uid="uid://bnc548s8vx7ph" path="res://Assets/test texture.png" id="9_oya12"]
 [ext_resource type="Material" uid="uid://du8evelo05fgv" path="res://Assets/sandy_with_grid.tres" id="9_tapj0"]
 [ext_resource type="Texture2D" uid="uid://fndbqout21sd" path="res://Assets/imported/smile.png" id="10_tmgjn"]
 [ext_resource type="Script" uid="uid://brqqd6a5il3by" path="res://addons/lines_and_trails_3d/line_3d.gd" id="11_l4xbo"]
@@ -46,7 +47,10 @@ uv1_scale = Vector3(100, 100, 100)
 size = Vector2(1000, 1000)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tapj0"]
-albedo_color = Color(0.323584, 0.323584, 0.323584, 1)
+albedo_texture = ExtResource("9_oya12")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yquia"]
+albedo_texture = ExtResource("9_oya12")
 
 [sub_resource type="SphereMesh" id="SphereMesh_ldvnk"]
 
@@ -109,10 +113,11 @@ axis = 1
 texture = ExtResource("4_elx2p")
 
 [node name="TestMeshTwo" type="MeshInstance3D" parent="World/MouseTracker3D/TrackBuilder3D"]
+material_override = SubResource("StandardMaterial3D_tapj0")
 gi_mode = 2
 
 [node name="TestMesh" type="MeshInstance3D" parent="World/MouseTracker3D/TrackBuilder3D"]
-material_override = SubResource("StandardMaterial3D_tapj0")
+material_override = SubResource("StandardMaterial3D_yquia")
 gi_mode = 2
 skeleton = NodePath("../../../..")
 
