@@ -28,296 +28,6 @@ static func load_vertex_resource(path: String) -> Array[Vector2]:
 		assert(false, "Failed to load vertex resource at: " + path)
 		return []
 
-
-static func extrude_polygon_along_path(
-	polygon_2d: Array[Vector2],
-	path_points: Array[Vector3],
-	immediate_mesh: ImmediateMesh
-) -> ImmediateMesh:
-	# Early exit if invalid input
-	if polygon_2d.is_empty() or path_points.size() < 2:
-		return
-
-	# Precompute the UVs for the starting polygon.
-	var polygon_uvs: Array[Vector2] = compute_polygon_uvs(polygon_2d)
-
-	# Compute the total length of the path.
-	var total_length: float = 0.0
-	var cumulative_dist : Array[float] = [0]
-	for i: int in range(1, path_points.size()):
-		total_length += path_points[i - 1].distance_to(path_points[i])
-		cumulative_dist.append(total_length)
-
-
-	# 2) Create a Transform3D array for each segment of the path
-	var transforms: Array[Transform3D] = []
-
-	var points_count: int = path_points.size()
-	for i: int in range(points_count):
-		var face_transform: Transform3D = Transform3D()			
-		if (i == 0):
-			var direction: Vector3 = (path_points[1] - path_points[0])
-			face_transform = face_transform.looking_at(direction, Vector3.UP, true)
-			face_transform = face_transform.translated(path_points[i])
-			transforms.append(face_transform)
-		elif i < points_count - 1:
-			var prev_dir: Vector3 = (path_points[i] - path_points[i - 1])
-			var next_dir: Vector3 = (path_points[i + 1] - path_points[i])
-			var direction: Vector3 = (prev_dir + next_dir)
-			face_transform = face_transform.looking_at(direction, Vector3.UP, true)
-			face_transform = face_transform.translated(path_points[i])
-			transforms.append(face_transform)
-		elif(i == points_count - 1):
-			# For the last point, reuse orientation from the previous or just identity
-			var direction: Vector3 = (path_points[i] - path_points[i - 1])
-			face_transform = face_transform.looking_at(direction, Vector3.UP, true)
-			face_transform = face_transform.translated(path_points[i])
-			transforms.append(face_transform) 
-		else:
-			assert(false, "We should never get here")
-
-	# 3) Build side walls between consecutive rings
-	immediate_mesh.clear_surfaces()
-	immediate_mesh.surface_begin(Mesh.PRIMITIVE_TRIANGLES)
-
-	var prev_global_points: Array[Vector3] = []
-	var current_global_points: Array[Vector3] = []
-	# print("STARTING EXTRUSION")
-	# print(" ")
-	for i: int in range(transforms.size()):
-		current_global_points.clear()
-
-		var t: Transform3D = transforms[i]
-		# Convert each 2D vertex to 3D for this ring
-		for v2: Vector2 in polygon_2d:
-			var v3: Vector3 = Vector3(v2.x, v2.y, 0.0) # WE ASSUME THE POLYGON IS 2D and "UPRIGHT" on the X AXIS
-			current_global_points.append(t * v3)
-			pass
-		# Duplicate the first vertex so the ring is closed.
-		# This is used to close the UV mapping
-		current_global_points.append(current_global_points[0])
-
-		# ********************************************************************************
-		# ********************************************************************************
-		# NOTE: ALL THESE TRIANGLES ARE IN CW WINDING ORDER(as required by godot).
-		# The face normal points OUT of the side of the face that's wound in CW order.
-		# Note this DOESNT seem to agree with the "right-hand" coordinate system of godot; 
-		# so don't use that when determing the normal vector, only look at which side of the polygon 
-		# causes the winding order to be CW, and know the normal points out in that direction
-		# Then, for the code that calculates the _actual_ normal below, use the right-hand rule to determine
-		# which way the normal should go. I know, it's confusing.
-		# ALSO, we should feed in the 2d pologyons in CW order to have the expected outcome
-		# ********************************************************************************
-		# ********************************************************************************
-
-		# If we have a previous ring, connect them with quads -> triangles
-		if i > 0:
-			var ring_size: int = polygon_2d.size() + 1  # note the extra vertex!
-			for j: int in range(ring_size):  # use ring_size-1 since j_next wraps around #TODO: Is this true? it works without it
-				var j_next: int = (j + 1) % ring_size
-
-				
-				var vA: Vector3 = prev_global_points[j]
-				var vB: Vector3 = prev_global_points[j_next]
-				var vC: Vector3 = current_global_points[j_next]
-				var vD: Vector3 = current_global_points[j]
-				
-				var u_previous: float = cumulative_dist[i - 1]
-				var u_next: float = cumulative_dist[i]
-				var v_previous: Vector2 = polygon_uvs[j]
-				var v_next: Vector2 = polygon_uvs[j_next]
-
-				# Probably need to add an offset here so that the texture starts at the "beginning"
-				# But it's not worth the effort to figure it out since these textures don't really have a start/end
-				var vA_uv: Vector2 = Vector2(1 - u_previous, v_previous.y)
-				var vB_uv: Vector2 = Vector2(1 - u_previous, v_next.y)
-				var vC_uv: Vector2 = Vector2(1 - u_next, v_next.y)
-				var vD_uv: Vector2 = Vector2(1 - u_next, v_previous.y)
-				
-				
-				var normals: Array[Vector3] = calculate_normals(vA, vB, vC, vD)
-				var normal1: Vector3 = normals[0]
-				var normal2: Vector3 = normals[1]
-
-				set_immediate_mesh_values(immediate_mesh, normal1, normal2, vA, vB, vC, vD, vA_uv, vB_uv, vC_uv, vD_uv)
-
-				# immediate_mesh.surface_set_normal(normal1)
-				# # immediate_mesh.surface_set_tangent(tangent1)
-				# immediate_mesh.surface_set_uv(vA_uv)
-				# immediate_mesh.surface_add_vertex(vA)
-				# immediate_mesh.surface_set_normal(normal1)
-				# # immediate_mesh.surface_set_tangent(tangent1)
-				# immediate_mesh.surface_set_uv(vB_uv)
-				# immediate_mesh.surface_add_vertex(vB)
-				# immediate_mesh.surface_set_normal(normal1)
-				# # immediate_mesh.surface_set_tangent(tangent1)
-				# immediate_mesh.surface_set_uv(vC_uv)
-				# immediate_mesh.surface_add_vertex(vC)
-
-
-				# immediate_mesh.surface_set_normal(normal2)
-				# # immediate_mesh.surface_set_tangent(tangent2)
-				# immediate_mesh.surface_set_uv(vC_uv)
-				# immediate_mesh.surface_add_vertex(vC)
-				# immediate_mesh.surface_set_normal(normal2)
-				# # immediate_mesh.surface_set_tangent(tangent2)
-				# immediate_mesh.surface_set_uv(vD_uv)
-				# immediate_mesh.surface_add_vertex(vD)
-				# immediate_mesh.surface_set_normal(normal2)
-				# # immediate_mesh.surface_set_tangent(tangent2)
-				# immediate_mesh.surface_set_uv(vA_uv)
-				# immediate_mesh.surface_add_vertex(vA)
-
-		# Prepare for next iteration
-		prev_global_points = current_global_points.duplicate(true)
-
-	setup_end_caps(polygon_2d, path_points, immediate_mesh, transforms)
-
-	
-	# immediate_mesh.surface_end()
-	SURFACE_END(immediate_mesh)
-
-
-	return immediate_mesh
-
-static func SURFACE_END(immediate_mesh: ImmediateMesh) -> void:
-	immediate_mesh.surface_end()
-
-static func calculate_normals(vA: Vector3, vB: Vector3, vC: Vector3, vD: Vector3) -> Array[Vector3]:
-	var normal1: Vector3 = (vC - vA).cross(vB - vA).normalized()
-	var normal2: Vector3 = (vA - vC).cross(vD - vC).normalized()
-	return [normal1, normal2]
-
-static func set_immediate_mesh_values(immediate_mesh: ImmediateMesh,
-normal1: Vector3, normal2: Vector3, vA: Vector3, vB: Vector3, vC: Vector3, vD: Vector3,
-vA_uv: Vector2, vB_uv: Vector2, vC_uv: Vector2, vD_uv: Vector2) -> void:
-		immediate_mesh.surface_set_normal(normal1)
-		# immediate_mesh.surface_set_tangent(tangent1)
-		immediate_mesh.surface_set_uv(vA_uv)
-		immediate_mesh.surface_add_vertex(vA)
-		immediate_mesh.surface_set_normal(normal1)
-		# immediate_mesh.surface_set_tangent(tangent1)
-		immediate_mesh.surface_set_uv(vB_uv)
-		immediate_mesh.surface_add_vertex(vB)
-		immediate_mesh.surface_set_normal(normal1)
-		# immediate_mesh.surface_set_tangent(tangent1)
-		immediate_mesh.surface_set_uv(vC_uv)
-		immediate_mesh.surface_add_vertex(vC)
-
-
-		immediate_mesh.surface_set_normal(normal2)
-		# immediate_mesh.surface_set_tangent(tangent2)
-		immediate_mesh.surface_set_uv(vC_uv)
-		immediate_mesh.surface_add_vertex(vC)
-		immediate_mesh.surface_set_normal(normal2)
-		# immediate_mesh.surface_set_tangent(tangent2)
-		immediate_mesh.surface_set_uv(vD_uv)
-		immediate_mesh.surface_add_vertex(vD)
-		immediate_mesh.surface_set_normal(normal2)
-		# immediate_mesh.surface_set_tangent(tangent2)
-		immediate_mesh.surface_set_uv(vA_uv)
-		immediate_mesh.surface_add_vertex(vA)
-
-
-static func setup_end_caps(	polygon_2d: Array[Vector2],
-	path_points: Array[Vector3],
-	immediate_mesh: ImmediateMesh,
-	transforms: Array[Transform3D]) -> void:
-	
-	# 4) Triangulate the polygon to make end caps
-	# Front cap
-	var polygon_indices: PackedInt32Array = Geometry2D.triangulate_polygon(polygon_2d)
-
-	var front_transform: Transform3D = transforms[0]
-	var front_vertices: Array[Vector3] = []
-	for v2: Vector2 in polygon_2d:
-		var v3: Vector3 = Vector3(v2.x, v2.y, 0.0)
-		front_vertices.append(front_transform * v3)
-
-
-	var min_x: float = polygon_2d[0].x
-	var min_y: float = polygon_2d[0].y
-	var max_x: float = polygon_2d[0].x
-	var max_y: float = polygon_2d[0].y
-
-	for pt: Vector2 in polygon_2d:
-		min_x = min(min_x, pt.x)
-		max_x = max(max_x, pt.x)
-		min_y = min(min_y, pt.y)
-		max_y = max(max_y, pt.y)
-		
-	# At beginning, start at 0 at the top, and start at top of range, and go down
-	var face_uvs: Array[Vector2] = []
-	for i: int in range(polygon_2d.size()):
-		var pt: Vector2 = polygon_2d[i]
-		#noramlize between range_x and range_y
-		var u_offset: float = pt.x - max_x
-		var v_offset: float = pt.y - max_y
-		var u_normalized: float = u_offset
-		var v_normalized: float = v_offset
-		
-		face_uvs.append(Vector2(u_normalized, v_normalized))
-
-	# Use the triangulation data from polygon_indices.
-	for i: int  in range(0, polygon_indices.size(), 3):
-		var idx0: int = polygon_indices[i]
-		var idx1: int = polygon_indices[i + 1]
-		var idx2: int = polygon_indices[i + 2]
-		var vA: Vector3 = front_vertices[idx0]
-		var vB: Vector3 = front_vertices[idx1]
-		var vC: Vector3 = front_vertices[idx2]
-		var normal: Vector3 = (vC - vA).cross(vB- vA).normalized()
-
-		var vA_uv: Vector2 = face_uvs[idx0]
-		var vB_uv: Vector2 = face_uvs[idx1]
-		var vC_uv: Vector2 = face_uvs[idx2]
-		# var tangent: Plane = compute_triangle_tangent(vA, vB, vC, vA_uv, vB_uv, vC_uv)
-		immediate_mesh.surface_set_normal(normal)
-		# immediate_mesh.surface_set_tangent(tangent)
-		immediate_mesh.surface_set_uv(vA_uv)
-		immediate_mesh.surface_add_vertex(vA)
-		immediate_mesh.surface_set_normal(normal)
-		# immediate_mesh.surface_set_tangent(tangent)
-		immediate_mesh.surface_set_uv(vB_uv)
-		immediate_mesh.surface_add_vertex(vB)
-		immediate_mesh.surface_set_normal(normal)
-		# immediate_mesh.surface_set_tangent(tangent)
-		immediate_mesh.surface_set_uv(vC_uv)
-		immediate_mesh.surface_add_vertex(vC)
-
-	# Back cap (at the end)
-	var back_transform: Transform3D = transforms[transforms.size() - 1]
-	var back_vertices: Array[Vector3] = []
-	for v2: Vector2 in polygon_2d:
-		var v3: Vector3 = Vector3(v2.x, v2.y, 0.0)
-		back_vertices.append(back_transform * v3)
-
-	# Reverse the triangle winding so that the normal points outward.
-	for i: int in range(0, polygon_indices.size(), 3):
-		var idx0: int = polygon_indices[i]
-		var idx1: int = polygon_indices[i + 1]
-		var idx2: int = polygon_indices[i + 2]
-		var vA: Vector3 = back_vertices[idx2]
-		var vB: Vector3 = back_vertices[idx1]
-		var vC: Vector3 = back_vertices[idx0]
-		var vA_uv: Vector2 = face_uvs[idx2]
-		var vB_uv: Vector2 = face_uvs[idx1]
-		var vC_uv: Vector2 = face_uvs[idx0]
-		var normal: Vector3 = (vC - vA).cross(vB - vA).normalized()
-		# var tangent: Plane = compute_triangle_tangent(vA, vB, vC, vA_uv, vB_uv, vC_uv)
-		immediate_mesh.surface_set_normal(normal)
-		# immediate_mesh.surface_set_tangent(tangent)
-		immediate_mesh.surface_set_uv(vA_uv)
-		immediate_mesh.surface_add_vertex(vA)
-		immediate_mesh.surface_set_normal(normal)
-		# immediate_mesh.surface_set_tangent(tangent)
-		immediate_mesh.surface_set_uv(vB_uv)
-		immediate_mesh.surface_add_vertex(vB)
-		immediate_mesh.surface_set_normal(normal)
-		# immediate_mesh.surface_set_tangent(tangent)
-		immediate_mesh.surface_set_uv(vC_uv)
-		immediate_mesh.surface_add_vertex(vC)
-
 # Chat-gpt generated
 static func compute_polygon_uvs(polygon: Array[Vector2]) -> Array[Vector2]:
 	var uvs: Array[Vector2] = []
@@ -386,25 +96,15 @@ static func calculate_normals_from_points(points: Array[Vector3]) -> PackedVecto
 
 # Utility function to add a single triangle's data (unindexed) to the arrays.
 # We store each triangle as 3 consecutive vertices, normals, and UVs.
-static func add_triangle_indexed(
+static func add_triangle(
 	vertex_array: PackedVector3Array,
 	normal_array: PackedVector3Array,
 	uv_array: PackedVector2Array,
 	index_array: PackedInt32Array,
-	vec_map: Dictionary[Vector3, Dictionary],
 	v0: Vector3, n0: Vector3, uv0: Vector2,
 	v1: Vector3, n1: Vector3, uv1: Vector2,
 	v2: Vector3, n2: Vector3, uv2: Vector2
 ) -> void:
-
-	# var idx_A: int = get_vertex_index(v0, n0, uv0, vec_map, vertex_array, normal_array, uv_array)
-	# var idx_B: int = get_vertex_index(v1, n1, uv1, vec_map, vertex_array, normal_array, uv_array)
-	# var idx_C: int = get_vertex_index(v2, n2, uv2, vec_map, vertex_array, normal_array, uv_array)
-	# index_array.push_back(idx_A)
-	# index_array.push_back(idx_B)
-	# index_array.push_back(idx_C)
-
-
 
 	# We'll just append these 3 new vertices to the end for now:
 	var base_index: int = vertex_array.size()
@@ -437,12 +137,10 @@ static func build_end_caps(
 	normal_array: PackedVector3Array,
 	uv_array: PackedVector2Array,
 	index_array: PackedInt32Array,
-	vertex_map: Dictionary[Vector3, Dictionary]
 ) -> void:
 	var poly_indices: PackedInt32Array = Geometry2D.triangulate_polygon(polygon_2d)
 	if poly_indices.size() < 3:
 		return
-
 
 	var min_x: float = polygon_2d[0].x
 	var min_y: float = polygon_2d[0].y
@@ -487,9 +185,8 @@ static func build_end_caps(
 		var uvC: Vector2 = face_uvs[idx2]
 		var normal: Vector3 = (vC - vA).cross(vB - vA).normalized()
 
-		add_triangle_indexed(
+		add_triangle(
 			vertex_array, normal_array, uv_array, index_array,
-			vertex_map,
 			vA, normal, uvA,
 			vB, normal, uvB,
 			vC, normal, uvC
@@ -514,9 +211,8 @@ static func build_end_caps(
 		var uvC_b: Vector2 = face_uvs[idx0b]
 		var normal_b: Vector3 = (vC_b - vA_b).cross(vB_b - vA_b).normalized()
 
-		add_triangle_indexed(
+		add_triangle(
 			vertex_array, normal_array, uv_array, index_array,
-			vertex_map,
 			vA_b, normal_b, uvA_b,
 			vB_b, normal_b, uvB_b,
 			vC_b, normal_b, uvC_b
@@ -558,9 +254,6 @@ static func extrude_polygon_along_path_arraymesh(
 ) -> void:
 
 	var vertex_map: Dictionary[Vector3, Dictionary] = {}
-
-	# if polygon_2d.is_empty() or path_points.size() < 2:
-	# 	return out_mesh
 
 	# 1) Precompute polygon UVs
 	var polygon_uvs: Array[Vector2] = compute_polygon_uvs(polygon_2d)
@@ -646,9 +339,8 @@ static func extrude_polygon_along_path_arraymesh(
 
 				# Triangle 1: (vA, vB, vC)
 				var normal1: Vector3 = (vC - vA).cross(vB - vA).normalized()
-				add_triangle_indexed(
+				add_triangle(
 					vertex_array, normal_array, uv_array, index_array,
-					vertex_map,
 					vA, normal1, vA_uv,
 					vB, normal1, vB_uv,
 					vC, normal1, vC_uv
@@ -656,9 +348,8 @@ static func extrude_polygon_along_path_arraymesh(
 
 				# Triangle 2: (vC, vD, vA)
 				var normal2: Vector3 = (vA - vC).cross(vD - vC).normalized()
-				add_triangle_indexed(
+				add_triangle(
 					vertex_array, normal_array, uv_array, index_array,
-					vertex_map,
 					vC, normal2, vC_uv,
 					vD, normal2, vD_uv,
 					vA, normal2, vA_uv
@@ -669,8 +360,7 @@ static func extrude_polygon_along_path_arraymesh(
 
 	# Build end caps
 	build_end_caps(polygon_2d, polygon_uvs, transforms,
-		vertex_array, normal_array, uv_array, index_array,
-		vertex_map
+		vertex_array, normal_array, uv_array, index_array
 	)
 
 	# Create the ArrayMesh from the final arrays
@@ -685,41 +375,6 @@ static func extrude_polygon_along_path_arraymesh(
 	set_the_arrays(out_mesh, arrays)
 	# out_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 	# return out_mesh
-
-static func get_vertex_index(
-	pos: Vector3, norm: Vector3, uv: Vector2,
-	vertex_map: Dictionary,  # Maps a key (String) to a Dictionary: { "index": int, "sum_normal": Vector3, "sum_uv": Vector2, "count": int }
-	vertex_array: PackedVector3Array,
-	normal_array: PackedVector3Array,
-	uv_array: PackedVector2Array
-) -> int:
-	# Create a key by rounding the position values to 3 decimal places.
-	# This means vertices within 0.001 units will be considered identical.
-	# var key: String = str(int(pos.x * 1000), ",", int(pos.y * 1000), ",", int(pos.z * 1000))
-	if vertex_map.has(pos):
-		var data: Dictionary = vertex_map[pos]
-		data["sum_normal"] += norm
-		data["sum_uv"] += uv
-		data["count"] += 1
-		var avg_normal: Vector3 = ((data["sum_normal"] / data["count"]) as Vector3).normalized()
-		var avg_uv: Vector2 = data["sum_uv"] / data["count"]
-		var idx: int = data["index"]
-		normal_array[idx] = avg_normal
-		uv_array[idx] = avg_uv
-		return idx
-	else:
-		var new_index: int = vertex_array.size()
-		vertex_array.push_back(pos)
-		normal_array.push_back(norm.normalized())
-		uv_array.push_back(uv)
-		vertex_map[pos] = {
-			"index": new_index,
-			"sum_normal": norm,
-			"sum_uv": uv,
-			"count": 1
-		}
-		return new_index
-
 
 static func set_the_arrays(mesh: ArrayMesh, arrays: Array) -> void:
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
