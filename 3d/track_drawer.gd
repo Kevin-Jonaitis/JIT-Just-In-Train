@@ -543,6 +543,15 @@ static func extrude_polygon_along_path_arraymesh(
 
 	var prev_global_points: Array[Vector3] = []
 	var current_global_points: Array[Vector3] = []
+	var vA: Vector3
+	var vB: Vector3
+	var vC: Vector3
+	var vD: Vector3
+	var vA_uv: Vector2
+	var vB_uv: Vector2
+	var vC_uv: Vector2
+	var vD_uv: Vector2
+
 
 	# Build side walls
 	for ring_i: int in range(transforms.size()):
@@ -561,10 +570,10 @@ static func extrude_polygon_along_path_arraymesh(
 			for j: int in range(ring_size):
 				var j_next: int = (j + 1) % ring_size
 
-				var vA: Vector3 = prev_global_points[j]
-				var vB: Vector3 = prev_global_points[j_next]
-				var vC: Vector3 = current_global_points[j_next]
-				var vD: Vector3 = current_global_points[j]
+				vA = prev_global_points[j]
+				vB = prev_global_points[j_next]
+				vC = current_global_points[j_next]
+				vD = current_global_points[j]
 
 				# Example UV logic (u from cumulative_dist, v from polygon_uvs)
 				var u_prev: float = cumulative_dist[ring_i - 1]
@@ -572,10 +581,10 @@ static func extrude_polygon_along_path_arraymesh(
 				var v_prev_uv: Vector2 = polygon_uvs[j]
 				var v_next_uv: Vector2 = polygon_uvs[j_next]
 
-				var vA_uv: Vector2 = Vector2(1.0 - u_prev, v_prev_uv.y)
-				var vB_uv: Vector2 = Vector2(1.0 - u_prev, v_next_uv.y)
-				var vC_uv: Vector2 = Vector2(1.0 - u_next, v_next_uv.y)
-				var vD_uv: Vector2 = Vector2(1.0 - u_next, v_prev_uv.y)
+				vA_uv = Vector2(1.0 - u_prev, v_prev_uv.y)
+				vB_uv = Vector2(1.0 - u_prev, v_next_uv.y)
+				vC_uv = Vector2(1.0 - u_next, v_next_uv.y)
+				vD_uv = Vector2(1.0 - u_next, v_prev_uv.y)
 
 				# Triangle 1: (vA, vB, vC)
 				var normal1: Vector3 = (vC - vA).cross(vB - vA).normalized()
