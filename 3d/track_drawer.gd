@@ -253,6 +253,7 @@ static func extrude_polygon_along_path_arraymesh(
 	out_mesh: ArrayMesh
 ) -> void:
 
+	# TrackArrayBuilder.PrintNodeName()
 	var vertex_map: Dictionary[Vector3, Dictionary] = {}
 
 	# 1) Precompute polygon UVs

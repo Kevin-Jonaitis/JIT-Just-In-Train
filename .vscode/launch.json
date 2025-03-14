@@ -8,5 +8,15 @@
             "request": "launch",
             "additional_options": "--screen 1",
 		}, 
+		{
+            "name": "Play",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "C:\\Users\\kevit\\Documents\\My Games\\GAME ASSETS\\Godot_v4.4-stable_mono_win64\\Godot_v4.4-stable_mono_win64.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false,
+        }
     ]
 }

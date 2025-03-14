@@ -4,3 +4,6 @@
 .import/
 addons/gut/*
 /Assets/imported
+/.vs/*
+/cpp/.vs/*
+*.vcxproj
