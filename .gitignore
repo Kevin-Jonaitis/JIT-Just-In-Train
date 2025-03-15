@@ -10,3 +10,4 @@ addons/gut/*
 bin/*
 *.obj
 *.obj.import
+.sconsign.dblite

@@ -155,7 +155,7 @@ skeleton = NodePath("")
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.935098, -0.0487296, -0.351022, 0.348938, -0.0464433, 0.935994, -0.0619132, -0.997732, -0.0264254, -273.376, 217.454, -21.5664)
 shadow_enabled = true
-shadow_bias = 0.0
+shadow_bias = 0.272
 directional_shadow_mode = 1
 
 [node name="CSGPolygon3D" type="CSGPolygon3D" parent="."]

@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3 uid="uid://c38tst03wuim4"]
+
+[ext_resource type="Texture2D" uid="uid://swsml3kqpwau" path="res://Dank.png" id="1_3ni1q"]
+[ext_resource type="Script" uid="uid://c18lndwlkxg4p" path="res://gd_example.gd" id="2_ehvmd"]
+
+[node name="Node2D" type="Node2D"]
+
+[node name="GDExample" type="GDExample" parent="."]
+texture = ExtResource("1_3ni1q")
+script = ExtResource("2_ehvmd")

@@ -8,6 +8,8 @@ static var RAIL_POLYGON_VERTICIES: PackedVector2Array = load_vertex_resource(RAI
 
 
 static func load_vertex_resource(path: String) -> Array[Vector2]:
+	var test : GDExample = GDExample.new()
+	test.amplitude = 40
 	var res: Resource = load(path)
 	if res == null:
 		PolygonGenerator.generate_polygon_from_glb(RAIL_GLB_PATH, RAIL_POLYGON_SAVE_PATH)
@@ -252,7 +254,7 @@ static func extrude_polygon_along_path_arraymesh(
 	path_points: Array[Vector3],
 	out_mesh: ArrayMesh
 ) -> void:
-
+	MeshGenerator.extrude_polygon_along_path_arraymesh(polygon_2d, path_points, out_mesh)
 	# TrackArrayBuilder.PrintNodeName()
 	var vertex_map: Dictionary[Vector3, Dictionary] = {}
 
