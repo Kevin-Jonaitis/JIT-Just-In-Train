@@ -7,3 +7,6 @@ addons/gut/*
 /.vs/*
 /cpp/.vs/*
 *.vcxproj
+bin/*
+*.obj
+*.obj.import
