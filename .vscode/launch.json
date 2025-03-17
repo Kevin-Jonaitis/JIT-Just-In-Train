@@ -17,6 +17,36 @@
             "args": [],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
-        }
+        },
+		// {
+		// 	"name": "Launch Project",
+		// 	"type": "cppvsdbg",
+		// 	"request": "launch",
+		// 	"program": "C:\\Users\\kevit\\Documents\\My Games\\GAME ASSETS\\Godot_v4.4-stable_mono_win64\\Godot_v4.4-stable_mono_win64.exe",
+		// 	// Change the arguments below for the project you want to test with.
+		// 	// To run the project instead of editing it, remove the "--editor" argument.
+		// 	"args": [ "--editor", "--path", "C:\\Users\\kevit\\Documents\\My Games\\jit--just-in-train"],
+		// 	"stopAtEntry": false,
+		// 	"cwd": "${workspaceFolder}",
+		// 	"environment": [],
+		// 	"console": "internalConsole",
+		// 	"visualizerFile": "${workspaceFolder}/platform/windows/godot.natvis",
+		// 	// "preLaunchTask": "build"
+		//   }
+		{
+			"name": "Launch C++ code",
+			"type": "cppvsdbg",
+			"request": "launch",
+			"program": "C:\\Users\\kevit\\Documents\\My Games\\GAME ASSETS\\Godot_v4.4-stable_mono_win64\\Godot_v4.4-stable_mono_win64.exe",
+			"args": ["--path", "C:\\Users\\kevit\\Documents\\My Games\\jit--just-in-train"],
+			"cwd": "C:\\Users\\kevit\\Documents\\My Games\\jit--just-in-train",
+			"console": "internalConsole",
+		 },
+		 {
+			"name": "Attach to Godot Editor (MSVC)",
+			"type": "cppvsdbg",
+			"request": "attach",
+			"processId": "${command:pickProcess}",
+		  }
     ]
 }
