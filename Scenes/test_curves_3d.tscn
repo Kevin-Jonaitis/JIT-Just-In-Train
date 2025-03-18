@@ -1,4 +1,4 @@
-[gd_scene load_steps=35 format=3 uid="uid://bo61ftst6mm73"]
+[gd_scene load_steps=39 format=3 uid="uid://bo61ftst6mm73"]
 
 [ext_resource type="Texture2D" uid="uid://cqycvtbraqa6n" path="res://Assets/imported/sandy_gravel_02_4k.gltf/textures/sandy_gravel_02_diff_4k.jpg" id="1_2be7a"]
 [ext_resource type="Script" uid="uid://dw703jxjsc0hp" path="res://Scripts/camera_3d.gd" id="1_dh1k4"]
@@ -20,6 +20,10 @@
 [ext_resource type="Material" uid="uid://p3mhytxfjmio" path="res://Assets/sandy_gravel.tres" id="12_2be7a"]
 [ext_resource type="Script" uid="uid://dat4dm1pytyav" path="res://addons/lines_and_trails_3d/trail_3d.gd" id="12_ldvnk"]
 [ext_resource type="Script" uid="uid://bf1rv43fffhyb" path="res://Scripts/fps.gd" id="14_i7f5g"]
+[ext_resource type="PackedScene" uid="uid://dxxkbwcc7s7kn" path="res://Assets/imported/Rails A.fbx" id="21_oya12"]
+[ext_resource type="PackedScene" uid="uid://damp1vpgr8ar" path="res://Assets/imported/crosstie.glb" id="22_4dmv2"]
+[ext_resource type="PackedScene" uid="uid://c6dsp0hrtyelw" path="res://Assets/imported/crosstie2.glb" id="23_yquia"]
+[ext_resource type="ArrayMesh" uid="uid://114feu6uyhrv" path="res://Assets/imported/crosstie.res" id="24_go0cu"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_aeeh6"]
 render_priority = 1
@@ -262,3 +266,34 @@ mesh = SubResource("SphereMesh_elx2p")
 offset_right = 40.0
 offset_bottom = 22.3333
 script = ExtResource("14_i7f5g")
+
+[node name="Rails A" parent="." instance=ExtResource("21_oya12")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.21899, 0, 2.51202)
+
+[node name="crosstie" parent="." instance=ExtResource("22_4dmv2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.23872, 0.442169, 4.77346)
+
+[node name="crosstie2" parent="." instance=ExtResource("23_yquia")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.4094, 0, 28.025)
+
+[node name="crosstie3" parent="." instance=ExtResource("22_4dmv2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.9232, 0, 29.9329)
+
+[node name="crosstie4" parent="." instance=ExtResource("22_4dmv2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.4631, 0, -6.71571)
+
+[node name="crosstie5" parent="." instance=ExtResource("23_yquia")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.49961, 0, -3.43168)
+
+[node name="crosstie6" parent="." instance=ExtResource("22_4dmv2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.100498, 0, -5.4263)
+
+[node name="crosstie7" parent="." instance=ExtResource("23_yquia")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.50011, 0, -4.15681)
+
+[node name="crosstie8" parent="." instance=ExtResource("22_4dmv2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.43163, 0.0127563, -2.15101)
+
+[node name="Crosstie" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0.301505, 0, 76.5184)
+mesh = ExtResource("24_go0cu")

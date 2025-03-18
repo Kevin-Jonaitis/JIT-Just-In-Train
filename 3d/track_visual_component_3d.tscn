@@ -1,15 +1,31 @@
-[gd_scene load_steps=4 format=3 uid="uid://dsekv08vlpjf4"]
+[gd_scene load_steps=6 format=3 uid="uid://dsekv08vlpjf4"]
 
 [ext_resource type="Script" uid="uid://37daqa3m3sb6" path="res://3d/track_visual_component_3d.gd" id="1_6r6ns"]
+[ext_resource type="ArrayMesh" uid="uid://114feu6uyhrv" path="res://Assets/imported/crosstie.res" id="2_58dnm"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6r6ns"]
-albedo_color = Color(0.61136, 0.61136, 0.61136, 1)
+albedo_color = Color(0.109253, 0.032315, 0, 1)
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_6r6ns"]
+
+[sub_resource type="MultiMesh" id="MultiMesh_dmx43"]
+transform_format = 1
+instance_count = 6
+mesh = ExtResource("2_58dnm")
+buffer = PackedFloat32Array(1.4013e-45, 0, 3.22299e-44, 3.08286e-44, 1.4013e-45, 2.94273e-44, 2.8026e-45, 1.4013e-45, 3.08286e-44, 2.94273e-44, 2.8026e-45, 2.8026e-44, 4.2039e-45, 2.8026e-45, 2.94273e-44, 2.8026e-44, 4.2039e-45, 2.66247e-44, 5.60519e-45, 4.2039e-45, 2.8026e-44, 2.66247e-44, 5.60519e-45, 2.52234e-44, 7.00649e-45, 5.60519e-45, 2.66247e-44, 2.52234e-44, 7.00649e-45, 2.38221e-44, 8.40779e-45, 7.00649e-45, 2.52234e-44, 2.38221e-44, 8.40779e-45, 2.24208e-44, 9.80909e-45, 8.40779e-45, 2.38221e-44, 2.24208e-44, 9.80909e-45, 2.10195e-44, 1.12104e-44, 9.80909e-45, 2.24208e-44, 2.10195e-44, 1.12104e-44, 1.96182e-44, 1.26117e-44, 1.12104e-44, 2.10195e-44, 1.96182e-44, 1.26117e-44, 1.82169e-44, 1.4013e-44, 1.26117e-44, 1.96182e-44, 1.82169e-44, 1.4013e-44, 1.68156e-44, 1.54143e-44, 1.4013e-44, 1.82169e-44, 1.68156e-44, 6.16571e-44, 6.44597e-44, 6.30584e-44, 6.30584e-44, 6.5861e-44, 6.44597e-44, 6.44597e-44, 0)
 
 [node name="TrackVisualComponent3D" type="Node3D"]
 script = ExtResource("1_6r6ns")
 
-[node name="Rail" type="MeshInstance3D" parent="."]
+[node name="RailRight" type="MeshInstance3D" parent="."]
 material_override = SubResource("StandardMaterial3D_6r6ns")
 mesh = SubResource("ArrayMesh_6r6ns")
+skeleton = NodePath("../RailLeft")
+
+[node name="RailLeft" type="MeshInstance3D" parent="."]
+material_override = SubResource("StandardMaterial3D_6r6ns")
+mesh = SubResource("ArrayMesh_6r6ns")
+
+[node name="Crossties" type="MultiMeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0)
+multimesh = SubResource("MultiMesh_dmx43")
