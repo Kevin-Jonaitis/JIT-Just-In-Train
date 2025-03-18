@@ -633,7 +633,8 @@ func test_call() -> void:
 	# TrackDrawer.extrude_polygon_along_path_arraymesh(TrackDrawer.RAIL_POLYGON_VERTICIES,
 	#  my_path_two, my_array_mesh)
 
-	# TrackDrawer.extrude_polygon_along_path_arraymesh(my_polygon_cw, my_path_two, my_array_mesh)
+	# MeshGenerator.extrude_polygon_along_path_arraymesh(my_polygon_ccw, my_path_two, my_array_mesh)
+	# TrackDrawer.extrude_polygon_along_path_arraymesh(my_polygon_ccw, my_path_two, my_array_mesh)
 	# TrackDrawer.extrude_polygon_along_path(my_polygon_cw, my_path_two, my_extruded_mesh_two)
 
 	# var rid : RID = my_array_mesh.get_rid()
