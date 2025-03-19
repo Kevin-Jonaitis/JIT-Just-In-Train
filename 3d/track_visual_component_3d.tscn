@@ -2,9 +2,7 @@
 
 [ext_resource type="Script" uid="uid://37daqa3m3sb6" path="res://3d/track_visual_component_3d.gd" id="1_6r6ns"]
 [ext_resource type="ArrayMesh" uid="uid://114feu6uyhrv" path="res://Assets/imported/crosstie.res" id="2_58dnm"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6r6ns"]
-albedo_color = Color(0.109253, 0.032315, 0, 1)
+[ext_resource type="Material" uid="uid://cu2r0uhskmml" path="res://Assets/rail_color.tres" id="2_dmx43"]
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_6r6ns"]
 
@@ -18,14 +16,13 @@ buffer = PackedFloat32Array(1.4013e-45, 0, 3.22299e-44, 3.08286e-44, 1.4013e-45,
 script = ExtResource("1_6r6ns")
 
 [node name="RailRight" type="MeshInstance3D" parent="."]
-material_override = SubResource("StandardMaterial3D_6r6ns")
+material_override = ExtResource("2_dmx43")
 mesh = SubResource("ArrayMesh_6r6ns")
 skeleton = NodePath("../RailLeft")
 
 [node name="RailLeft" type="MeshInstance3D" parent="."]
-material_override = SubResource("StandardMaterial3D_6r6ns")
+material_override = ExtResource("2_dmx43")
 mesh = SubResource("ArrayMesh_6r6ns")
 
 [node name="Crossties" type="MultiMeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0)
 multimesh = SubResource("MultiMesh_dmx43")

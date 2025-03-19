@@ -2,8 +2,13 @@
 extends Node3D
 class_name TrackVisualComponent3D
 
-var crosstie_distance: float = 7
-
+var crosstie_distance: float = 1.5
+const CROSSTIE_HEIGHT_OFFSET: float = 0.254 # Height offset for crossties
+const CROSSTIE_SCALE: float = 0.01 # Scale for crossties
+const CROSSTIE_ROTATION_X_AXIS: float = PI / 2 # Rotation for crossties around the x-axis
+const RAIL_HEIGHT_OFFSET: float = 0.275 # Height offset for rails
+const RAIL_OFFSET_CENTER_EACH_SIDE: float = 1.1 # Offset for rails on each side of the track
+const STARTING_ANGLE_CROSSTIES: float = 3 *PI / 2
 
 # We should use this visual building system:
 # https://www.factorio.com/blog/post/fff-163
@@ -84,20 +89,20 @@ func offset_paths(path: Array[Vector2], offset: float) -> Dictionary[String, Pac
 		if (i == 0):
 			left_vector2 = extra_start_point + (normal * offset)
 			right_vector2 = extra_start_point - (normal * offset)
-			left_path.append(Vector3(left_vector2.x, 0.001, left_vector2.y))
-			right_path.append(Vector3(right_vector2.x, 0.001, right_vector2.y))
+			left_path.append(Vector3(left_vector2.x, RAIL_HEIGHT_OFFSET, left_vector2.y))
+			right_path.append(Vector3(right_vector2.x, RAIL_HEIGHT_OFFSET, right_vector2.y))
 		
 		left_vector2 = path[i] + normal * offset
 		right_vector2 = path[i] - normal * offset
-		left_path.append(Vector3(left_vector2.x, 0.001, left_vector2.y))
-		right_path.append(Vector3(right_vector2.x, 0.001, right_vector2.y))
+		left_path.append(Vector3(left_vector2.x, RAIL_HEIGHT_OFFSET, left_vector2.y))
+		right_path.append(Vector3(right_vector2.x, RAIL_HEIGHT_OFFSET, right_vector2.y))
 		
 		# Add extra point to remove "gaps" bewteen rails
 		if(i == n - 1):
 			left_vector2 = extra_end_point + (normal * offset)
 			right_vector2 = extra_end_point - (normal * offset)
-			left_path.append(Vector3(left_vector2.x, 0.001, left_vector2.y))
-			right_path.append(Vector3(right_vector2.x, 0.001, right_vector2.y))
+			left_path.append(Vector3(left_vector2.x, RAIL_HEIGHT_OFFSET, left_vector2.y))
+			right_path.append(Vector3(right_vector2.x, RAIL_HEIGHT_OFFSET, right_vector2.y))
 
 	return {"left": left_path, "right": right_path}
 
@@ -113,7 +118,7 @@ func update_track_points(points_: Array[Vector2], length: float, get_coord_at_of
 	## so that there's better overlap with the next segment, and we don't get "sliver gaps" between the train paths
 	var draw_points: Array[Vector2] = points_.duplicate()	
 
-	var results: Dictionary[String, PackedVector3Array] = offset_paths(draw_points, 0.5) # This is just to get the size of the array, we don't need it
+	var results: Dictionary[String, PackedVector3Array] = offset_paths(draw_points, RAIL_OFFSET_CENTER_EACH_SIDE) # This is just to get the size of the array, we don't need it
 	# var vector_3_path: PackedVector3Array = []
 	var vector_3_path_left: PackedVector3Array = results["left"]
 	var vector_3_path_right: PackedVector3Array = results["right"]
@@ -185,7 +190,7 @@ func _update_crossties(path_length: float, get_coord_at_offset: Callable) -> voi
 	# 	t = t.rotated((next_position - crosstie_position).normalized().angle())
 	# 	t.origin = crosstie_position
 	# 	crossties.set_instance_transform_2d(i, t)
-
+	print("STARTING POSITION")
 	for i: int in range(crosstie_count):
 		var t: Transform3D = Transform3D()
 		var crosstie_position: Vector2 = get_coord_at_offset.call((i * crosstie_distance) + crosstie_distance / 2.0)
@@ -193,12 +198,18 @@ func _update_crossties(path_length: float, get_coord_at_offset: Callable) -> voi
 		print("POSITION:" + str(crosstie_position))
 		# t = t.rotated(Vector3(next_position.x, 0, next_position.y) - Vector3(crosstie_position.x, 0, crosstie_position.y))
 		# t.origin = 
-		t.basis = Basis().scaled(Vector3(0.01, 0.01, 0.01)).rotated(Vector3(1, 0, 0), PI / 2)
-		# .rotated(Vector3(0, 1, 0), (next_position - crosstie_position).normalized().angle())
-		t.origin = Vector3(crosstie_position.x, 0 ,crosstie_position.y)
+		t.basis = Basis().scaled(Vector3(CROSSTIE_SCALE, CROSSTIE_SCALE, CROSSTIE_SCALE)).rotated(Vector3(1, 0, 0), CROSSTIE_ROTATION_X_AXIS)
+		var angle: float = (next_position - crosstie_position).normalized().angle()
+		print("ANGLE:" + str(angle))
+		var normalized_angle: float = Utils.normalize_angle_0_to_2_pi(angle)
+		var angle_to_rotate: float = STARTING_ANGLE_CROSSTIES - normalized_angle
+		print("NORMALIZED ANGLE:" + str(normalized_angle))
+		print("ANGLE DIFFERENCE" + str(normalized_angle - STARTING_ANGLE_CROSSTIES))
+		t = t.rotated(Vector3(0, 1, 0), angle_to_rotate) # Rotate around the y-axis to align with the path
+		t.origin = Vector3(crosstie_position.x, CROSSTIE_HEIGHT_OFFSET ,crosstie_position.y)
 
 		# t = t.scaled(Vector3(0.01, 0.01, 0.01)) # make the crossties thiner
 		# t.origin = Vector3(crosstie_position.x, 0 ,crosstie_position.y)
 		# var transform: Transform3D = Transform3D(t, Vector3(crosstie_position.x, 0 ,crosstie_position.y))
-		print("TRANSFORM:", t)
+		# print("TRANSFORM:", t)
 		crossties.set_instance_transform(i, t)

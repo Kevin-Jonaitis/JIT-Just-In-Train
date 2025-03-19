@@ -630,6 +630,8 @@ func test_call() -> void:
 
 	my_array_mesh.clear_surfaces()
 	my_array_mesh.clear_blend_shapes()
+
+	# TrackDrawer.extrude_polygon_along_path_arraymesh(TrackDrawer.RAIL_POLYGON_VERTICIES, my_path_two, my_array_mesh)
 	# TrackDrawer.extrude_polygon_along_path_arraymesh(TrackDrawer.RAIL_POLYGON_VERTICIES,
 	#  my_path_two, my_array_mesh)
 
