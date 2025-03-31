@@ -340,7 +340,7 @@ func update_arrow_end() -> void:
 	var arrowPoint: Vector2 = 1 * currentPointTangent
 	# Rotate the arrow sprite to point in the opposite direction of the track's tangent
 	rotate_sprite_3d(-1 * Vector2.from_angle(trackEndingAngle), arrow_end)
-	var vec2 : Vector2 = trackEndingPosition - (arrowPoint * (MapManager3D.cellSize / 2.0))
+	var vec2 : Vector2 = trackEndingPosition + (arrowPoint * (MapManager3D.cellSize / 2.0))
 	arrow_end.position = Utils.convert_to_3d(vec2, 1)
 
 
@@ -349,7 +349,7 @@ func update_arrow_start() -> void:
 	# Determine the arrow's tangent point, it's opposite of the track tangent
 	var arrowPoint: Vector2 = 1 * currentPointTangent
 	rotate_sprite_3d(-1 * arrowPoint, arrow_start)
-	arrow_start.position = Utils.convert_to_3d(currentTrackPlacePoint + (arrowPoint * (MapManager3D.cellSize / 2.0)), 1)
+	arrow_start.position = Utils.convert_to_3d(currentTrackPlacePoint - (arrowPoint * (MapManager3D.cellSize / 2.0)), 1)
 	pass
 
 
