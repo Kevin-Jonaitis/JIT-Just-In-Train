@@ -190,21 +190,16 @@ func _update_crossties(path_length: float, get_coord_at_offset: Callable) -> voi
 	# 	t = t.rotated((next_position - crosstie_position).normalized().angle())
 	# 	t.origin = crosstie_position
 	# 	crossties.set_instance_transform_2d(i, t)
-	print("STARTING POSITION")
 	for i: int in range(crosstie_count):
 		var t: Transform3D = Transform3D()
 		var crosstie_position: Vector2 = get_coord_at_offset.call((i * crosstie_distance) + crosstie_distance / 2.0)
 		var next_position: Vector2 = get_coord_at_offset.call((i + 1) * crosstie_distance)
-		print("POSITION:" + str(crosstie_position))
 		# t = t.rotated(Vector3(next_position.x, 0, next_position.y) - Vector3(crosstie_position.x, 0, crosstie_position.y))
 		# t.origin = 
 		t.basis = Basis().scaled(Vector3(CROSSTIE_SCALE, CROSSTIE_SCALE, CROSSTIE_SCALE)).rotated(Vector3(1, 0, 0), CROSSTIE_ROTATION_X_AXIS)
 		var angle: float = (next_position - crosstie_position).normalized().angle()
-		print("ANGLE:" + str(angle))
 		var normalized_angle: float = Utils.normalize_angle_0_to_2_pi(angle)
 		var angle_to_rotate: float = STARTING_ANGLE_CROSSTIES - normalized_angle
-		print("NORMALIZED ANGLE:" + str(normalized_angle))
-		print("ANGLE DIFFERENCE" + str(normalized_angle - STARTING_ANGLE_CROSSTIES))
 		t = t.rotated(Vector3(0, 1, 0), angle_to_rotate) # Rotate around the y-axis to align with the path
 		t.origin = Vector3(crosstie_position.x, CROSSTIE_HEIGHT_OFFSET ,crosstie_position.y)
 
