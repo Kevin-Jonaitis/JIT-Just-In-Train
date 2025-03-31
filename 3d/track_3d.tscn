@@ -1,9 +1,14 @@
-[gd_scene load_steps=3 format=3 uid="uid://hothb1y8x8v0"]
+[gd_scene load_steps=4 format=3 uid="uid://hothb1y8x8v0"]
 
 [ext_resource type="Script" uid="uid://fxb63ycqbn3s" path="res://3d/track_3d.gd" id="1_n82nj"]
 [ext_resource type="PackedScene" uid="uid://dsekv08vlpjf4" path="res://3d/track_visual_component_3d.tscn" id="2_pahnv"]
+[ext_resource type="Script" uid="uid://ov384ce0oex0" path="res://3d/area_3d.gd" id="3_iu4s0"]
 
-[node name="Track" type="Node3D"]
+[node name="Track3D" type="Node3D"]
 script = ExtResource("1_n82nj")
 
 [node name="TrackVisualComponent3D" parent="." instance=ExtResource("2_pahnv")]
+
+[node name="Area" type="Area2D" parent="."]
+script = ExtResource("3_iu4s0")
+metadata/_custom_type_script = "uid://drckqo8tmifx"

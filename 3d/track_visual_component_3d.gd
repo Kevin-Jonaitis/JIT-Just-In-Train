@@ -10,6 +10,10 @@ const RAIL_HEIGHT_OFFSET: float = 0.275 # Height offset for rails
 const RAIL_OFFSET_CENTER_EACH_SIDE: float = 1.1 # Offset for rails on each side of the track
 const STARTING_ANGLE_CROSSTIES: float = 3 *PI / 2
 
+const rail_metal_width: float = 0.5 # Guessed this number
+# The width of the whole trainline
+const width : float = (RAIL_OFFSET_CENTER_EACH_SIDE + rail_metal_width) * 2
+
 # We should use this visual building system:
 # https://www.factorio.com/blog/post/fff-163
 
@@ -31,7 +35,7 @@ var my_polygon: Array[Vector2] = [
 
 @onready var parentTrack : Track = get_parent() as Track
 
-@onready var backing: Line2D = $Backing
+# @onready var backing: Line2D = $Backing
 # @onready var rail_left: Line2D = $Rail
 
 func _ready() -> void:
@@ -116,7 +120,10 @@ func update_track_points(points_: Array[Vector2], length: float, get_coord_at_of
 	
 	## We add 0.2 pixels to the start and the end of this segment(in the direction it was coming and going) 
 	## so that there's better overlap with the next segment, and we don't get "sliver gaps" between the train paths
-	var draw_points: Array[Vector2] = points_.duplicate()	
+	var draw_points: Array[Vector2] = points_.duplicate()
+	# var last_point_value: Vector2 = points_[points_.size() - 1]
+	# draw_points.insert(0, points_[0] - (startTangent * 0.2))
+	# draw_points.append(last_point_value - (endTangent * 0.2))
 
 	var results: Dictionary[String, PackedVector3Array] = offset_paths(draw_points, RAIL_OFFSET_CENTER_EACH_SIDE) # This is just to get the size of the array, we don't need it
 	# var vector_3_path: PackedVector3Array = []

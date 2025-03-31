@@ -9,7 +9,7 @@ static var counter: int = 0
 ## Used to keep track of last changes in the editor, and if changed, to re-render the points
 var baked_points_editor_checker: PackedVector2Array = []
 
-@onready var area: Area = $Area
+@onready var area: AreaCollision = $Area
 # var junction_manager: JunctionManager = JunctionManager.new(self)
 # var virtual_node_manager: VirtualNodeManager = VirtualNodeManager.new(self)
 

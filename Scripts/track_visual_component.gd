@@ -3,6 +3,7 @@ extends Node2D
 class_name TrackVisualComponent
 
 var crosstie_distance: float = 7
+#var width: float = 1
 
 
 

@@ -139,7 +139,7 @@ skeleton = NodePath("../../..")
 [node name="Tracks" type="Node3D" parent="World"]
 script = ExtResource("4_03nuc")
 
-[node name="Trains" type="Node3D" parent="World"]
+[node name="Trains" type="Node3D" parent="World" groups=["trains"]]
 script = ExtResource("5_mwpqo")
 
 [node name="Junctions" type="Node3D" parent="World"]

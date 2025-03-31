@@ -5,8 +5,10 @@
 [ext_resource type="Material" uid="uid://cu2r0uhskmml" path="res://Assets/rail_color.tres" id="2_dmx43"]
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_6r6ns"]
+resource_local_to_scene = true
 
 [sub_resource type="MultiMesh" id="MultiMesh_dmx43"]
+resource_local_to_scene = true
 transform_format = 1
 instance_count = 6
 mesh = ExtResource("2_58dnm")
