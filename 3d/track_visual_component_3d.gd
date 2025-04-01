@@ -121,9 +121,13 @@ func update_track_points(points_: Array[Vector2], length: float, get_coord_at_of
 	## We add 0.2 pixels to the start and the end of this segment(in the direction it was coming and going) 
 	## so that there's better overlap with the next segment, and we don't get "sliver gaps" between the train paths
 	var draw_points: Array[Vector2] = points_.duplicate()
-	# var last_point_value: Vector2 = points_[points_.size() - 1]
-	# draw_points.insert(0, points_[0] - (startTangent * 0.2))
-	# draw_points.append(last_point_value - (endTangent * 0.2))
+
+	# NOTE: WE DO THIS ALREDY IN OFFSET_PATHS to correct for the gaps between the rails
+	#var last_point_value: Vector2 = points_[points_.size() - 1]
+	#var test: Vector2 = points_[0] - (startTangent * 0.2)
+	#var end_test: Vector2 = last_point_value + (endTangent * 0.2)
+	#draw_points.insert(0,test)
+	#draw_points.append(end_test)
 
 	var results: Dictionary[String, PackedVector3Array] = offset_paths(draw_points, RAIL_OFFSET_CENTER_EACH_SIDE) # This is just to get the size of the array, we don't need it
 	# var vector_3_path: PackedVector3Array = []

@@ -267,6 +267,10 @@ static func dubins_LRL(start: CircleInfo, end: CircleInfo, radius: float) -> Dub
 ## Finally squish the values together if they're too far apart(more than 2PI) once they've been
 ## ordered correctly	
 static func adjust_end_theta(start_radian: float, end_radian: float, clockwise: bool) -> float:
+	#Do nothing if they're close
+	if (Utils.check_angle_matches(start_radian, end_radian)):
+		return start_radian
+		
 	if (clockwise):
 		while (start_radian > end_radian):
 			end_radian += TAU
