@@ -13,6 +13,8 @@ const STARTING_ANGLE_CROSSTIES: float = 3 *PI / 2
 const rail_metal_width: float = 0.5 # Guessed this number
 # The width of the whole trainline
 const width : float = (RAIL_OFFSET_CENTER_EACH_SIDE + rail_metal_width) * 2
+# How much we have the rails overlap to remove "gaps" at the ends
+const RAIL_OVERUN_ENDS: float = 0.04
 
 # We should use this visual building system:
 # https://www.factorio.com/blog/post/fff-163
@@ -77,11 +79,11 @@ func offset_paths(path: Array[Vector2], offset: float) -> Dictionary[String, Pac
 		if i == 0:
 			var dir: Vector2 = (path[1] - path[0]).normalized()
 			normal = Vector2(-dir.y, dir.x)
-			extra_start_point = path[i] - dir * 0.02
+			extra_start_point = path[i] - dir * RAIL_OVERUN_ENDS
 		elif i == n - 1:
 			var dir: Vector2 = (path[i] - path[i - 1]).normalized()
 			normal = Vector2(-dir.y, dir.x)
-			extra_end_point = path[i] + dir * 0.02
+			extra_end_point = path[i] + dir * RAIL_OVERUN_ENDS
 		else:
 			var dir1: Vector2 = (path[i] - path[i - 1]).normalized()
 			var dir2: Vector2 = (path[i + 1] - path[i]).normalized()
