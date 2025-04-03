@@ -31,8 +31,8 @@ var my_polygon: Array[Vector2] = [
 		Vector2(0.5,0.5), #Top Right
 		Vector2(-0.5,0.5)] #Top Left
 	
-
 @onready var rail_left : MeshInstance3D = $RailLeft
+
 @onready var rail_right : MeshInstance3D = $RailRight
 
 @onready var parentTrack : Track = get_parent() as Track

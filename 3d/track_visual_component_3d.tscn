@@ -1,10 +1,15 @@
-[gd_scene load_steps=6 format=3 uid="uid://dsekv08vlpjf4"]
+[gd_scene load_steps=7 format=3 uid="uid://dsekv08vlpjf4"]
 
 [ext_resource type="Script" uid="uid://37daqa3m3sb6" path="res://3d/track_visual_component_3d.gd" id="1_6r6ns"]
 [ext_resource type="ArrayMesh" uid="uid://114feu6uyhrv" path="res://Assets/imported/crosstie.res" id="2_58dnm"]
-[ext_resource type="Material" uid="uid://cu2r0uhskmml" path="res://Assets/rail_color.tres" id="2_dmx43"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_58dnm"]
+resource_local_to_scene = true
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_6r6ns"]
+resource_local_to_scene = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dmx43"]
 resource_local_to_scene = true
 
 [sub_resource type="MultiMesh" id="MultiMesh_dmx43"]
@@ -18,12 +23,12 @@ buffer = PackedFloat32Array(1.4013e-45, 0, 3.22299e-44, 3.08286e-44, 1.4013e-45,
 script = ExtResource("1_6r6ns")
 
 [node name="RailRight" type="MeshInstance3D" parent="."]
-material_override = ExtResource("2_dmx43")
+material_override = SubResource("StandardMaterial3D_58dnm")
 mesh = SubResource("ArrayMesh_6r6ns")
 skeleton = NodePath("../RailLeft")
 
 [node name="RailLeft" type="MeshInstance3D" parent="."]
-material_override = ExtResource("2_dmx43")
+material_override = SubResource("StandardMaterial3D_dmx43")
 mesh = SubResource("ArrayMesh_6r6ns")
 
 [node name="Crossties" type="MultiMeshInstance3D" parent="."]

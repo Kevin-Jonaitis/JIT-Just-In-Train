@@ -13,6 +13,15 @@ var grid_line: Line3D = Line3D.new()
 var circle_color: Color = Color(0, 0, 255)
 var circle_y_index: int = 2
 
+var crosstie_material: StandardMaterial3D = load("res://Assets/crosstie_material.tres")
+var rail_material: StandardMaterial3D = load("res://Assets/rail_color.tres")
+
+
+const BLUE: Color = Color(0,0,1,0.7)
+const BLUE_LIGHT: Color = Color(0.091,0.323,1,0.1)
+const RAIL_COLOR: Color = Color(0.55873, 0.48697, 0.339118, 1)
+const CROSSTIE_COLOR: Color = Color(0.461, 0.54, 0.697, 1)
+
 var grid_circle: MeshInstance3D = MeshInstance3D.new()
 
 var currentTrackPlacePoint: Vector2
@@ -202,7 +211,10 @@ func reset_track_builder() -> void:
 	if (track.dubins_path):
 		track.dubins_path.clear_drawables()
 	# TODO: 3D FIX
+	# track.track_visual_component.mesh
+	set_track_color_built()
 	# track.track_visual_component.modulate = Color(1,1,1,1)
+	# apply_tint(track.track_visual_component.rail_right, load("res://Assets/blue_tint.tres"))
 	trackStartingPosition = null
 	trackEndingPosition = null
 	starting_overlay = null
@@ -210,6 +222,46 @@ func reset_track_builder() -> void:
 	trackStartAngle = 0
 	trackEndingAngle = 0
 
+func apply_tint(mesh: MeshInstance3D, tint_material: ShaderMaterial) -> void:
+	var original_material: Material = mesh.get_active_material(0)
+	if original_material == null:
+		return
+
+	# # Duplicate the tint material to adjust its color strength per mesh if needed
+	var tinted_material: ShaderMaterial = tint_material.duplicate() as ShaderMaterial
+
+	# # Optional: you can tweak strength here if desired
+	# tinted_material.set_shader_parameter("tint_strength", 0.6)
+
+	# Now layer the tint on top of the original color
+	# tinted_material.set_shader_parameter("tint_color", Color(0.4, 0.6, 1.0, 1.0))
+	# tinted_material.get(0).albedo_color = original_material.get(0).albedo_color
+
+	mesh.set_surface_override_material(0, tinted_material)
+
+func set_track_color_constructing() -> void:
+	set_mesh_color(track.track_visual_component.rail_left.material_override, BLUE)
+	set_mesh_color(track.track_visual_component.rail_right.material_override, BLUE)
+	set_mesh_color(track.track_visual_component._crosstie_multimesh.multimesh.mesh.surface_get_material(0), BLUE_LIGHT)
+
+func set_track_color_built() -> void:
+	set_mesh_color(track.track_visual_component.rail_left.material_override, RAIL_COLOR)
+	set_mesh_color(track.track_visual_component.rail_right.material_override, RAIL_COLOR)
+	set_mesh_color(track.track_visual_component._crosstie_multimesh.multimesh.mesh.surface_get_material(0), CROSSTIE_COLOR)
+
+func set_mesh_color(material: Material, color: Color) -> void:
+	if material is StandardMaterial3D:
+		var standard_material: StandardMaterial3D = material as StandardMaterial3D
+		standard_material.albedo_color = color
+	else:
+		assert(false, "Material is not a StandardMaterial3D")
+
+# func tint_standard_material(original: StandardMaterial3D, tint_color: Color) -> StandardMaterial3D:
+# 	# var new_material : StandardMaterial3D = original.duplicate() as StandardMaterial3D
+# 	var original_color : Color = new_material.albedo_color
+# 	# new_material.albedo_color = original_color.lerp(tint_color, strength)
+# 	new_material.albedo_color = tint_color
+# 	return new_material
 
 func cancel_track() -> void:
 	if (!is_instance_valid(track)):
@@ -411,10 +463,12 @@ func compute_path() -> void:
 	self.validTrack = valid
 
 	# TODO: 3D FIX
-	# if valid:
-	# 	track.track_visual_component.modulate = Color8(0, 77, 255, int(0.79 * 255))  # Half-transparent blue
-	# else:
-	# 	track.track_visual_component.modulate = Color(1, 0, 0, 0.5)  # Half-transparent red
+	if valid:
+		set_track_color_constructing()
+		# track.track_visual_component.modulate = Color8(0, 77, 255, int(0.79 * 255))  # Half-transparent blue
+	else:
+		set_track_color_built()
+		# track.track_visual_component.modulate = Color(1, 0, 0, 0.5)  # Half-transparent red
 
 
 # func draw_circle_at_point(point: Vector2) -> void:
