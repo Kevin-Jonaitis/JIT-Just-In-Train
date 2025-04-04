@@ -40,7 +40,7 @@ static func new_Track(name_: String, curve_type_flag_: bool, tracks_: Tracks, vi
 	track.name = name_
 	track.update_stored_curves(curve_type_flag_)
 	track.visible = visible_
-	TrackBuilder.track_counter += 1
+	TrackBuilder3D.track_counter += 1
 	track.tracks = tracks_
 	tracks_.add_child(track)
 	track.assert_name_unique(name_)
@@ -124,33 +124,33 @@ func get_curve() -> Variant:
 		assert(false, "Unimplemented code path!")
 		return null
 
-# # Returns [point, tangent(in radians)]
-# func get_point_info_at_index(index: int) -> TrackPointInfo:
-# 	if bezier_curve:
-# 		assert(false, "Unimplemented code path!")
-# 		return TrackPointInfo.new(self, index, 0)
-# 	elif dubins_path:
-# 		return get_track_point_info_dubin_path(index)
-# 	else:
-# 		assert(false, "This should be impossible!")
-# 		return TrackPointInfo.new(self, index, 0)
+# Returns [point, tangent(in radians)]
+func get_point_info_at_index(index: int) -> TrackPointInfo:
+	if bezier_curve:
+		assert(false, "Unimplemented code path!")
+		return TrackPointInfo.new(self, index, 0)
+	elif dubins_path:
+		return get_track_point_info_dubin_path(index)
+	else:
+		assert(false, "This should be impossible!")
+		return TrackPointInfo.new(self, index, 0)
 
-# func get_track_point_info_dubin_path(index: int) -> TrackPointInfo:
-# 	# If this is the endpoint for a track. Useful to determine if we should
-# 	# snap the tangent in the opposite direction
-# 	var is_end: bool = false
-# 	var is_start: bool = false
-# 	var points: Array[Vector2] = dubins_path.shortest_path.get_points()
-# 	if index >= points.size():
-# 		assert(false, "This should be impossible!")
-# 		return TrackPointInfo.new(self, index, 0)
+func get_track_point_info_dubin_path(index: int) -> TrackPointInfo:
+	# If this is the endpoint for a track. Useful to determine if we should
+	# snap the tangent in the opposite direction
+	var is_end: bool = false
+	var is_start: bool = false
+	var points: Array[Vector2] = dubins_path.shortest_path.get_points()
+	if index >= points.size():
+		assert(false, "This should be impossible!")
+		return TrackPointInfo.new(self, index, 0)
 	
-# 	var theta: float = dubins_path.shortest_path.get_angle_at_point_index(index)
+	var theta: float = dubins_path.shortest_path.get_angle_at_point_index(index)
 
-# 	if is_start or is_end:
-# 		assert(false, "This should be a junction, not a point!")
+	if is_start or is_end:
+		assert(false, "This should be a junction, not a point!")
 
-# 	return TrackPointInfo.new(self, index, theta)
+	return TrackPointInfo.new(self, index, theta)
 
 func get_endpoints_and_directions() -> Array[Array]:
 	if bezier_curve:

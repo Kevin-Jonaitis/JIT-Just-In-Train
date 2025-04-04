@@ -63,7 +63,7 @@ var track_mode_flag: bool = false
 @onready var arrow_end : Sprite3D = $ArrowEnd
 var track: Track3D
 
-# @onready var track_intersection_searcher: TrackIntersectionSearcher = TrackIntersectionSearcher.new(self)
+@onready var track_intersection_searcher: TrackIntersectionSearcher3D = TrackIntersectionSearcher3D.new(self)
 #TODO: This could be better
 @onready var tracks: Tracks = $"../../Tracks"
 @onready var trains: Trains = $"../../Trains"
@@ -273,15 +273,15 @@ func cancel_track() -> void:
 
 	create_track_node_tree()
 	
-func find_nearest_grid_and_tangents(mousePos: OptionalVector2) -> void:
-	if mousePos == null:
+func find_nearest_grid_and_tangents(mousePosOptional: OptionalVector2) -> void:
+	if mousePosOptional == null:
 		return
-	var mousePosition: Vector2 = mousePos.value
+	var mousePosition: Vector2 = mousePosOptional.value
 	
 	
 
-	# current_overlay = track_intersection_searcher.check_for_junctions_or_track_at_position(mousePosition)
-	var near_stop: bool = TrackIntersectionSearcher.check_for_stops_at_position(current_overlay)
+	current_overlay = track_intersection_searcher.check_for_junctions_or_track_at_position(mousePosition)
+	var near_stop: bool = TrackIntersectionSearcher3D.check_for_stops_at_position(current_overlay)
 	if (near_stop):
 		can_place_point = false
 		arrow_start.modulate = Color(1, 0, 0)

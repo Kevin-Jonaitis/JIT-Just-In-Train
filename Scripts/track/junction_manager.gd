@@ -1,9 +1,9 @@
 extends RefCounted
 
 class_name JunctionManager
-var track: Track  # Added type annotation
+var track: Track3D  # Added type annotation
 
-func _init(track_: Track) -> void:
+func _init(track_: Track3D) -> void:
 	self.track = track_
 
 func setup_junctions(starting_overlay: TrackOrJunctionOverlap, ending_overlay: TrackOrJunctionOverlap) -> void:

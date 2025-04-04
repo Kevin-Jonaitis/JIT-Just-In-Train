@@ -131,14 +131,14 @@ func update_progress(old_progress: Progress, new_progress_px: float, train: Trai
 
 
 class TrackSegment:
-	var track: Track
+	var track: Track3D
 	#Distance too this point on the track(not the global vector2 position)
 	var start_track_pos: float
 	var end_track_pos: float
 	var length: float
 	var starting_progress: float #TODO: remove, this is redundant
 	
-	func _init(track_: Track, start_track_pos_: float, end_track_pos_: float) -> void:
+	func _init(track_: Track3D, start_track_pos_: float, end_track_pos_: float) -> void:
 		self.track = track_
 		self.start_track_pos = start_track_pos_
 		self.end_track_pos = end_track_pos_
@@ -174,7 +174,7 @@ func create_track_segments() -> Array[TrackSegment]:
 	if nodes.size() < 2:
 		return []
 
-	var current_track: Track = nodes[0].track
+	var current_track: Track3D = nodes[0].track
 	var start_pos: float = nodes[0].get_track_position()
 
 	for i: int in range(1, nodes.size()):

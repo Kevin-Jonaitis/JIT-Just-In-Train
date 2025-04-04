@@ -9,6 +9,5 @@ script = ExtResource("1_n82nj")
 
 [node name="TrackVisualComponent3D" parent="." instance=ExtResource("2_pahnv")]
 
-[node name="Area" type="Area2D" parent="."]
+[node name="Area" type="Area3D" parent="."]
 script = ExtResource("3_iu4s0")
-metadata/_custom_type_script = "uid://drckqo8tmifx"

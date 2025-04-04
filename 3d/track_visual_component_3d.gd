@@ -35,7 +35,7 @@ var my_polygon: Array[Vector2] = [
 
 @onready var rail_right : MeshInstance3D = $RailRight
 
-@onready var parentTrack : Track = get_parent() as Track
+@onready var parentTrack : Track3D = get_parent() as Track3D
 
 # @onready var backing: Line2D = $Backing
 # @onready var rail_left: Line2D = $Rail

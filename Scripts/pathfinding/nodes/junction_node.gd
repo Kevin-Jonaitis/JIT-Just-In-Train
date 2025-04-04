@@ -10,7 +10,7 @@ var junction: Junction
 var connected_at_start_of_track: bool
 var is_exit_node_bool: bool
 
-func _init(junction_: Junction, track_: Track, connected_at_start_: bool, is_entry: bool) -> void:
+func _init(junction_: Junction, track_: Track3D, connected_at_start_: bool, is_entry: bool) -> void:
 	self.name = generate_name(junction_, track_, connected_at_start_, is_entry)
 	self.track = track_
 	self.junction = junction_
@@ -19,7 +19,7 @@ func _init(junction_: Junction, track_: Track, connected_at_start_: bool, is_ent
 	self.is_exit_node_bool = name.ends_with("-exit")
 
 #<junction_name>-<track-name>-<t_start/end)-<entry/exit/null>
-static func generate_name(junction_: Junction, track_: Track, connected_at_start_: bool, is_entry: bool) -> String:
+static func generate_name(junction_: Junction, track_: Track3D, connected_at_start_: bool, is_entry: bool) -> String:
 	var track_end : String
 	# If this track loops back onto the same junction, we need to be able to differentiate
 	# between the nodes that are at the start and end of the track

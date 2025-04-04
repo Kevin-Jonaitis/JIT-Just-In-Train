@@ -21,22 +21,22 @@ const scene: PackedScene = preload("res://Scenes/junction.tscn")
 # Classes for connections
 # ---------------------------------------------------------
 class TrackConnection:
-	var track: Track
+	var track: Track3D
 	# Wether it approaches from angle or opposite angle going INTO the junction
 	var approach_from_angle: bool
 	var connected_at_start: bool
 
-	func _init(track_: Track, approach_from_angle_: bool, connected_at_start_: bool) -> void:
+	func _init(track_: Track3D, approach_from_angle_: bool, connected_at_start_: bool) -> void:
 		track = track_
 		approach_from_angle = approach_from_angle_
 		connected_at_start = connected_at_start_
 
 class NewConnection:
-	var track: Track 
+	var track: Track3D 
 	var angle: float # Then angle facing AWAY from the track at the connection point
 	var connected_at_start: bool
 
-	func _init(track_: Track, connected_at_start_: bool) -> void:
+	func _init(track_: Track3D, connected_at_start_: bool) -> void:
 		track = track_
 		connected_at_start = connected_at_start_
 		if connected_at_start_:
@@ -48,8 +48,7 @@ class NewConnection:
 # Main logic
 # ---------------------------------------------------------
 
-func get_junction_node(track: Track, connected_at_start: bool, is_entry: bool) -> JunctionNode:
-
+func get_junction_node(track: Track3D, connected_at_start: bool, is_entry: bool) -> JunctionNode:
 	# We no longer rely on local virtual_nodes; we look for the node in the global Graph.
 	var node_name: String = JunctionNode.generate_name(self, track, connected_at_start, is_entry)
 	if Graph._nodes.has(node_name):
@@ -116,7 +115,7 @@ func add_connection(connection: NewConnection) -> void:
 	# 5. Create the new VirtualNodes (JunctionNodes) and edges
 	add_vritual_nodes_for_connection(track_connection)
 
-func remove_track_and_nodes(track: Track) -> void:
+func remove_track_and_nodes(track: Track3D) -> void:
 	# Remove from lines
 	for i: int in range(lines.size()):
 		if lines[i].track.uuid == track.uuid:
@@ -126,7 +125,7 @@ func remove_track_and_nodes(track: Track) -> void:
 	remove_virtual_nodes_and_references(track)
 
 
-func remove_virtual_nodes_and_references(track: Track) -> void:
+func remove_virtual_nodes_and_references(track: Track3D) -> void:
 	if track.start_junction == self:
 		var entry_node_name_start_track: String = JunctionNode.generate_name(self, track, true, true)
 		var exit_node_name_start_track:  String = JunctionNode.generate_name(self, track, true, false)
@@ -149,7 +148,7 @@ func remove_node_and_references(node_name: String) -> void:
 		Graph.remove_node(node_to_remove)  # This will remove edges as well
 		# The rest of the references (edges, etc.) are handled by the Graph’s remove_node logic
 
-func get_outgoing_connections(track: Track) -> Array[TrackConnection]:
+func get_outgoing_connections(track: Track3D) -> Array[TrackConnection]:
 	var outgoing_connections: Array[TrackConnection] = []
 	var angle_dir: bool
 	# 1. Find the approach_from_angle for the track

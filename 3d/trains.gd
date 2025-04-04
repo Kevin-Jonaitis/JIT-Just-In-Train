@@ -19,7 +19,7 @@ func _on_train_placed(train: Train) -> void:
 
 # TODO: Put this somewhere more appropriate
 # Given an old track that's being split into 2 new tracks, update the train stops on the old track
-func update_train_stops(old_track: Track, new_track_a: Track, new_track_b: Track) -> void:
+func update_train_stops(old_track: Track3D, new_track_a: Track3D, new_track_b: Track3D) -> void:
 	for train: Train in trains:
 		for stop_index: int in range(train.get_stops().size()):
 			var virtual_node : StopNode = train.get_stops()[stop_index].stop_option[0].front_of_train # Just check one, all stops should be on the same train track
@@ -34,7 +34,7 @@ func update_train_stops(old_track: Track, new_track_a: Track, new_track_b: Track
 					pass
 
 # TODO: Put this somewhere more appropriate
-func get_point_info_on_new_tracks(old_point: Vector2, new_track_a: Track, new_track_b: Track) -> TrackPointInfo:
+func get_point_info_on_new_tracks(old_point: Vector2, new_track_a: Track3D, new_track_b: Track3D) -> TrackPointInfo:
 	var track_a_points: Array[Vector2] = new_track_a.dubins_path.shortest_path.get_points()
 	var track_b_points: Array[Vector2] = new_track_b.dubins_path.shortest_path.get_points()
 	for point_index: int in range(track_a_points.size()):

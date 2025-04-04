@@ -2,11 +2,11 @@ extends RefCounted
 
 class_name TrackPointInfo
 
-var track: Track
+var track: Track3D
 var point_index: int
 var angle: float # radians
 
-func _init(p_track: Track, p_point_index: int, p_angle: float) -> void:
+func _init(p_track: Track3D, p_point_index: int, p_angle: float) -> void:
 	track = p_track
 	point_index = p_point_index
 	angle = p_angle

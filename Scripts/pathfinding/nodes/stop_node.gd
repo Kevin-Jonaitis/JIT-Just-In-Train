@@ -15,7 +15,7 @@ var is_reverse_node: bool = false
 # then this would be considered backward)
 var forward : bool
 
-func _init(track_: Track, track_pos_: float, forward_: bool, train_: Train, is_reverse_node_: bool = false) -> void:
+func _init(track_: Track3D, track_pos_: float, forward_: bool, train_: Train, is_reverse_node_: bool = false) -> void:
 	self.name = generate_name(track_, track_pos_, forward_, train_)
 	self.track = track_
 	self.track_pos = track_pos_
@@ -36,7 +36,7 @@ func get_track_pos_name() -> String:
 func is_forward() -> bool:
 	return forward
 
-static func generate_name(track_: Track, track_pos_: float, forward_: bool, train_: Train) -> String:
+static func generate_name(track_: Track3D, track_pos_: float, forward_: bool, train_: Train) -> String:
 	
 	var direction_str: String = "forward" if forward_ else "backward"
 	var generated_name: String =  str("stop-", track_.name, "-", int(track_pos_), "-", train_.name, "-", direction_str)

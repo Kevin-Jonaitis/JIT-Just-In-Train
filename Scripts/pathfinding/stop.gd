@@ -95,7 +95,7 @@ static func create_stop_for_point(middle_of_front_car: TrackPointInfo, train: Tr
 	assert(stop.get_front_stops()[0].get_vector_pos() == stop.get_front_stops()[1].get_vector_pos(), "Positions should be the same else things will look bad when the train stops at the station")
 	return stop
 
-static func generate_train_position(point_one_track_offset: float, point_two_track_offset: float, track: Track, train: Train, train_facing_foward: bool) -> Array[TrainPosition]:
+static func generate_train_position(point_one_track_offset: float, point_two_track_offset: float, track: Track3D, train: Train, train_facing_foward: bool) -> Array[TrainPosition]:
 	var front_of_train: StopNode = StopNode.new(track, point_one_track_offset, train_facing_foward, train)
 	# Even though the stopnode is part of the train, we don't want it to
 	# face the same way, since that'll make it seem like we can navigate there to "stop";

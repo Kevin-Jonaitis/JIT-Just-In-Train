@@ -17,7 +17,7 @@ var crosstie_distance: float = 7
 #@onready var _circle_mesh_instance : MeshInstance2D = $Circle
 
 
-@onready var parentTrack : Track = get_parent() as Track
+@onready var parentTrack : Track3D = get_parent() as Track3D
 
 @onready var backing: Line2D = $Backing
 @onready var rail: Line2D = $Rail

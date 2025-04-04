@@ -13,7 +13,7 @@ var name: String:
 
 var identifier: int # A unique int identifier. 
 # All nodes are either entry/exit to a track in a junction, or are ON a track
-var track: Track
+var track: Track3D
 
 
 static func calculate_distance_between_two_connectable_nodes(node_one: VirtualNode, node_two: VirtualNode) -> float:
