@@ -1,9 +1,9 @@
 extends RefCounted
 
 class_name VirtualNodeManager
-var track: Track
+var track: Track3D
 
-func _init(track_: Track) -> void:
+func _init(track_: Track3D) -> void:
 	self.track = track_
 
 

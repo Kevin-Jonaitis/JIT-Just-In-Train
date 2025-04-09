@@ -1,11 +1,10 @@
-[gd_scene load_steps=39 format=3 uid="uid://bo61ftst6mm73"]
+[gd_scene load_steps=32 format=3 uid="uid://bo61ftst6mm73"]
 
 [ext_resource type="Texture2D" uid="uid://cqycvtbraqa6n" path="res://Assets/imported/sandy_gravel_02_4k.gltf/textures/sandy_gravel_02_diff_4k.jpg" id="1_2be7a"]
 [ext_resource type="Script" uid="uid://dw703jxjsc0hp" path="res://Scripts/camera_3d.gd" id="1_dh1k4"]
 [ext_resource type="Script" uid="uid://bfp651ssem0k2" path="res://Scenes/test_curves_3d.gd" id="1_go0cu"]
 [ext_resource type="Script" uid="uid://cdja3kyeyg4q2" path="res://3d/mouse_tracker_3d.gd" id="2_dh1k4"]
 [ext_resource type="Texture2D" uid="uid://gt7j3spkh8kd" path="res://Assets/imported/sandy_gravel_02_4k.gltf/textures/sandy_gravel_02_arm_4k.jpg" id="2_iyfcu"]
-[ext_resource type="ArrayMesh" uid="uid://c3tlrc78gcd8i" path="res://Assets/rail.res" id="3_436s2"]
 [ext_resource type="Script" uid="uid://dkenavabc5uno" path="res://Scripts/track_builder_3d.gd" id="3_dh1k4"]
 [ext_resource type="Shader" uid="uid://dvxrab6uer7oa" path="res://Scenes/gridlines.gdshader" id="3_tapj0"]
 [ext_resource type="Script" uid="uid://ct7nknt5qlk15" path="res://3d/tracks.gd" id="4_03nuc"]
@@ -21,9 +20,6 @@
 [ext_resource type="Script" uid="uid://dat4dm1pytyav" path="res://addons/lines_and_trails_3d/trail_3d.gd" id="12_ldvnk"]
 [ext_resource type="Script" uid="uid://bf1rv43fffhyb" path="res://Scripts/fps.gd" id="14_i7f5g"]
 [ext_resource type="PackedScene" uid="uid://dxxkbwcc7s7kn" path="res://Assets/imported/Rails A.fbx" id="21_oya12"]
-[ext_resource type="PackedScene" uid="uid://damp1vpgr8ar" path="res://Assets/imported/crosstie.glb" id="22_4dmv2"]
-[ext_resource type="PackedScene" uid="uid://c6dsp0hrtyelw" path="res://Assets/imported/crosstie2.glb" id="23_yquia"]
-[ext_resource type="ArrayMesh" uid="uid://114feu6uyhrv" path="res://Assets/imported/crosstie.res" id="24_go0cu"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_aeeh6"]
 render_priority = 1
@@ -61,14 +57,6 @@ albedo_texture = ExtResource("9_oya12")
 [sub_resource type="BoxMesh" id="BoxMesh_436s2"]
 size = Vector3(2, 2, 2)
 
-[sub_resource type="Curve3D" id="Curve3D_dh1k4"]
-bake_interval = 1.0
-_data = {
-"points": PackedVector3Array(0, 0, 0, 0, 0, 0, -2, 5, 0, 0, 0, 0, 0, 0, 0, 5, 5, 0, 0, 0, 0, 0, 10, 0, 5, 5, 10),
-"tilts": PackedFloat32Array(0, 0, 0)
-}
-point_count = 3
-
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_l4xbo"]
 albedo_texture = ExtResource("10_tmgjn")
 
@@ -82,12 +70,6 @@ sky_material = SubResource("ProceduralSkyMaterial_vbeuq")
 background_mode = 2
 sky = SubResource("Sky_dh1k4")
 ssao_enabled = true
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ldvnk"]
-albedo_color = Color(0.231469, 1, 0.943212, 1)
-
-[sub_resource type="SphereMesh" id="SphereMesh_elx2p"]
-material = SubResource("StandardMaterial3D_ldvnk")
 
 [node name="TestCurves3D" type="Node3D"]
 script = ExtResource("1_go0cu")
@@ -162,55 +144,10 @@ shadow_enabled = true
 shadow_bias = 0.272
 directional_shadow_mode = 1
 
-[node name="CSGPolygon3D" type="CSGPolygon3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -33.7843, 5.85125, 0)
-mode = 2
-path_node = NodePath("../Path3D")
-path_interval_type = 0
-path_interval = 0.75
-path_simplify_angle = 0.0
-path_rotation = 2
-path_rotation_accurate = false
-path_local = false
-path_continuous_u = true
-path_u_distance = 1.0
-path_joined = false
-
-[node name="Path3D" type="Path3D" parent="."]
-curve = SubResource("Curve3D_dh1k4")
-
-[node name="CSGMesh3D" type="CSGMesh3D" parent="."]
-visible = false
-mesh = ExtResource("3_436s2")
-
 [node name="Smiley" type="CSGSphere3D" parent="."]
-transform = Transform3D(-0.243, 0, -0.97, 0, 1, 0, 0.97, 0, -0.243, -45.2358, 4.21146, 0)
+transform = Transform3D(-0.243, 0, -0.97, 0, 1, 0, 0.97, 0, -0.243, 0, 0, 0)
 rotation_edit_mode = 2
 material = SubResource("StandardMaterial3D_l4xbo")
-
-[node name="PointA" type="CSGSphere3D" parent="."]
-transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0.121, -0.5, 3.515)
-visible = false
-
-[node name="PointB" type="CSGSphere3D" parent="."]
-transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, -0.121, -0.5, 4.485)
-visible = false
-
-[node name="PointC" type="CSGSphere3D" parent="."]
-transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, -0.121, 0.5, 4.485)
-visible = false
-
-[node name="PointD" type="CSGSphere3D" parent="."]
-transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0.121, 0.5, 3.515)
-visible = false
-
-[node name="PointE" type="CSGSphere3D" parent="."]
-transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 4, 0.5, 4.5)
-visible = false
-
-[node name="PointE2" type="CSGSphere3D" parent="."]
-transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 4, 0.5, 4.5)
-visible = false
 
 [node name="Trail3D" type="MeshInstance3D" parent="."]
 process_priority = 9999
@@ -233,34 +170,10 @@ metadata/_custom_type_script = "uid://brqqd6a5il3by"
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_03nuc")
 
-[node name="TestLine" type="MeshInstance3D" parent="."]
-visible = false
-skeleton = NodePath("")
-script = ExtResource("11_l4xbo")
-width = 1.0
-billboard_mode = 0
-material_type = 3
-points = PackedVector3Array(0, 1, 4, 4, 1, 4)
-metadata/_custom_type_script = "uid://brqqd6a5il3by"
-
-[node name="TestLineBroken" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 11.7168)
-script = ExtResource("11_l4xbo")
-width = 1.0
-billboard_mode = 0
-material_type = 0
-points = PackedVector3Array(0, 1, 0, 0, 1, 4)
-curve_normals = PackedVector3Array(-1, 0, 0, -1, 0, 0)
-metadata/_custom_type_script = "uid://brqqd6a5il3by"
-
 [node name="UnknownCube" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.33958, 0, -8.49062)
 mesh = SubResource("BoxMesh_436s2")
 skeleton = NodePath("")
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.70349, 2.99398, 7.41338)
-mesh = SubResource("SphereMesh_elx2p")
 
 [node name="FPS" type="Label" parent="."]
 offset_right = 40.0
@@ -268,32 +181,4 @@ offset_bottom = 22.3333
 script = ExtResource("14_i7f5g")
 
 [node name="Rails A" parent="." instance=ExtResource("21_oya12")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.21899, 0, 2.51202)
-
-[node name="crosstie" parent="." instance=ExtResource("22_4dmv2")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.23872, 0.442169, 4.77346)
-
-[node name="crosstie2" parent="." instance=ExtResource("23_yquia")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.4094, 0, 28.025)
-
-[node name="crosstie3" parent="." instance=ExtResource("22_4dmv2")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17.9232, 0, 29.9329)
-
-[node name="crosstie4" parent="." instance=ExtResource("22_4dmv2")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.4631, 0, -6.71571)
-
-[node name="crosstie5" parent="." instance=ExtResource("23_yquia")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.49961, 0, -3.43168)
-
-[node name="crosstie6" parent="." instance=ExtResource("22_4dmv2")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.100498, 0, -5.4263)
-
-[node name="crosstie7" parent="." instance=ExtResource("23_yquia")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.50011, 0, -4.15681)
-
-[node name="crosstie8" parent="." instance=ExtResource("22_4dmv2")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.43163, 0.0127563, -2.15101)
-
-[node name="Crosstie" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0.301505, 0, 76.5184)
-mesh = ExtResource("24_go0cu")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.21899, 0, 19.0151)

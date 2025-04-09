@@ -10,8 +10,8 @@ static var counter: int = 0
 var baked_points_editor_checker: PackedVector2Array = []
 
 @onready var area: AreaCollision = $Area
-# var junction_manager: JunctionManager = JunctionManager.new(self)
-# var virtual_node_manager: VirtualNodeManager = VirtualNodeManager.new(self)
+var junction_manager: JunctionManager3D = JunctionManager3D.new(self)
+var virtual_node_manager: VirtualNodeManager = VirtualNodeManager.new(self)
 
 # Always connected at the index 0 of points
 @onready var start_junction: Junction
@@ -20,6 +20,12 @@ var baked_points_editor_checker: PackedVector2Array = []
 @onready var junctions: Junctions = $"../../Junctions"
 @onready var trains: Trains = $"../../Trains"
 @onready var tracks: Tracks
+
+const BLUE: Color = Color(0,0,1,0.7)
+const BLUE_LIGHT: Color = Color(0.091,0.323,1,0.1)
+const RAIL_COLOR: Color = Color(0.55873, 0.48697, 0.339118, 1)
+const CROSSTIE_COLOR: Color = Color(0.461, 0.54, 0.697, 1)
+
 
 # Determines if this track has been "placed/solidified" yet or not
 var temp: bool = true
@@ -32,7 +38,7 @@ func _ready() -> void:
 
 	# If the curve was pre-created in the editor, then we should show the goods
 	update_visual_with_bezier_points()
-	RenderingDevice.POLYGON_FRONT_FACE_CLOCKWISE
+	set_track_color_built()
 
 static func new_Track(name_: String, curve_type_flag_: bool, tracks_: Tracks, visible_: bool = true) -> Track3D:
 	assert(!name_.contains("-"), "This will break pathfinding name parssing if we have a '-' in the name")
@@ -52,9 +58,9 @@ func build_track(starting_overlay: TrackOrJunctionOverlap, ending_overlay: Track
 		name = optional_name
 	assert(dubins_path && dubins_path.shortest_path, "We haven't defined a path yet!")
 
-	# junction_manager.setup_junctions(starting_overlay, ending_overlay)
+	junction_manager.setup_junctions(starting_overlay, ending_overlay)
 
-	# virtual_node_manager.setup_interjunction_virtual_nodes()
+	virtual_node_manager.setup_interjunction_virtual_nodes()
 	temp = false
 	area.solidify_collision_area()
 	DeferredQueue.network_updated()
@@ -340,3 +346,22 @@ func get_start_position() -> Vector2:
 	
 func get_end_position() -> Vector2:
 	return get_point_at_index(-1)
+
+
+
+func set_track_color_constructing() -> void:
+	set_mesh_color(track_visual_component.rail_left.material_override, BLUE)
+	set_mesh_color(track_visual_component.rail_right.material_override, BLUE)
+	set_mesh_color(track_visual_component._crosstie_multimesh.multimesh.mesh.surface_get_material(0), BLUE_LIGHT)
+
+func set_track_color_built() -> void:
+	set_mesh_color(track_visual_component.rail_left.material_override, RAIL_COLOR)
+	set_mesh_color(track_visual_component.rail_right.material_override, RAIL_COLOR)
+	set_mesh_color(track_visual_component._crosstie_multimesh.multimesh.mesh.surface_get_material(0), CROSSTIE_COLOR)
+
+func set_mesh_color(material: Material, color: Color) -> void:
+	if material is StandardMaterial3D:
+		var standard_material: StandardMaterial3D = material as StandardMaterial3D
+		standard_material.albedo_color = color
+	else:
+		assert(false, "Material is not a StandardMaterial3D")
