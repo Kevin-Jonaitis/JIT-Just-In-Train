@@ -205,8 +205,6 @@ func solidifyTrack() -> void:
 func reset_track_builder() -> void:
 	if (track.dubins_path):
 		track.dubins_path.clear_drawables()
-	# TODO: 3D FIX
-	# track.track_visual_component.mesh
 	track.set_track_color_built()
 	# track.track_visual_component.modulate = Color(1,1,1,1)
 	# apply_tint(track.track_visual_component.rail_right, load("res://Assets/blue_tint.tres"))
@@ -442,13 +440,10 @@ func compute_path() -> void:
 
 	self.validTrack = valid
 
-	# TODO: 3D FIX
 	if valid:
 		track.set_track_color_constructing()
-		# track.track_visual_component.modulate = Color8(0, 77, 255, int(0.79 * 255))  # Half-transparent blue
 	else:
 		track.set_track_color_built()
-		# track.track_visual_component.modulate = Color(1, 0, 0, 0.5)  # Half-transparent red
 
 
 # func draw_circle_at_point(point: Vector2) -> void:

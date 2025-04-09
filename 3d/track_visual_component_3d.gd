@@ -169,9 +169,6 @@ func update_track_points(points_: Array[Vector2], length: float, get_coord_at_of
 	#TODO: DO TRACK DRAWING HERE
 
 	#set_points(draw_points)
-	# TODO: 3D fix
-	# rail_left.set_points(draw_points)
-	# backing.set_points(draw_points)
 	_update_crossties(length, get_coord_at_offset)
 	# for point: Vector2 in draw_points: 
 	# 	drawableFunctionsToCallLater.append(func() -> void: draw_circle(point, 3, Color.BLACK))
