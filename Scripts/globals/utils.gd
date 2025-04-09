@@ -253,5 +253,11 @@ func get_ground_mouse_position_vec2() -> OptionalVector2:
 func get_y_layer(y_layer_index: int) -> float:
 	return y_layer_index * 0.01
 	
-func convert_to_3d(vec_2d: Vector2, y_index: int) -> Vector3:
+func convert_to_3d_y_layer(vec_2d: Vector2, y_index: int) -> Vector3:
 	return Vector3(vec_2d.x, get_y_layer(y_index), vec_2d.y)
+
+func convert_to_3d_flat(vec_2d: Vector2) -> Vector3:
+	return Vector3(vec_2d.x, 0, vec_2d.y)
+
+func convert_to_2d(vec_3d: Vector3) -> Vector2:
+	return Vector2(vec_3d.x, vec_3d.z)

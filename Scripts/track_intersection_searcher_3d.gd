@@ -68,7 +68,7 @@ func check_for_junction_at_position(position: Vector2) -> Junction:
 	var results: Array[Dictionary] = check_for_collision(position, 4) # value 4 = bitmask 3
 	for item: Dictionary in results:
 		if item.size() > 0:
-			var junction: Junction = (item["collider"] as Area2D).get_parent()
+			var junction: Junction = (item["collider"] as Area3D).get_parent()
 			junctions_found.append(junction)
 		
 	if (junctions_found.size() > 0):

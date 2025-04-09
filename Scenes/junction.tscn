@@ -1,14 +1,14 @@
 [gd_scene load_steps=3 format=3 uid="uid://cr5xyl54nbt3h"]
 
 [ext_resource type="Script" uid="uid://dgu1ai3bf63h0" path="res://Scripts/junction.gd" id="1_ax2dl"]
-[ext_resource type="Script" uid="uid://3jf3yskienoy" path="res://Scripts/collision_shape_2d.gd" id="2_v1awx"]
+[ext_resource type="Script" uid="uid://f7hesdctl7iy" path="res://Scenes/collision_shape_3d.gd" id="2_je7mr"]
 
-[node name="Junction" type="Node2D"]
+[node name="Junction" type="Node3D"]
 script = ExtResource("1_ax2dl")
 
-[node name="Area2D" type="Area2D" parent="."]
+[node name="Area3D" type="Area3D" parent="."]
 collision_layer = 4
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
-script = ExtResource("2_v1awx")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D"]
+script = ExtResource("2_je7mr")

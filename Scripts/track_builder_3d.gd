@@ -282,8 +282,8 @@ func find_nearest_grid_and_tangents(mousePosOptional: OptionalVector2) -> void:
 
 	if (current_overlay):
 		if (current_overlay.junction):
-			draw_walls_and_centerpoint(current_overlay.junction.position, current_overlay.junction._angle)
-			currentTrackPlacePoint = current_overlay.junction.position
+			draw_walls_and_centerpoint(Utils.convert_to_2d(current_overlay.junction.position), current_overlay.junction._angle)
+			currentTrackPlacePoint = Utils.convert_to_2d(current_overlay.junction.position)
 
 			# If there is only one track on the junction, and we don't have a starting position yet,
 			# snap to that junction
@@ -373,7 +373,7 @@ func update_arrow_end() -> void:
 	# Rotate the arrow sprite to point in the opposite direction of the track's tangent
 	rotate_sprite_3d(-1 * Vector2.from_angle(trackEndingAngle), arrow_end)
 	var vec2 : Vector2 = trackEndingPosition + (arrowPoint * (MapManager3D.cellSize / 2.0))
-	arrow_end.position = Utils.convert_to_3d(vec2, 1)
+	arrow_end.position = Utils.convert_to_3d_y_layer(vec2, 1)
 
 
 func update_arrow_start() -> void:
@@ -381,7 +381,7 @@ func update_arrow_start() -> void:
 	# Determine the arrow's tangent point, it's opposite of the track tangent
 	var arrowPoint: Vector2 = 1 * currentPointTangent
 	rotate_sprite_3d(-1 * arrowPoint, arrow_start)
-	arrow_start.position = Utils.convert_to_3d(currentTrackPlacePoint - (arrowPoint * (MapManager3D.cellSize / 2.0)), 1)
+	arrow_start.position = Utils.convert_to_3d_y_layer(currentTrackPlacePoint - (arrowPoint * (MapManager3D.cellSize / 2.0)), 1)
 	pass
 
 

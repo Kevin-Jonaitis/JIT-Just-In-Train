@@ -44,7 +44,7 @@ func create_dubin_junctions(starting_overlay: TrackOrJunctionOverlap, ending_ove
 
 
 func is_junction_within_search_radius(junction_one: Junction, point: Vector2) -> bool:
-	if (point.distance_to(junction_one.position) <= TrackIntersectionSearcher3D.SEARCH_RADIUS):
+	if (Vector3(point.x, 0, point.y).distance_to(junction_one.position) <= TrackIntersectionSearcher3D.SEARCH_RADIUS):
 		return true
 	else:
 		return false

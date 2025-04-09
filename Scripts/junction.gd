@@ -1,4 +1,4 @@
-extends Node2D
+extends Node3D
 class_name Junction
 
 var uuid: String = Utils.generate_unique_id()
@@ -169,8 +169,8 @@ static func new_Junction(position_: Vector2, junctionsNode: Junctions, connectio
 	junction._angle = Utils.normalize_angle_0_to_2_pi(connection.angle)
 	junction._opposite_angle = Utils.normalize_angle_0_to_2_pi(connection.angle + PI)
 	junction.add_connection(NewConnection.new(connection.track, connection.connected_at_start))
-	junction.position = position_
+	junction.position = Vector3(position_.x, 0, position_.y)
 	junctionsNode.add_child(junction)
-	junction.queue_redraw()
+	# junction.queue_redraw()
 	assert(!junction.name.contains("-"), "This will break pathfinding name parsing if we have a '-' in the name")
 	return junction
