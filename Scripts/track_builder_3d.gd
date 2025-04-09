@@ -13,8 +13,8 @@ var grid_line: Line3D = Line3D.new()
 var circle_color: Color = Color(0, 0, 255)
 var circle_y_index: int = 2
 
-var crosstie_material: StandardMaterial3D = load("res://Assets/crosstie_material.tres")
-var rail_material: StandardMaterial3D = load("res://Assets/rail_color.tres")
+#var crosstie_material: StandardMaterial3D = load("res://Assets/crosstie_material.tres")
+#var rail_material: StandardMaterial3D = load("res://Assets/rail_color.tres")
 
 
 var grid_circle: MeshInstance3D = MeshInstance3D.new()

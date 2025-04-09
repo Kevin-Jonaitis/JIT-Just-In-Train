@@ -14,8 +14,8 @@ var track_or_train: bool = true
 # Interact_or_edit mode
 var interact_or_edit_mode: bool = false
 const MIN_TURN_RADIUS_STEP: float = 1
-# func _ready() -> void:
-# 	train_builder.set_train_builder_disabled()
+func _ready() -> void:
+	train_builder.set_train_builder_disabled()
 
 @onready var mouse_sphere: MeshInstance3D = $MouseSphere
 
@@ -55,11 +55,11 @@ func handle_edit_mode(event: InputEvent) -> void:
 		trackBuilder3D.drawableFunctionsToCallLater.clear()
 		trackBuilder3D.find_nearest_grid_and_tangents(Utils.get_ground_mouse_position_vec2())
 		trackBuilder3D.visible = true
-		# train_builder.set_train_builder_disabled()
+		train_builder.set_train_builder_disabled()
 		# trackBuilder3D.queue_redraw()
-	# elif (!track_or_train):
-	# 	trackBuilder.visible = false
-	# 	train_builder.set_train_builder_enabled()		
+	elif (!track_or_train):
+		trackBuilder3D.visible = false
+		train_builder.set_train_builder_enabled()		
 
 	if (track_or_train):
 		handle_track_building(event)
