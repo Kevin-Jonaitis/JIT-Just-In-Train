@@ -115,10 +115,8 @@ script = ExtResource("1_brhbh")
 [node name="Tracks" type="Node2D" parent="." groups=["tracks"]]
 script = ExtResource("4_n16fs")
 
-[node name="Track" parent="Tracks" node_paths=PackedStringArray("bezier_curve") instance=ExtResource("5_n4hhv")]
+[node name="Track" parent="Tracks" instance=ExtResource("5_n4hhv")]
 position = Vector2(867, 202)
-bezier_curve_prop = SubResource("Curve2D_xvilm")
-bezier_curve = NodePath("BezierPath2D_0")
 
 [node name="BezierPath2D_0" type="Path2D" parent="Tracks/Track"]
 curve = SubResource("Curve2D_xvilm")

@@ -11,3 +11,9 @@ func _init(value_: Vector2) -> void:
 
 static func print(test_value: OptionalVector2) -> void:
 	print("MOUSE POSITION: ", str(test_value.value) if test_value else "null")
+
+func map(fun: Callable) -> Variant:
+	if self.value:
+		return fun.call(self.value)
+	else:
+		return null

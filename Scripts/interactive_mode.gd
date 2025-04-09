@@ -1,4 +1,4 @@
-extends Node2D
+extends Node3D
 
 class_name InteractiveMode
 
@@ -13,4 +13,6 @@ func hide_UI() -> void:
 
 func handle_input(event: InputEvent) -> void:
 	# Later we'll have submodes that will pass handling input around
-	train_schedule_ui.handle_input(event, get_global_mouse_position())
+	var mouse_position: OptionalVector2 = Utils.get_ground_mouse_position_vec2()
+	if (mouse_position):
+		train_schedule_ui.handle_input(event, mouse_position.value)

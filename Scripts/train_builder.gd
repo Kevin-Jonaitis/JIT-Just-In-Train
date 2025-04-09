@@ -1,4 +1,4 @@
-extends Node2D
+extends Node3D
 
 class_name TrainBuilder
 
@@ -17,7 +17,7 @@ static var SOLID: Color = Color(1,1,1,1)  # Added type annotation
 static var BLUE: Color = Color(0,0,1,0.7)  # Added type annotation
 
 const TRACK_COLLISION_LAYER: int = 1
-@onready var track_intersection_searcher: TrackIntersectionSearcher = TrackIntersectionSearcher.new(self)
+@onready var track_intersection_searcher: TrackIntersectionSearcher3D = TrackIntersectionSearcher3D.new(self)
 
 var valid_train_placement: bool = false  # Added type annotation
 
@@ -43,7 +43,12 @@ func handle_input(event: InputEvent) -> void:
 	if (event.is_action_pressed("left_click") && valid_train_placement):
 		place_train()
 
-	var pointInfo: TrackPointInfo = track_intersection_searcher.check_for_overlaps_at_position(get_global_mouse_position())
+	
+
+	var pointInfo: TrackPointInfo = Utils.get_ground_mouse_position_vec2().map(
+		func (value: Vector2) -> TrackPointInfo: 
+			return track_intersection_searcher.check_for_overlaps_at_position(value))
+
 	if (pointInfo):
 		train.set_position_and_rotation(pointInfo.get_point(), pointInfo.angle)
 		train.modulate = SOLID
@@ -52,7 +57,9 @@ func handle_input(event: InputEvent) -> void:
 		train.modulate = TRANSPARENT_RED
 		train.rotation = 0
 		valid_train_placement = false
-		train.set_position_and_rotation(get_global_mouse_position(), 0)
+		var possible_spot: OptionalVector2 = Utils.get_ground_mouse_position_vec2()
+		if possible_spot:
+			train.set_position_and_rotation(possible_spot.value, 0)
 	
 func place_train() -> void:  # Added return type
 	train.modulate = SOLID

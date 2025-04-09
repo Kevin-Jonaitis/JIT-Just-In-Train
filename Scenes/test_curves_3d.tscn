@@ -1,4 +1,4 @@
-[gd_scene load_steps=32 format=3 uid="uid://bo61ftst6mm73"]
+[gd_scene load_steps=39 format=3 uid="uid://bo61ftst6mm73"]
 
 [ext_resource type="Texture2D" uid="uid://cqycvtbraqa6n" path="res://Assets/imported/sandy_gravel_02_4k.gltf/textures/sandy_gravel_02_diff_4k.jpg" id="1_2be7a"]
 [ext_resource type="Script" uid="uid://dw703jxjsc0hp" path="res://Scripts/camera_3d.gd" id="1_dh1k4"]
@@ -12,13 +12,19 @@
 [ext_resource type="Texture2D" uid="uid://ckl20pb85srtb" path="res://Assets/imported/sandy_gravel_02_4k.gltf/textures/sandy_gravel_02_nor_gl_4k.jpg" id="4_oya12"]
 [ext_resource type="Script" uid="uid://b80rmxayma5du" path="res://3d/trains.gd" id="5_mwpqo"]
 [ext_resource type="Script" uid="uid://bx3we6mgiapf2" path="res://3d/junctions.gd" id="6_qva4k"]
+[ext_resource type="Script" uid="uid://dpoa37le2gknl" path="res://Scenes/world_3d.gd" id="6_wgo1u"]
 [ext_resource type="Texture2D" uid="uid://bnc548s8vx7ph" path="res://Assets/test texture.png" id="9_oya12"]
 [ext_resource type="Material" uid="uid://du8evelo05fgv" path="res://Assets/sandy_with_grid.tres" id="9_tapj0"]
 [ext_resource type="Texture2D" uid="uid://fndbqout21sd" path="res://Assets/imported/smile.png" id="10_tmgjn"]
 [ext_resource type="Script" uid="uid://brqqd6a5il3by" path="res://addons/lines_and_trails_3d/line_3d.gd" id="11_l4xbo"]
+[ext_resource type="PackedScene" uid="uid://bd4106ayhxdc0" path="res://Scenes/train_builder.tscn" id="11_oya12"]
 [ext_resource type="Material" uid="uid://p3mhytxfjmio" path="res://Assets/sandy_gravel.tres" id="12_2be7a"]
+[ext_resource type="Script" uid="uid://3kj3en6k7jfq" path="res://Scripts/interactive_mode.gd" id="12_4dmv2"]
 [ext_resource type="Script" uid="uid://dat4dm1pytyav" path="res://addons/lines_and_trails_3d/trail_3d.gd" id="12_ldvnk"]
 [ext_resource type="Script" uid="uid://bf1rv43fffhyb" path="res://Scripts/fps.gd" id="14_i7f5g"]
+[ext_resource type="StyleBox" uid="uid://couho1lepf2hq" path="res://Assets/stylebox.tres" id="16_go0cu"]
+[ext_resource type="PackedScene" uid="uid://bfsvlbfk8q1dq" path="res://Scenes/train_sprite.tscn" id="16_l6knw"]
+[ext_resource type="Script" uid="uid://c404jcvnt7t42" path="res://Scripts/ui/train_schedule_ui.gd" id="17_l6knw"]
 [ext_resource type="PackedScene" uid="uid://dxxkbwcc7s7kn" path="res://Assets/imported/Rails A.fbx" id="21_oya12"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_aeeh6"]
@@ -54,6 +60,12 @@ albedo_texture = ExtResource("9_oya12")
 
 [sub_resource type="SphereMesh" id="SphereMesh_ldvnk"]
 
+[sub_resource type="StyleBoxLine" id="StyleBoxLine_wgo1u"]
+color = Color(0, 0, 0, 0)
+grow_begin = 0.0
+grow_end = 0.0
+thickness = 5
+
 [sub_resource type="BoxMesh" id="BoxMesh_436s2"]
 size = Vector3(2, 2, 2)
 
@@ -79,6 +91,7 @@ material_override = SubResource("StandardMaterial3D_4dmv2")
 mesh = SubResource("PlaneMesh_elx2p")
 
 [node name="World" type="Node3D" parent="."]
+script = ExtResource("6_wgo1u")
 
 [node name="MouseTracker3D" type="Node3D" parent="World"]
 script = ExtResource("2_dh1k4")
@@ -118,6 +131,12 @@ visible = false
 mesh = SubResource("SphereMesh_ldvnk")
 skeleton = NodePath("../../..")
 
+[node name="TrainBuilder" parent="World/MouseTracker3D" instance=ExtResource("11_oya12")]
+
+[node name="InteractiveMode" type="Node3D" parent="World/MouseTracker3D"]
+script = ExtResource("12_4dmv2")
+metadata/_custom_type_script = "uid://3kj3en6k7jfq"
+
 [node name="Tracks" type="Node3D" parent="World"]
 script = ExtResource("4_03nuc")
 
@@ -126,6 +145,77 @@ script = ExtResource("5_mwpqo")
 
 [node name="Junctions" type="Node3D" parent="World"]
 script = ExtResource("6_qva4k")
+
+[node name="UIWorldItems" type="Node2D" parent="World" groups=["UIWorldItems"]]
+
+[node name="PlacingStationSprite" parent="World/UIWorldItems" instance=ExtResource("16_l6knw")]
+
+[node name="UI" type="CanvasLayer" parent="World"]
+
+[node name="Control" type="Control" parent="World/UI"]
+layout_mode = 3
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -20.0
+offset_right = 40.0
+offset_bottom = 20.0
+grow_vertical = 2
+
+[node name="TrainScheduleUI" type="PanelContainer" parent="World/UI/Control"]
+visible = false
+clip_children = 2
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 50.0
+offset_top = -100.0
+offset_bottom = 200.0
+grow_vertical = 2
+theme_override_styles/panel = ExtResource("16_go0cu")
+script = ExtResource("17_l6knw")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="World/UI/Control/TrainScheduleUI"]
+layout_mode = 2
+metadata/_edit_lock_ = true
+
+[node name="TrainName" type="Label" parent="World/UI/Control/TrainScheduleUI/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 24
+text = "Train"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="World/UI/Control/TrainScheduleUI/VBoxContainer"]
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+theme_override_styles/separator = SubResource("StyleBoxLine_wgo1u")
+
+[node name="Stops" type="VBoxContainer" parent="World/UI/Control/TrainScheduleUI/VBoxContainer"]
+layout_mode = 2
+
+[node name="Add Station" type="Button" parent="World/UI/Control/TrainScheduleUI/VBoxContainer"]
+layout_mode = 2
+text = "Add Station"
+
+[node name="ExitButton" type="Button" parent="World/UI/Control/TrainScheduleUI"]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 0
+text = "x"
+
+[node name="FPS" type="Label" parent="World/UI"]
+z_index = 4
+offset_left = 1087.0
+offset_top = 4.0
+offset_right = 1141.0
+offset_bottom = 27.0
+text = "FPS: -99"
+vertical_alignment = 1
+script = ExtResource("14_i7f5g")
 
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.0244322, 0.999702, 0, -0.999702, 0.0244322, 0.542, 10, 4)
@@ -182,3 +272,6 @@ script = ExtResource("14_i7f5g")
 
 [node name="Rails A" parent="." instance=ExtResource("21_oya12")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.21899, 0, 19.0151)
+
+[connection signal="pressed" from="World/UI/Control/TrainScheduleUI/VBoxContainer/Add Station" to="World/UI/Control/TrainScheduleUI" method="_on_add_station_pressed"]
+[connection signal="pressed" from="World/UI/Control/TrainScheduleUI/ExitButton" to="World/UI/Control/TrainScheduleUI" method="_on_exit_button_pressed"]

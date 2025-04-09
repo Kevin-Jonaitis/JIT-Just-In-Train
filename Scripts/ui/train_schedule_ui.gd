@@ -41,7 +41,7 @@ func reset_state() -> void:
 
 # Set From the world object
 # Could also probably just set this from a global loader?
-var track_intersection_searcher: TrackIntersectionSearcher 
+var track_intersection_searcher: TrackIntersectionSearcher3D 
 
 var selecting_station_mode: bool = false
 

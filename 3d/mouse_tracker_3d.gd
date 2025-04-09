@@ -3,8 +3,8 @@ extends Node3D
 class_name MouseTracker3D
 
 @onready var trackBuilder3D: TrackBuilder3D = $TrackBuilder3D
-# @onready var train_builder: TrainBuilder = $TrainBuilder
-# @onready var interactive_mode: InteractiveMode = $InteractiveMode
+@onready var train_builder: TrainBuilder = $TrainBuilder
+@onready var interactive_mode: InteractiveMode = $InteractiveMode
 
 var drawableFunctionsToCallLater: Array[Callable] = []
 
@@ -21,34 +21,31 @@ const MIN_TURN_RADIUS_STEP: float = 1
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	trackBuilder3D.test_call()
-	# trackBuilder3D.draw_line_mesh(trackBuilder3D.wall_im_mesh, [Vector2(0,0), Vector2(0,1), Vector2(1,1)])
 
+	if (event.is_action_pressed("interact_mode")):
+		interact_or_edit_mode = !interact_or_edit_mode #Toggable, we should change this later to be more user friendly
 
-	# if (event.is_action_pressed("interact_mode")):
-	# 	interact_or_edit_mode = !interact_or_edit_mode #Toggable, we should change this later to be more user friendly
+	if (event.is_action_pressed("place_train_or_track")): # Maybe this could go top level?
+		track_or_train = !track_or_train
 
-	# if (event.is_action_pressed("place_train_or_track")): # Maybe this could go top level?
-	# 	track_or_train = !track_or_train
-
-	# if (interact_or_edit_mode):
-	# 	handle_interact_mode(event)
-	# else:
-	handle_edit_mode(event)
+	if (interact_or_edit_mode):
+		handle_interact_mode(event)
+	else:
+		handle_edit_mode(event)
 
 # TODO: There's got to be a better way to do this
-# func hide_editor_modes() -> void:
-# 	trackBuilder.visible = false
-# 	trackBuilder.cancel_track()
-# 	train_builder.set_train_builder_disabled()
+func hide_editor_modes() -> void:
+	trackBuilder3D.visible = false
+	trackBuilder3D.cancel_track()
+	train_builder.set_train_builder_disabled()
 
-# func hide_interact_mode() -> void:
-# 	interactive_mode.hide_UI()
+func hide_interact_mode() -> void:
+	interactive_mode.hide_UI()
 	
-# func handle_interact_mode(event: InputEvent) -> void:
-# 	hide_editor_modes()
-# 	interactive_mode.handle_input(event)
-# 	pass
+func handle_interact_mode(event: InputEvent) -> void:
+	hide_editor_modes()
+	interactive_mode.handle_input(event)
+	pass
 
 func handle_edit_mode(event: InputEvent) -> void:
 	pass

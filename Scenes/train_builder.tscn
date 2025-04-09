@@ -2,5 +2,5 @@
 
 [ext_resource type="Script" uid="uid://ct81vkhir5l0i" path="res://Scripts/train_builder.gd" id="1_0dkfy"]
 
-[node name="TrainBuilder" type="Node2D"]
+[node name="TrainBuilder" type="Node3D"]
 script = ExtResource("1_0dkfy")
