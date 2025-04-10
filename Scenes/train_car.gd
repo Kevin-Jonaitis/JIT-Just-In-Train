@@ -1,5 +1,7 @@
-extends Node2D
+extends Node3D
 
 class_name TrainCar
 
-@onready var area2d : Area2D = $Area2D
+@onready var area3d : Area3D = $Area3D
+@onready var boogie_front: MeshInstance3D = $Model/BoogieFront
+@onready var boogie_back: MeshInstance3D = $Model/BoogieBack

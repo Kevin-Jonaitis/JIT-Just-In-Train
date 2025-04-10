@@ -5,18 +5,16 @@
 [ext_resource type="Script" uid="uid://dm3oagscvaajl" path="res://Scripts/stops.gd" id="4_73r2y"]
 [ext_resource type="PackedScene" uid="uid://b7r520607ib5w" path="res://Scenes/train_car.tscn" id="4_a6eo5"]
 
-[node name="Train" type="Node2D"]
+[node name="Train" type="Node3D"]
 script = ExtResource("1_d7wio")
 
-[node name="Stops" type="Node2D" parent="."]
+[node name="Stops" type="Node3D" parent="."]
 script = ExtResource("4_73r2y")
 
-[node name="ScheduleFollower" type="Node2D" parent="."]
+[node name="ScheduleFollower" type="Node3D" parent="."]
 top_level = true
 script = ExtResource("1_6okc3")
 
-[node name="Cars" type="Node2D" parent="."]
+[node name="Cars" type="Node3D" parent="."]
 
 [node name="TrainCar" parent="Cars" instance=ExtResource("4_a6eo5")]
-
-[editable path="Cars/TrainCar"]

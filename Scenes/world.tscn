@@ -134,6 +134,5 @@ script = ExtResource("14_dgxka")
 
 [node name="PlacingStationSprite" parent="UIWorldItems" instance=ExtResource("15_iymaf")]
 
-[connection signal="add_new_train" from="MouseTracker/TrainBuilder" to="Trains" method="_on_train_placed"]
 [connection signal="pressed" from="UI/Control/TrainScheduleUI/VBoxContainer/Add Station" to="UI/Control/TrainScheduleUI" method="_on_add_station_pressed"]
 [connection signal="pressed" from="UI/Control/TrainScheduleUI/ExitButton" to="UI/Control/TrainScheduleUI" method="_on_exit_button_pressed"]

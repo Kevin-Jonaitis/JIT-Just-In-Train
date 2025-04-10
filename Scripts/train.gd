@@ -1,4 +1,4 @@
-extends Node2D
+extends Node3D
 
 class_name Train
 
@@ -50,9 +50,18 @@ func flip_front_car() -> void:
 		_use_last_car_as_front = true
 		front_car = _cars[_cars.size() - 1]
 
+# set the boogie rotation and the train position
+func set_position_on_track(pointInfo: TrackPointInfo) -> void:
+	var car_center: Vector2 = pointInfo.get_point()
+	front_car.position = Vector3(car_center.x, 0, car_center.y)
+	front_car.rotation = Vector3(0, - pointInfo.angle - 3 * PI / 2, 0)
+	front_car.boogie_front.rotation = Vector3(0, - pointInfo.angle - 3 * PI / 2, 0)
+	front_car.boogie_back.rotation = Vector3(0, - pointInfo.angle - 3 * PI / 2, 0)
+
+
 func set_position_and_rotation(position_: Vector2, rotation_: float) -> void:
-	front_car.position = position_
-	front_car.rotation = rotation_
+	front_car.position = Vector3(position_.x, 0, position_.y)
+	front_car.rotation = Vector3(0, - rotation_ - 3 * PI / 2, 0)
 	#TODO: modify all the following cars
 
 func _ready() -> void:
@@ -107,7 +116,7 @@ func calculate_schedule() -> void:
 		#print_schedule()
 		schedule_follower.reset()
 		# calculate_path_draw()
-		queue_redraw()
+		#queue_redraw() # TODO: 3D fix
 		# Graph.print_graph()
 
 var colors: Array[Color] = [

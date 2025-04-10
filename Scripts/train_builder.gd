@@ -29,7 +29,7 @@ func set_train_builder_disabled() -> void:  # Added return type
 
 func _ready() -> void:  # Added return type
 	create_new_train(false)
-	train.modulate = TRANSPARENT_RED
+	# train.modulate = TRANSPARENT_RED
 
 func create_new_train(visible_: bool) -> void:  # Added return type
 	train = trainScene.instantiate()
@@ -43,27 +43,27 @@ func handle_input(event: InputEvent) -> void:
 	if (event.is_action_pressed("left_click") && valid_train_placement):
 		place_train()
 
-	
-
 	var pointInfo: TrackPointInfo = Utils.get_ground_mouse_position_vec2().map(
 		func (value: Vector2) -> TrackPointInfo: 
 			return track_intersection_searcher.check_for_overlaps_at_position(value))
 
 	if (pointInfo):
-		train.set_position_and_rotation(pointInfo.get_point(), pointInfo.angle)
-		train.modulate = SOLID
+		#-y_rotation + PI
+		# train.modulate = SOLID
+		train.set_position_on_track(pointInfo)
+		# train.set_position_and_rotation(pointInfo.get_point(), pointInfo.angle)
 		valid_train_placement = true
 	else:
-		train.modulate = TRANSPARENT_RED
-		train.rotation = 0
+		# train.modulate = TRANSPARENT_RED
+		train.rotation = Vector3(0, 0, 0)
 		valid_train_placement = false
 		var possible_spot: OptionalVector2 = Utils.get_ground_mouse_position_vec2()
 		if possible_spot:
 			train.set_position_and_rotation(possible_spot.value, 0)
 	
 func place_train() -> void:  # Added return type
-	train.modulate = SOLID
-	train.front_car.area2d.collision_layer = Train.TRAIN_COLLISION_LAYER
+	# train.modulate = SOLID
+	train.front_car.area3d.collision_layer = Train.TRAIN_COLLISION_LAYER
 	train.is_placed = true
 	DeferredQueue.queue_calculate_turnaround(train) # As soon as it's placed set its turnaround loops
 	create_new_train(true)

@@ -273,5 +273,6 @@ script = ExtResource("14_i7f5g")
 [node name="Rails A" parent="." instance=ExtResource("21_oya12")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.21899, 0, 19.0151)
 
+[connection signal="add_new_train" from="World/MouseTracker3D/TrainBuilder" to="World/Trains" method="_on_train_placed"]
 [connection signal="pressed" from="World/UI/Control/TrainScheduleUI/VBoxContainer/Add Station" to="World/UI/Control/TrainScheduleUI" method="_on_add_station_pressed"]
 [connection signal="pressed" from="World/UI/Control/TrainScheduleUI/ExitButton" to="World/UI/Control/TrainScheduleUI" method="_on_exit_button_pressed"]

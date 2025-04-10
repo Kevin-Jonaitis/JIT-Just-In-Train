@@ -63,8 +63,8 @@ func handle_edit_mode(event: InputEvent) -> void:
 
 	if (track_or_train):
 		handle_track_building(event)
-	# else:
-	# 	train_builder.handle_input(event)
+	else:
+		train_builder.handle_input(event)
 
 func handle_track_building(event: InputEvent) -> void:
 	draw_sphere_for_mouse_position()
