@@ -91,7 +91,7 @@ func set_boogie_rotation(car_center_angle: float, radians: float) -> float:
 	return car_center_angle - radians
 
 func set_position_and_rotation(position_: Vector2, rotation_: float) -> void:
-	front_car.position = Vector3(position_.x, 0, position_.y)
+	front_car.position = Vector3(position_.x, 0.666, position_.y)
 	front_car.rotation = Vector3(0, offset_rotation(rotation_), 0)
 	#TODO: modify all the following cars
 

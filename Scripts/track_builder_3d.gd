@@ -435,7 +435,7 @@ func compute_path() -> void:
 		minAllowedRadius,
 		track_mode_flag,
 		curve_type_flag,
-		true ## draw paths!!
+		false ## draw paths!!
 		)
 
 	self.validTrack = valid
