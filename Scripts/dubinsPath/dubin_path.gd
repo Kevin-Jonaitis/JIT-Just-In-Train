@@ -185,7 +185,7 @@ func get_approx_point_index_at_offset(offset: float) -> int:
 	
 	return _points.size() - 1
 
-func get_distance_to_point(point_index: int) -> float:
+func get_offset_to_point(point_index: int) -> float:
 	var running_distance: float = 0
 	var segment_index: int = segment_index_for_point[point_index]
 	for segment: int in range(segment_index):

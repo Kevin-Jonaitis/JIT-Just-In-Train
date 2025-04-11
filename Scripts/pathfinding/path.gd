@@ -29,7 +29,7 @@ var reverse_nodes: Array[VirtualNode] = []:
 		return reverse_nodes
 
 var calculated_length: bool = false
-var calculated_track_segments : bool = false
+var calculated_track_segments: bool = false
 var calculated_reverse_nodes: bool = false
 
 func _init(new_nodes: Array[VirtualNode]) -> void:

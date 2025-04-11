@@ -16,7 +16,7 @@ var drawableFunctionsToCallLater: Array[Callable] = []
 func _on_train_placed(train: Train) -> void:
 	add_child(train)
 
-
+	
 # TODO: Put this somewhere more appropriate
 # Given an old track that's being split into 2 new tracks, update the train stops on the old track
 func update_train_stops(old_track: Track3D, new_track_a: Track3D, new_track_b: Track3D) -> void:

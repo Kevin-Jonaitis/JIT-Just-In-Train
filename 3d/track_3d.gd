@@ -324,12 +324,12 @@ func delete_track() -> void:
 	self.queue_free()
 	DeferredQueue.network_updated()
 
-func get_distance_to_point(point_index: int) -> float:
+func get_offset_to_point(point_index: int) -> float:
 	if bezier_curve:
 		assert(false, "Unimplemented code path!")
 		return 0
 	elif dubins_path:
-		return dubins_path.shortest_path.get_distance_to_point(point_index)
+		return dubins_path.shortest_path.get_offset_to_point(point_index)
 	else:
 		assert(false, "We haven't defined a curve for this track yet!")
 		return 0

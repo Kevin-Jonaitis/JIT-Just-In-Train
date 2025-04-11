@@ -3,6 +3,9 @@ extends Node3D
 class_name Train
 
 const TRAIN_COLLISION_LAYER: int = 8
+var BOGIE_HEIGHT: float = 0.826
+var TRAIN_CAR_HEIGHT: float = 0.64
+@onready var track_intersection_searcher: TrackIntersectionSearcher3D = TrackIntersectionSearcher3D.new(self)
 
 # Length of ALL cars end-to-end(including gaps)
 var length : float = 80 #TODO: Set this to a a real value based on the train sprites
@@ -53,11 +56,35 @@ func flip_front_car() -> void:
 # set the boogie rotation and the train position
 func set_position_on_track(pointInfo: TrackPointInfo) -> void:
 	var car_center: Vector2 = pointInfo.get_point()
-	front_car.position = Vector3(car_center.x, 0, car_center.y)
+	front_car.position = Vector3(car_center.x, TRAIN_CAR_HEIGHT, car_center.y)
 	front_car.rotation = Vector3(0, - pointInfo.angle - 3 * PI / 2, 0)
-	front_car.boogie_front.rotation = Vector3(0, - pointInfo.angle - 3 * PI / 2, 0)
-	front_car.boogie_back.rotation = Vector3(0, - pointInfo.angle - 3 * PI / 2, 0)
 
+	var front_car_position : Transform3D = front_car.global_transform
+	var front_boogie_global_position : Vector3 = front_car_position.origin + front_car.global_transform.basis * Vector3(0, 0.826, 2.229)
+	var back_boogie_global_position : Vector3 = front_car_position.origin + front_car.global_transform.basis * Vector3(0, 0.826, -2.331)
+
+
+	# Has to be searched the front car position is set since the boogies are locally offset from the car
+	var front_boogie_point_info: TrackPointInfo = track_intersection_searcher.check_for_overlaps_at_position(Utils.convert_to_2d(front_boogie_global_position))
+	var back_boogie_point_info: TrackPointInfo = track_intersection_searcher.check_for_overlaps_at_position(Utils.convert_to_2d(back_boogie_global_position))
+	
+	if !(front_boogie_point_info && back_boogie_point_info):
+		return
+
+	front_car.boogie_front.global_position = Vector3(front_boogie_point_info.get_point().x, 
+	front_car.position.y + BOGIE_HEIGHT, front_boogie_point_info.get_point().y)
+	
+	front_car.boogie_back.global_position = Vector3(back_boogie_point_info.get_point().x,
+	front_car.position.y + BOGIE_HEIGHT, back_boogie_point_info.get_point().y)
+
+	front_car.boogie_front.global_rotation = Vector3(0, set_train_rotation(front_boogie_point_info.angle), 0)
+	front_car.boogie_back.global_rotation = Vector3(0, set_train_rotation(back_boogie_point_info.angle), 0)
+
+func set_train_rotation(radians: float) -> float:
+	return - radians - 3 * PI / 2
+
+func set_boogie_rotation(car_center_angle: float, radians: float) -> float:
+	return car_center_angle - radians
 
 func set_position_and_rotation(position_: Vector2, rotation_: float) -> void:
 	front_car.position = Vector3(position_.x, 0, position_.y)

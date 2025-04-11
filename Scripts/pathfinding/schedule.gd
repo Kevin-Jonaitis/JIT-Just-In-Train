@@ -1,7 +1,8 @@
 extends RefCounted
 
 class_name  Schedule
-
+# I will know the "starting" positions of the bogies behind it, because we force the train to always be on a single track when it stops. 
+# so we can just look at the "opposite" direction of travel on the rail and determine the parts behind the train\
 # path between each pair of stops
 var paths: Array[Path]
 var is_loop: bool

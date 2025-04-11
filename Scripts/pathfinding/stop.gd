@@ -66,12 +66,12 @@ static func new_Stop(stop_option_: Array[TrainPosition]) -> Stop:
 # However, we calcualte the FRONT of the front cart and the BACK of the BACK cart the prevent placing a stop that would
 # have the train "hang over" the edge of a track
 static func create_stop_for_point(middle_of_front_car: TrackPointInfo, train: Train, train_placed_forward: bool) -> Stop:
-	var middle_of_front_car_track_pos: float = middle_of_front_car.track.get_distance_to_point(middle_of_front_car.point_index)
+	var middle_of_front_car_track_pos: float = middle_of_front_car.track.get_offset_to_point(middle_of_front_car.point_index)
 	var middle_of_back_car_distance: float
 	var front_of_front_car: float
 	var back_of_back_car: float
 	var length_of_cart : float = train.cart_length
-	var track_distance_to_middle_of_front_car: float = middle_of_front_car.track.get_distance_to_point(middle_of_front_car.point_index)
+	var track_distance_to_middle_of_front_car: float = middle_of_front_car.track.get_offset_to_point(middle_of_front_car.point_index)
 	if train_placed_forward:
 		front_of_front_car = track_distance_to_middle_of_front_car + (length_of_cart / 2)
 		back_of_back_car = front_of_front_car - train.length
