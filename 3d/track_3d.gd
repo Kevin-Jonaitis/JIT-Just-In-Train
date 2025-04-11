@@ -317,6 +317,16 @@ func get_angle_at_point_index(index: int) -> float:
 		assert(false, "We haven't defined a curve for this track yet!")
 		return 0
 
+func get_angle_at_offset(offset: float) -> float:
+	if bezier_curve:
+		assert(false, "Unimplemented code path!")
+		return -1
+	elif dubins_path:
+		return dubins_path.shortest_path.get_angle_at_offset(offset)
+	else:
+		assert(false, "We haven't defined a curve for this track yet!")
+		return 0
+
 func delete_track() -> void:
 	# start_junction.remove_track_and_nodes(self)
 	# end_junction.remove_track_and_nodes(self)

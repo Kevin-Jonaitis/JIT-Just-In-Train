@@ -8,9 +8,11 @@ var TRAIN_CAR_HEIGHT: float = 0.64
 @onready var track_intersection_searcher: TrackIntersectionSearcher3D = TrackIntersectionSearcher3D.new(self)
 
 # Length of ALL cars end-to-end(including gaps)
-var length : float = 80 #TODO: Set this to a a real value based on the train sprites
+var length : float = 5.35 #TODO: Set this to a a multiple of the cart_length the space between them
 # Length of a single cart of the train
-const cart_length : float = 80 #TODO: Set this to a a real value based on the train sprites
+const cart_length : float = 5.35 #TODO: Set this to a a real value based on model; I just used a ruler to measure it
+# const cart_length : float = 80 #TODO: Set this to a a real value based on the train sprites
+
 const num_of_carts : int = 1 #TODO: Set this to a a real value based on the train sprites
 
 var is_placed: bool = false
@@ -88,8 +90,11 @@ func set_boogie_rotation(car_center_angle: float, radians: float) -> float:
 
 func set_position_and_rotation(position_: Vector2, rotation_: float) -> void:
 	front_car.position = Vector3(position_.x, 0, position_.y)
-	front_car.rotation = Vector3(0, - rotation_ - 3 * PI / 2, 0)
+	front_car.rotation = Vector3(0, offset_rotation(rotation_), 0)
 	#TODO: modify all the following cars
+
+static func offset_rotation(angle: float) -> float:
+	return - angle - 3 * PI / 2
 
 func _ready() -> void:
 	for callable: Callable in on_ready_callables:

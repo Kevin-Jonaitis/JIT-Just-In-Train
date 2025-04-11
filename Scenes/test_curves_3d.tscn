@@ -218,7 +218,7 @@ vertical_alignment = 1
 script = ExtResource("14_i7f5g")
 
 [node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.0244322, 0.999702, 0, -0.999702, 0.0244322, 0.542, 10, 4)
+transform = Transform3D(1, 0, 0, 0, 0.0244322, 0.999702, 0, -0.999702, 0.0244322, 0.542, 50, 4)
 fov = 68.9283
 script = ExtResource("1_dh1k4")
 

@@ -125,6 +125,7 @@ func update_progress(old_progress: Progress, new_progress_px: float, train: Trai
 
 	# var location: PathLocation = PathLocation.new()
 	new_progress.position = segment.get_position_at_progress(new_progress_for_track_segment)
+	new_progress.rotation = segment.get_rotation_at_progress(new_progress_for_track_segment)
 	new_progress.track_segment_index = track_segment_index
 	new_progress.track_segment_progress = new_progress_for_track_segment
 	return new_progress
@@ -149,6 +150,11 @@ class TrackSegment:
 		if (end_track_pos < start_track_pos):
 			progress = -progress
 		return track.get_point_at_offset(starting_progress + progress)
+
+	func get_rotation_at_progress(progress: float) -> float:
+		if (end_track_pos < start_track_pos):
+			progress = -progress
+		return track.get_angle_at_offset(starting_progress + progress)
 	
 	func calculate_length() -> float:
 		return abs(end_track_pos - start_track_pos)

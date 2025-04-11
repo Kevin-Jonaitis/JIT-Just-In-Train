@@ -4,6 +4,7 @@ class_name Progress
 
 
 var position: Vector2
+var rotation: float # Rotation in radians at position
 var overshoot: float # Total overshoot of whole schedule
 var path_overshoot: float # How much we overshot a path(between two stops)
 var path_index: int = 0 # index in the schedule
