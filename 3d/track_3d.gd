@@ -328,9 +328,9 @@ func get_angle_at_offset(offset: float) -> float:
 		return 0
 
 func delete_track() -> void:
-	# start_junction.remove_track_and_nodes(self)
-	# end_junction.remove_track_and_nodes(self)
-	# virtual_node_manager.delete_interjunction_virtual_nodes() # TODO: remove, because it's duplicated?
+	start_junction.remove_track_and_nodes(self)
+	end_junction.remove_track_and_nodes(self)
+	virtual_node_manager.delete_interjunction_virtual_nodes() # TODO: remove, because it's duplicated?
 	self.queue_free()
 	DeferredQueue.network_updated()
 

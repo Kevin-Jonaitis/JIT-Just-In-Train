@@ -87,7 +87,7 @@ func add_vritual_nodes_for_connection(connection_: TrackConnection) -> void:
 
 func add_connection(connection: NewConnection) -> void:
 	# 1. Determine if the new track approaches from the _angle or _opposite_angle
-	var track_connection: TrackConnection = null
+	var track_connection: TrackConnection = null	
 	if Utils.check_angle_matches(connection.angle, _angle):
 		track_connection = TrackConnection.new(connection.track, true, connection.connected_at_start)
 	elif Utils.check_angle_matches(connection.angle, _opposite_angle):

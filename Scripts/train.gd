@@ -151,7 +151,6 @@ func calculate_schedule() -> void:
 		#print_schedule()
 		schedule_follower.reset()
 		calculate_path_draw()
-		#queue_redraw() # TODO: 3D fix
 		# Graph.print_graph()
 
 var colors: Array[Color] = [
