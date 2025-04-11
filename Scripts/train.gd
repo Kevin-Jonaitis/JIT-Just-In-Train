@@ -15,6 +15,8 @@ const cart_length : float = 5.35 #TODO: Set this to a a real value based on mode
 
 const num_of_carts : int = 1 #TODO: Set this to a a real value based on the train sprites
 
+var path_line: Line3D = Line3D.new()
+
 var is_placed: bool = false
 @onready var _stops: Array[Stop] :
 	get:
@@ -101,6 +103,7 @@ func _ready() -> void:
 		callable.call()
 	
 	front_car = _cars[0]
+	add_child(path_line)
 
 
 func set_name_user(name_: String) -> void:
@@ -147,7 +150,7 @@ func calculate_schedule() -> void:
 		# 	schedule.debug_print_schedule()
 		#print_schedule()
 		schedule_follower.reset()
-		# calculate_path_draw()
+		calculate_path_draw()
 		#queue_redraw() # TODO: 3D fix
 		# Graph.print_graph()
 
@@ -155,28 +158,49 @@ var colors: Array[Color] = [
 	Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.CYAN, Color.MAGENTA, Color.ORANGE, Color.PURPLE, Color.PINK, Color.TEAL, Color.GRAY, Color.LIME, Color.AQUA, Color.OLIVE, Color.MAROON, Color.TEAL, Color.SILVER, Color.WHITE, Color.BLACK
 ]
 
-# func calculate_path_draw() -> void:
-# 	if not schedule:
-# 		return
-# 	trains.queue_redraw()
-# 	for path: Path in schedule.paths:
-# 		var color: Color = colors[randi() % colors.size()]
-# 		for segment: Path.TrackSegment in path.track_segments:
-# 			var start_pos: float = segment.start_track_pos
-# 			var end_pos: float = segment.end_track_pos
-# 			var step: int = 5 if start_pos < end_pos else -5 # 5 px
-# 			for i: int in range(start_pos, end_pos, step):
-# 				var point_a: Vector2 = segment.track.get_point_at_offset(i)
-# 				var point_b: Vector2 = segment.track.get_point_at_offset(i + step)
-# 				trains.drawableFunctionsToCallLater.append(func() -> void: trains.draw_line(point_a, point_b, color, 4))
 
-# func _draw() -> void:
-# 	for stop: Stop in _stops:
-# 		for stop_option: Stop.TrainPosition in stop.stop_option:
-# 			var front_stop: StopNode = stop_option.front_of_train
-# 			var end_stop: StopNode = stop_option.back_of_train
-# 			var offset_vector: Vector2 = Vector2(5, 5)
+func calculate_path_draw() -> void:
+	path_line.clear()
+	if not schedule:
+		return
+	var points : PackedVector2Array = PackedVector2Array()
+	for path: Path in schedule.paths:
+		for segment: Path.TrackSegment in path.track_segments:
+			var start_pos: float = segment.start_track_pos
+			var end_pos: float = segment.end_track_pos
+			var step: int = 1 if start_pos < end_pos else -1 # 1 meter
+			for i: int in range(start_pos, end_pos, step):
+				points.append(segment.track.get_point_at_offset(i))
+	set_line_attributes(path_line, points, 20, colors[randi() % colors.size()])
 
-# 			draw_circle(front_stop.get_vector_pos(), 3, Color.WHITE, true)
-# 			draw_circle(end_stop.get_vector_pos(), 3, Color.RED, true)
-# 			draw_line(front_stop.get_vector_pos() + offset_vector, end_stop.get_vector_pos() + offset_vector, Color.BLACK, 4)
+
+static func set_line_attributes(line: Line3D, points_2d: Array[Vector2], y_index: int, color: Color) -> void:
+	var y_value: float = Utils.get_y_layer(y_index)
+	var points: PackedVector3Array = PackedVector3Array()
+	for point : Vector2 in points_2d:
+		points.append(Vector3(point.x, y_value, point.y))
+	line.points = points
+	line.color = color
+	line.width = 0.5
+	line.billboard_mode = Line3D.BillboardMode.NONE
+	line.curve_normals = calculate_normals_from_points(points)
+	line.rebuild()
+
+
+# # WE ASSUME THAT ALL POINTS LINE ON THE SAME FLAT(XZ) plane,
+# # hence using Vector3 as our reference
+static func calculate_normals_from_points(points: Array[Vector3]) -> PackedVector3Array:
+	var normals: PackedVector3Array = PackedVector3Array()
+	for i: int in range(points.size() - 1):
+		var direction: Vector3 = points[i + 1] - points[i]
+		direction.cross(Vector3.UP).normalized()
+		var normal: Vector3 = Vector3(-direction.z, 0, direction.x).normalized()
+		normals.append(normal)
+	# Add the last normal
+	if points.size() > 1:
+		var last_direction: Vector3 = points[-1] - points[-2]
+		last_direction.cross(Vector3.UP).normalized()
+		#We should reverse the direction for the last normal
+		var last_normal: Vector3 = Vector3(-last_direction.z, 0, last_direction.x).normalized()
+		normals.append(last_normal)
+	return normals

@@ -25,10 +25,12 @@ func _on_request_train_ui_show(show_or_hide: bool) -> void:
 	reset_state()
 	if (show_or_hide):
 		self.show()
+		current_train.path_line.show() ## TODO: This should probably be grouped better
 		set_train_stop_visiblity(true)
 		render()
 	else:
 		self.hide()
+		current_train.path_line.hide()
 		train_station_sprite.visible = false
 		set_train_stop_visiblity(false)
 
