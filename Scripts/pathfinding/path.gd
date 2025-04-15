@@ -91,46 +91,6 @@ func check_if_track_segment_starts_with_reverse_node(track_segment_index: int) -
 			return true
 	return false
 
-func update_progress(old_progress: Progress, new_progress_px: float, train: Train) -> Progress:
-	var new_progress: Progress = Progress.copy(old_progress)
-	var track_segment_index: int = new_progress.track_segment_index
-	var previous_track_segment_progress: float = new_progress.track_segment_progress
-	var segment: TrackSegment = track_segments[track_segment_index]
-	var segment_length: float = segment.get_length()
-
-	while (previous_track_segment_progress + new_progress_px) > segment_length:
-		track_segment_index += 1
-		if(check_if_track_segment_starts_with_reverse_node(track_segment_index)):
-			# When you flip around, the "train" advances by the amount of distance we shifit our
-			# cart position
-			new_progress_px = new_progress_px + train.cart_length * (train._cars.size() - 1)
-			new_progress.reverse()
-
-		new_progress_px = new_progress_px - (segment_length - previous_track_segment_progress)
-		previous_track_segment_progress = 0
-		
-		
-		if track_segment_index == track_segments.size():
-			# We've reached the end of the path
-			# var overshot_path: PathLocation = PathLocation.new()
-			# overshot_path.overshoot = new_progress
-			new_progress.path_overshoot = new_progress_px
-			new_progress.track_segment_progress = 0
-			return new_progress
-			
-		segment = track_segments[track_segment_index]
-		segment_length = segment.get_length()
-	
-	var new_progress_for_track_segment: float = new_progress_px + previous_track_segment_progress
-
-	# var location: PathLocation = PathLocation.new()
-	new_progress.position = segment.get_position_at_progress(new_progress_for_track_segment)
-	new_progress.rotation = segment.get_rotation_at_progress(new_progress_for_track_segment)
-	new_progress.track_segment_index = track_segment_index
-	new_progress.track_segment_progress = new_progress_for_track_segment
-	return new_progress
-
-
 class TrackSegment:
 	var track: Track3D
 	#Distance too this point on the track(not the global vector2 position)
