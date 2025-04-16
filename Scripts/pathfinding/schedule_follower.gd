@@ -58,7 +58,7 @@ func update_progress(old_progress: Progress, schedule: Schedule, progress_px: fl
 		if(path.check_if_track_segment_starts_with_reverse_node(track_segment_index)):
 			# When you flip around, the "train" advances by the amount of distance we shifit our
 			# cart position
-			progress_px = progress_px + train.cart_length * (train._cars.size() - 1)
+			progress_px = progress_px + train.car_length * (train._cars.size() - 1)
 			new_progress.reverse()
 
 		progress_px = progress_px - (segment_length - previous_track_segment_progress)

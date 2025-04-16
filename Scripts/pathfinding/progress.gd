@@ -8,10 +8,10 @@ var rotation: float # Rotation in radians at position
 var path_index: int = 0 # index in the schedule
 var track_segment_index: int = 0
 var track_segment_progress: float = 0
+var train: Train
 
 # var train_offset: float = 0
 # var facing_forward: bool = true # Do we even need this?
-var train: Train
 
 func _init(train_: Train) -> void:
 	self.train = train_

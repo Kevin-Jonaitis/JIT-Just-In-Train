@@ -38,7 +38,7 @@ static func check_for_stops_at_position(track_or_junction: TrackOrJunctionOverla
 	var stops : Array[Stop] = Utils.get_all_stops()
 	for stop: Stop in stops:
 		var train : Train = stop.get_train()
-		var minimum_required_distance: float = train.length -  (train.cart_length / 2)
+		var minimum_required_distance: float = train.length -  (train.car_length / 2)
 		for train_pos: Stop.TrainPosition in stop.stop_option:
 			if (train_pos.front_of_train.track.uuid != track_to_test.uuid):
 				continue

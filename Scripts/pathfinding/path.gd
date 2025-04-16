@@ -97,24 +97,24 @@ class TrackSegment:
 	var start_track_pos: float
 	var end_track_pos: float
 	var length: float
-	var starting_progress: float #TODO: remove, this is redundant
+	# var starting_progress: float #TODO: remove, this is redundant
 	
 	func _init(track_: Track3D, start_track_pos_: float, end_track_pos_: float) -> void:
 		self.track = track_
 		self.start_track_pos = start_track_pos_
 		self.end_track_pos = end_track_pos_
 		self.length = calculate_length()
-		self.starting_progress = start_track_pos_
+		# self.starting_progress = start_track_pos_
 
 	func get_position_at_progress(progress: float) -> Vector2:
 		if (end_track_pos < start_track_pos):
 			progress = -progress
-		return track.get_point_at_offset(starting_progress + progress)
+		return track.get_point_at_offset(start_track_pos + progress)
 
 	func get_rotation_at_progress(progress: float) -> float:
 		if (end_track_pos < start_track_pos):
 			progress = -progress
-		return track.get_angle_at_offset(starting_progress + progress)
+		return track.get_angle_at_offset(start_track_pos + progress)
 	
 	func calculate_length() -> float:
 		return abs(end_track_pos - start_track_pos)

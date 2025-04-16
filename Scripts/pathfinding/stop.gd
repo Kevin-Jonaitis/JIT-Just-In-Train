@@ -70,7 +70,7 @@ static func create_stop_for_point(middle_of_front_car: TrackPointInfo, train: Tr
 	var middle_of_back_car_distance: float
 	var front_of_front_car: float
 	var back_of_back_car: float
-	var length_of_cart : float = train.cart_length
+	var length_of_cart : float = train.car_length
 	var track_distance_to_middle_of_front_car: float = middle_of_front_car.track.get_offset_to_point(middle_of_front_car.point_index)
 	if train_placed_forward:
 		front_of_front_car = track_distance_to_middle_of_front_car + (length_of_cart / 2)
