@@ -5,13 +5,15 @@ class_name Train
 const TRAIN_COLLISION_LAYER: int = 8
 var BOGIE_HEIGHT: float = 0.826
 var TRAIN_CAR_HEIGHT: float = 0.64
+static var FRONT_BOOGIE_OFFSET: float = 2.229
+static var BACK_BOOGIE_OFFSET: float = -2.331
 @onready var track_intersection_searcher: TrackIntersectionSearcher3D = TrackIntersectionSearcher3D.new(self)
 
 # Length of ALL cars end-to-end(including gaps)
-var length : float = 5.35 #TODO: Set this to a a multiple of the car_length the space between them
+var length : float = 5.35 #TODO: Set this to a a multiple of the CAR_LENGTH the space between them
 # Length of a single cart of the train
-const car_length : float = 5.35 #TODO: Set this to a a real value based on model; I just used a ruler to measure it
-# const car_length : float = 80 #TODO: Set this to a a real value based on the train sprites
+static var CAR_LENGTH : float = 5.35 #TODO: Set this to a a real value based on model; I just used a ruler to measure it
+# const CAR_LENGTH : float = 80 #TODO: Set this to a a real value based on the train sprites
 
 const num_of_cars : int = 1 #TODO: Set this to a a real value based on the train sprites
 
@@ -58,14 +60,18 @@ func flip_front_car() -> void:
 		front_car = _cars[_cars.size() - 1]
 
 # set the boogie rotation and the train position
+
+func set_car_position(front_boogie: TrackPointInfo, back_boogie: TrackPointInfo) -> void:
+	pass
+
 func set_position_on_track(pointInfo: TrackPointInfo) -> void:
 	var car_center: Vector2 = pointInfo.get_point()
 	front_car.position = Vector3(car_center.x, TRAIN_CAR_HEIGHT, car_center.y)
 	front_car.rotation = Vector3(0, - pointInfo.angle - 3 * PI / 2, 0)
 
 	var front_car_position : Transform3D = front_car.global_transform
-	var front_boogie_global_position : Vector3 = front_car_position.origin + front_car.global_transform.basis * Vector3(0, 0.826, 2.229)
-	var back_boogie_global_position : Vector3 = front_car_position.origin + front_car.global_transform.basis * Vector3(0, 0.826, -2.331)
+	var front_boogie_global_position : Vector3 = front_car_position.origin + front_car.global_transform.basis * Vector3(0, 0.826, FRONT_BOOGIE_OFFSET)
+	var back_boogie_global_position : Vector3 = front_car_position.origin + front_car.global_transform.basis * Vector3(0, 0.826, BACK_BOOGIE_OFFSET)
 
 
 	# Has to be searched the front car position is set since the boogies are locally offset from the car
