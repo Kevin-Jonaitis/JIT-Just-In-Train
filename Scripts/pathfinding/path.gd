@@ -119,6 +119,9 @@ class TrackSegment:
 	func calculate_length() -> float:
 		return abs(end_track_pos - start_track_pos)
 
+	func is_increasing() -> bool:
+		return end_track_pos > start_track_pos
+
 	# TODO: make ABSOLUTE
 	func get_length() -> float:
 		return length

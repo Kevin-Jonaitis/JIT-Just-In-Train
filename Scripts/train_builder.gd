@@ -50,7 +50,7 @@ func handle_input(event: InputEvent) -> void:
 	if (pointInfo):
 		#-y_rotation + PI
 		# train.modulate = SOLID
-		train.set_position_on_track(pointInfo)
+		train.schedule_follower.set_position_on_track(pointInfo)
 		# train.set_position_and_rotation(pointInfo.get_point(), pointInfo.angle)
 		valid_train_placement = true
 	else:
@@ -59,11 +59,11 @@ func handle_input(event: InputEvent) -> void:
 		valid_train_placement = false
 		var possible_spot: OptionalVector2 = Utils.get_ground_mouse_position_vec2()
 		if possible_spot:
-			train.set_position_and_rotation(possible_spot.value, 0)
+			train.schedule_follower.set_position_and_rotation(possible_spot.value, 0)
 	
 func place_train() -> void:  # Added return type
 	# train.modulate = SOLID
-	train.front_car.area3d.collision_layer = Train.TRAIN_COLLISION_LAYER
+	train.schedule_follower.front_car.area3d.collision_layer = Train.TRAIN_COLLISION_LAYER
 	train.is_placed = true
 	DeferredQueue.queue_calculate_turnaround(train) # As soon as it's placed set its turnaround loops
 	create_new_train(true)

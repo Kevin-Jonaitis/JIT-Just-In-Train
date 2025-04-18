@@ -65,6 +65,9 @@ static func new_Stop(stop_option_: Array[TrainPosition]) -> Stop:
 # Our stops are placed at the MIDDLE of a cart, because that's the point at which a cart pivots around turns.
 # However, we calcualte the FRONT of the front cart and the BACK of the BACK cart the prevent placing a stop that would
 # have the train "hang over" the edge of a track
+
+#TODO: CHANGE THIS TO "FRONT" OF CAR STYLE; This will allow our boogies to pathfind more easily as we don't have to extend
+# "beyond" the progress of the car 
 static func create_stop_for_point(middle_of_front_car: TrackPointInfo, train: Train, train_placed_forward: bool) -> Stop:
 	var middle_of_front_car_track_pos: float = middle_of_front_car.track.get_offset_to_point(middle_of_front_car.point_index)
 	var middle_of_back_car_distance: float
