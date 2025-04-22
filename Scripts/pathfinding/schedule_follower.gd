@@ -6,7 +6,7 @@ class_name ScheduleFollower
 # https://wiki.factorio.com/Railway/Train_path_finding
 
 # Pixels per second
-var velocity : float = 12
+var velocity : float = 2
 
 @onready var train: Train = get_parent()
 
@@ -102,14 +102,50 @@ func update_train_position(delta: float) -> void:
 		return
 	if (!train.schedule.is_loop):
 		return
-	for car: TrainCar in train._cars:
-		var car_progress: CarProgress = car.progress
+
+	# Reverse the cars if they're driving, so we can iterate over the 
+	# progress correctly
+	var cars_to_iterate: Array[TrainCar]
+	if (!_use_last_car_as_front):
+		cars_to_iterate = train._cars
+	else:
+		# reverse array
+		cars_to_iterate = train._cars
+		cars_to_iterate.reverse()
+	
+	var reversed : bool = 0
+	for i: int in range(cars_to_iterate.size()):
+		var car_progress: CarProgress = cars_to_iterate[i].progress
 		var front_progress: Progress
 		var front_boogie_progress: Progress
 		var back_boogie_progress : Progress
 		var center_car_progress: Progress
-		front_progress = move_progress(car_progress.front, schedule, position_change, true)
-		center_car_progress = move_progress(front_progress, schedule, - Train.CAR_LENGTH / 2)
+		if (i == 0):
+			# Also check if we're reversing based on this. 
+			var front_progress_and_reverse: ProgressAndReverse = move_progress_with_reversing(car_progress.front, schedule, position_change, cars_to_iterate[i], true)
+			front_progress = front_progress_and_reverse.progress
+			if (front_progress_and_reverse.reversed):
+				reversed = true
+			else:
+				reversed = false
+		else:
+			var offset_car_progress: CarProgress = cars_to_iterate[i - 1].progress
+			# var reverse_distance : float = 0.0
+			if (reversed):
+				front_progress = move_progress(offset_car_progress.front, schedule, position_change + cars_to_iterate[i -1].get_car_length())
+			else:
+				front_progress = move_progress(offset_car_progress.front, schedule, position_change - cars_to_iterate[i -1].get_car_length())
+				pass
+
+				# reverse_distance = 
+				# for j: int in range(i):
+				# 	reverse_distance += cars_to_iterate[j].get_car_length() * 2
+				# reverse_distance += cars_to_iterate[i].get_car_length()
+				# print("REVERSE DISTANCE: ", reverse_distance)
+			# front_progress = move_progress(offset_car_progress.front, schedule, position_change - cars_to_iterate[i].get_car_length() + reverse_distance)
+			pass
+		
+		center_car_progress = move_progress(front_progress, schedule, - cars_to_iterate[i].get_car_length() / 2)
 
 
 
@@ -124,8 +160,13 @@ func update_train_position(delta: float) -> void:
 		car_progress.center = center_car_progress
 		car_progress.front_boogie = front_boogie_progress
 		car_progress.back_boogie = back_boogie_progress
-		car.set_position_and_rotation(car_progress) # Should we change this?
-		position_change = position_change - Train.CAR_LENGTH
+		# if (cars_to_iterate[i].car_type == TrainCar.CarType.LOCOMOTIVE):
+		# 	cars_to_iterate[i].set_position_and_rotation(car_progress) # Should we change this?
+		cars_to_iterate[i].set_position_and_rotation(car_progress) # Should we change this?
+
+
+		#if (i == 1):
+		# position_change = position_change - Train.CAR_LENGTH
 
 
 
@@ -136,12 +177,29 @@ func update_train_position(delta: float) -> void:
 	if (!train.schedule.is_loop): 
 		return
 
-func move_progress(
+class ProgressAndReverse:
+	var progress: Progress
+	var reversed: bool
+
+	func _init(progress_: Progress, reversed_: bool) -> void:
+		progress = progress_
+		reversed = reversed_
+
+
+func move_progress(base: Progress,
+		schedule: Schedule,
+		delta_px: float) -> Progress:
+	var result: ProgressAndReverse = move_progress_with_reversing(base, schedule, delta_px, null, false)
+	return result.progress
+
+func move_progress_with_reversing(
 		base: Progress,
 		schedule: Schedule,
 		delta_px: float,
+		train_car: TrainCar,
 		allow_reversing: bool = false,
-	) -> Progress:
+	) -> ProgressAndReverse:
+	var reversed: bool = false
 
 	var p : Progress = Progress.copy(base)
 
@@ -174,7 +232,8 @@ func move_progress(
 				seg_pos   = 0.0
 
 				if path.check_if_track_segment_starts_with_reverse_node(seg_idx):
-					dist_left += train.CAR_LENGTH * (train._cars.size() - 1)
+					dist_left += train_car.get_car_length() # 2x train - 1 current car
+					reversed = true
 					reverse()
 
 				if seg_idx >= path.track_segments.size():
@@ -208,7 +267,9 @@ func move_progress(
 				seg_len = seg.get_length()
 				seg_pos = seg_len
 		if (allow_reversing):
-			dist_left += check_for_reverse(schedule, previous_path_index, path_idx, previous_segment_index, seg_idx)
+			if (check_for_reverse(schedule, previous_path_index, path_idx, previous_segment_index, seg_idx)):
+				dist_left += train_car.get_car_length() # 2x train - 1 current car
+				reversed = true
 		previous_path_index = path_idx
 		previous_segment_index = seg_idx
 
@@ -222,13 +283,13 @@ func move_progress(
 	p.position               = seg_final.get_position_at_progress(seg_pos)
 	p.rotation               = seg_final.get_rotation_at_progress(seg_pos)
 
-	return p
+	return ProgressAndReverse.new(p, reversed)
 
 # Check if a train is reversing at a stop(_NOT_ a reverse node which is different)
-func check_for_reverse(schedule: Schedule, previous_path_index: int, next_path_index: int, previous_segment_index: int, segment_index: int) -> float:
+func check_for_reverse(schedule: Schedule, previous_path_index: int, next_path_index: int, previous_segment_index: int, segment_index: int) -> bool:
 	var previous_segment: Path.TrackSegment = schedule.paths[previous_path_index].track_segments[previous_segment_index]
 	var next_segment: Path.TrackSegment = schedule.paths[next_path_index].track_segments[segment_index]
 	if (schedule.check_for_reverse(previous_segment, next_segment)):
 		reverse()
-		return train.CAR_LENGTH * (train._cars.size())
-	return 0
+		return true
+	return false

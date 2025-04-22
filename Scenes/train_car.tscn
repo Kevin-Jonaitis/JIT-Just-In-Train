@@ -1,20 +1,6 @@
-[gd_scene load_steps=4 format=3 uid="uid://b7r520607ib5w"]
+[gd_scene load_steps=2 format=3 uid="uid://b7r520607ib5w"]
 
 [ext_resource type="Script" uid="uid://cp0q0mwkb0x7u" path="res://Scenes/train_car.gd" id="1_82te6"]
-[ext_resource type="PackedScene" uid="uid://c5obkry4mx75d" path="res://Assets/imported/locomotive.tscn" id="2_8jpl3"]
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_6n6on"]
-size = Vector3(3.08179, 4.53467, 9.54243)
 
 [node name="TrainCar" type="Node3D"]
 script = ExtResource("1_82te6")
-
-[node name="Model" parent="." instance=ExtResource("2_8jpl3")]
-
-[node name="Area3D" type="Area3D" parent="."]
-collision_layer = 0
-collision_mask = 0
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0548515, 1.71942, -0.00167131)
-shape = SubResource("BoxShape3D_6n6on")

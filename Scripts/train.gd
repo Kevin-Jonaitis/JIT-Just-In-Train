@@ -11,9 +11,17 @@ static var TRAIN_HEIGHT_OFFSET: float = 0.666
 @onready var track_intersection_searcher: TrackIntersectionSearcher3D = TrackIntersectionSearcher3D.new(self)
 
 # Length of ALL cars end-to-end(including gaps)
-var length : float = 5.35 #TODO: Set this to a a multipdle of the CAR_LENGTH the space between them
+var length: float:
+	get:
+		var total: float = 0
+		for car: TrainCar in _cars:
+			total += car.get_car_length()
+		return total
+static var FAKE_LENGTH: float = 5.35
 # Length of a single cart of the train
 static var CAR_LENGTH : float = 5.35 #TODO: Set this to a a real value based on model; I just used a ruler to measure it
+static var LOCOMOTIVE_CAR_LENGTH: float = 8.333
+static var COAL_CAR_LENGTH: float = 10.109
 # const CAR_LENGTH : float = 80 #TODO: Set this to a a real value based on the train sprites
 
 const num_of_cars : int = 1 #TODO: Set this to a a real value based on the train sprites
@@ -33,6 +41,7 @@ var is_placed: bool = false
 		for car: TrainCar in $Cars.get_children():
 			cars_temp.append(car)
 		return cars_temp
+		# car.set_process(true)
 var schedule: Schedule
 var on_ready_callables: Array[Callable]
 var should_loop: bool = true
@@ -56,13 +65,17 @@ var update_schedule_dirty: bool = false
 
 # set the boogie rotation and the train position
 
-
 func _ready() -> void:
+	$Cars.add_child(TrainCar.new(TrainCar.CarType.LOCOMOTIVE))
+	$Cars.add_child(TrainCar.new(TrainCar.CarType.COAL))
+
 	for callable: Callable in on_ready_callables:
 		callable.call()
 	
 	schedule_follower.front_car = _cars[0]
 	add_child(path_line)
+
+	# _cars.append(TrainCar.new(TrainCar.CarType.COAL))
 
 
 func set_name_user(name_: String) -> void:

@@ -77,11 +77,11 @@ static func create_stop_for_point(middle_of_front_car: TrackPointInfo, train: Tr
 	var track_distance_to_middle_of_front_car: float = middle_of_front_car.track.get_offset_to_point(middle_of_front_car.point_index)
 	if train_placed_forward:
 		front_of_front_car = track_distance_to_middle_of_front_car + (length_of_cart / 2)
-		back_of_back_car = front_of_front_car - train.length
+		back_of_back_car = front_of_front_car - train.FAKE_LENGTH # TODO: FIX
 		middle_of_back_car_distance = back_of_back_car + (length_of_cart / 2)
 	else:
 		front_of_front_car = track_distance_to_middle_of_front_car - (length_of_cart / 2)
-		back_of_back_car  = front_of_front_car + train.length
+		back_of_back_car  = front_of_front_car + train.FAKE_LENGTH # TODO: FIX
 		middle_of_back_car_distance = back_of_back_car + (length_of_cart / 2)
 		
 
