@@ -6,7 +6,7 @@ class_name ScheduleFollower
 # https://wiki.factorio.com/Railway/Train_path_finding
 
 # Pixels per second
-var velocity : float = 2
+var velocity : float = 12
 
 @onready var train: Train = get_parent()
 
@@ -114,6 +114,7 @@ func update_train_position(delta: float) -> void:
 		cars_to_iterate.reverse()
 	
 	var reversed : bool = 0
+	var use_last_car_as_front_loop_consistent: bool = _use_last_car_as_front
 	for i: int in range(cars_to_iterate.size()):
 		var car_progress: CarProgress = cars_to_iterate[i].progress
 		var front_progress: Progress
@@ -132,7 +133,7 @@ func update_train_position(delta: float) -> void:
 			var offset_car_progress: CarProgress = cars_to_iterate[i - 1].progress
 			# var reverse_distance : float = 0.0
 			if (reversed):
-				front_progress = move_progress(offset_car_progress.front, schedule, position_change + cars_to_iterate[i -1].get_car_length())
+				front_progress = move_progress(offset_car_progress.front, schedule, position_change + cars_to_iterate[i].get_car_length())
 			else:
 				front_progress = move_progress(offset_car_progress.front, schedule, position_change - cars_to_iterate[i -1].get_car_length())
 				pass
@@ -147,9 +148,10 @@ func update_train_position(delta: float) -> void:
 		
 		center_car_progress = move_progress(front_progress, schedule, - cars_to_iterate[i].get_car_length() / 2)
 
+		if (cars_to_iterate[i].car_type == TrainCar.CarType.LOCOMOTIVE && reversed):
+			print("AFTER REVERSED")
 
-
-		if (!_use_last_car_as_front):
+		if (!use_last_car_as_front_loop_consistent):
 			front_boogie_progress = move_progress(center_car_progress, schedule, Train.FRONT_BOOGIE_OFFSET)
 			back_boogie_progress = move_progress(center_car_progress, schedule, - Train.BACK_BOOGIE_OFFSET)
 		else:
@@ -160,7 +162,8 @@ func update_train_position(delta: float) -> void:
 		car_progress.center = center_car_progress
 		car_progress.front_boogie = front_boogie_progress
 		car_progress.back_boogie = back_boogie_progress
-		# if (cars_to_iterate[i].car_type == TrainCar.CarType.LOCOMOTIVE):
+		if (cars_to_iterate[i].car_type == TrainCar.CarType.LOCOMOTIVE):
+			print(car_progress.center.position)
 		# 	cars_to_iterate[i].set_position_and_rotation(car_progress) # Should we change this?
 		cars_to_iterate[i].set_position_and_rotation(car_progress) # Should we change this?
 

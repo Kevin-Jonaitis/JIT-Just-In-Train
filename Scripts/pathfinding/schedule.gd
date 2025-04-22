@@ -28,7 +28,7 @@ func get_path(stop_index: int) -> Path:
 	return paths[stop_index]
 
 # We cross stops when we cross paths.
-# We can see if this stop is reversed if the path segments before and after are in opposite directions
+# We can see if this stop is reversed if the path segments before and aft	er are in opposite directions
 # We ASSUME that the forward/backward node of as stop are always on the same track
 func check_for_reverse(previous_segment: Path.TrackSegment, next_segment: Path.TrackSegment) -> bool:
 	if (previous_segment.track.uuid == next_segment.track.uuid && previous_segment.is_increasing() != next_segment.is_increasing()):

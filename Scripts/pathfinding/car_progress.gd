@@ -13,3 +13,6 @@ func _init() -> void:
 	back_boogie = Progress.new()
 	front = Progress.new()
 	center = Progress.new()
+
+
+# func calculate_movement_from_front(delta: float) -> void
