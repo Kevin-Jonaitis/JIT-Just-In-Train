@@ -46,9 +46,11 @@ func reverse() -> void:
 
 
 func reset() -> void:
+	var total_length: float = 0;
 	for car: TrainCar in train._cars:
 		# car_progresses.append(car_progress)
-		car.progress = CarProgress.new()
+		total_length += car.get_car_length()
+		car.progress = CarProgress.new(train.schedule, total_length, car.get_car_length())
 	# _progress = Progress.new(train)
 
 func ready() -> void:

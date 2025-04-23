@@ -288,6 +288,7 @@ func update_visual_for_dubin_path() -> void:
 	)
 
 func get_point_at_offset(offset: float) -> Vector2:
+	assert(offset > -1, "We are too negative with our offset(it's not just a rounding error), check calling code for issues")
 	if bezier_curve:
 		assert(false, "Unimplemented code path!")
 		return Vector2.ZERO
