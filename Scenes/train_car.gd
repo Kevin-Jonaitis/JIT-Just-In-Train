@@ -44,7 +44,7 @@ func set_position_and_rotation(car_progress: CarProgress) -> void:
 	var back_boogie_pos: Vector2 = car_progress.back_boogie.position
 
 	global_position = Vector3(center_position.x, Train.TRAIN_HEIGHT_OFFSET, center_position.y)
-	rotation = Vector3(0, offset_rotation(car_progress.front.rotation), 0)
+	rotation = Vector3(0, offset_rotation(car_progress.center.rotation), 0)
 	
 	# THESE NEED TO BE SET AFTER THE GLOBAL TRAINCAR POSITION; if we do it before, we'll get some weird undefined behavior about double applying location
 	boogie_front.global_position = Vector3(front_boogie_pos.x, Train.TRAIN_HEIGHT_OFFSET + Train.BOGIE_HEIGHT, front_boogie_pos.y)
