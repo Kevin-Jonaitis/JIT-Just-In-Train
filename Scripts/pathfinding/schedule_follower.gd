@@ -129,6 +129,7 @@ func update_train_position(delta: float) -> void:
 			front_progress = front_progress_and_reverse.progress
 			if (front_progress_and_reverse.reversed):
 				reversed = true
+				cars_to_iterate.reverse()
 			else:
 				reversed = false
 		else:
@@ -273,7 +274,8 @@ func move_progress_with_reversing(
 				seg_pos = seg_len
 		if (allow_reversing):
 			if (check_for_reverse(schedule, previous_path_index, path_idx, previous_segment_index, seg_idx)):
-				dist_left += train_car.get_car_length() # 2x train - 1 current car
+				# When we flip over, the progress meter should now be at the "back" car
+				#dist_left += train_car.get_car_length() # 
 				reversed = true
 		previous_path_index = path_idx
 		previous_segment_index = seg_idx

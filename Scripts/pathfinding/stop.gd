@@ -45,6 +45,11 @@ func get_front_stops() -> Array[StopNode]:
 	array_to_return.assign(stop_option.map(func(x: TrainPosition) -> StopNode: return x.front_of_train))
 	return array_to_return
 
+func get_back_stops() -> Array[StopNode]:
+	var array_to_return : Array[StopNode]
+	array_to_return.assign(stop_option.map(func(x: TrainPosition) -> StopNode: return x.back_of_train))
+	return array_to_return
+
 func _ready() -> void: # Set the position of the stop when it actually enters the tree
 	stop_sprite.position = stop_option[0].front_of_train.get_vector_pos()
 	stop_sprite.rotation = stop_option[0].front_of_train.get_angle_of_point()
@@ -62,40 +67,33 @@ static func new_Stop(stop_option_: Array[TrainPosition]) -> Stop:
 # the train_placed_forward flag says if we are facing opposite that direction
 # Return null if we can't create a stop because the back would go off the track
 
-# Our stops are placed at the MIDDLE of a cart, because that's the point at which a cart pivots around turns.
-# However, we calcualte the FRONT of the front cart and the BACK of the BACK cart the prevent placing a stop that would
-# have the train "hang over" the edge of a track
-
 #TODO: CHANGE THIS TO "FRONT" OF CAR STYLE; This will allow our boogies to pathfind more easily as we don't have to extend
 # "beyond" the progress of the car 
-static func create_stop_for_point(middle_of_front_car: TrackPointInfo, train: Train, train_placed_forward: bool) -> Stop:
-	var middle_of_front_car_track_pos: float = middle_of_front_car.track.get_offset_to_point(middle_of_front_car.point_index)
-	var middle_of_back_car_distance: float
-	var front_of_front_car: float
-	var back_of_back_car: float
-	var length_of_cart : float = train.CAR_LENGTH
-	var track_distance_to_middle_of_front_car: float = middle_of_front_car.track.get_offset_to_point(middle_of_front_car.point_index)
+static func create_stop_for_point(front_of_front_car: TrackPointInfo, train: Train, train_placed_forward: bool) -> Stop:
+	var front_of_front_car_pos: float = front_of_front_car.track.get_offset_to_point(front_of_front_car.point_index)
+	var back_of_back_car_pos: float
 	if train_placed_forward:
-		front_of_front_car = track_distance_to_middle_of_front_car + (length_of_cart / 2)
-		back_of_back_car = front_of_front_car - train.FAKE_LENGTH # TODO: FIX
-		middle_of_back_car_distance = back_of_back_car + (length_of_cart / 2)
+		back_of_back_car_pos = front_of_front_car_pos - train.length
+		# front_of_front_car = track_distance_to_middle_of_front_car + (length_of_cart / 2)
+		# back_of_back_car = front_of_front_car - train.FAKE_LENGTH # TODO: FIX
+		# middle_of_back_car_distance = back_of_back_car + (length_of_cart / 2)
 	else:
-		front_of_front_car = track_distance_to_middle_of_front_car - (length_of_cart / 2)
-		back_of_back_car  = front_of_front_car + train.FAKE_LENGTH # TODO: FIX
-		middle_of_back_car_distance = back_of_back_car + (length_of_cart / 2)
+		back_of_back_car_pos = front_of_front_car_pos + train.length
+		# front_of_front_car = track_distance_to_middle_of_front_car - (length_of_cart / 2)
+		# back_of_back_car  = front_of_front_car + train.FAKE_LENGTH # TODO: FIX
+		# middle_of_back_car_distance = back_of_back_car + (length_of_cart / 2)
 		
 
-	# TODO: allow a stop to cross a track boundry if  there's only 1 "previous" track
-	# Also TODO: we should have a "get_previous_node" function on stopnodes and junctionNodes to faciliate
-	# the above
-	if (front_of_front_car < 0 || front_of_front_car > middle_of_front_car.track.length ||
-		back_of_back_car < 0 || back_of_back_car > middle_of_front_car.track.length):
+	# FEATURE REQUEST: Allow train stops to cross "track" boundaries if there's only 1 other track. Right now
+	# it's more effort than it's worth to get this thing out the door
+	if (front_of_front_car_pos < 0 || front_of_front_car_pos > front_of_front_car.track.length ||
+		back_of_back_car_pos < 0 || back_of_back_car_pos > front_of_front_car.track.length):
 		return null
 
-	# var point_index_two : int = middle_of_front_car.track.get_approx_point_index_at_offset(middle_of_back_car_distance)
 
-	var stop : Stop = Stop.new_Stop(generate_train_position(middle_of_front_car_track_pos, middle_of_back_car_distance, middle_of_front_car.track, train, train_placed_forward))
-	assert(stop.get_front_stops()[0].get_vector_pos() == stop.get_front_stops()[1].get_vector_pos(), "Positions should be the same else things will look bad when the train stops at the station")
+	var stop : Stop = Stop.new_Stop(generate_train_position(front_of_front_car_pos, 
+	back_of_back_car_pos, front_of_front_car.track, train, train_placed_forward))
+	assert(stop.get_front_stops()[0].get_vector_pos() == stop.get_back_stops()[1].get_vector_pos(), "Positions should be the same else things will look bad when the train stops at the station")
 	return stop
 
 static func generate_train_position(point_one_track_offset: float, point_two_track_offset: float, track: Track3D, train: Train, train_facing_foward: bool) -> Array[TrainPosition]:

@@ -52,6 +52,22 @@ func create_node_in_opposite_direction() -> StopNode:
 func get_track_position() -> float:
 	return track_pos
 
+
+func get_back_train_position() -> float: 
+	# The back of the train is the opposite direction of the front of the train
+	var position: float
+	if forward:
+		position =  track_pos - train.length
+	else:
+		position = track_pos + train.length
+	
+	if position < 0:
+		assert(false, "The back of the train is before the start of the track")
+	elif position > track.length:
+		assert(false, "The back of the train is before the start of the track")
+	
+	return position
+
 # <stop>-<track-name>-<index>-<train>-<direction>
 func get_track_name() -> String:
 	return track.name

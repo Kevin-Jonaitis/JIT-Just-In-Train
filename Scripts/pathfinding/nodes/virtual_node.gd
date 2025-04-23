@@ -46,7 +46,12 @@ func get_vector_pos() -> Vector2:
 
 static func are_nodes_are_at_same_position(node_one: VirtualNode, node_two: VirtualNode) -> bool:
 	if (node_one is StopNode and node_two is StopNode):
+		var stop_one: StopNode = node_one as StopNode
+		var stop_two: StopNode = node_two as StopNode
+		
 		return node_one.track.uuid == node_two.track.uuid && \
+		# Note on this line: if the back of the train position for a stop is the same as the front of the train position for another stop, then they are at the same position
+		Utils.is_equal_approx(stop_one.get_track_position(), stop_two.get_back_train_position()) || \
 		Utils.is_equal_approx(node_one.get_track_position(),node_two.get_track_position())
 	elif (node_one is JunctionNode and node_two is JunctionNode):
 		return (node_one as JunctionNode).junction.name == (node_two as JunctionNode).junction.name
