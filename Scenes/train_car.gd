@@ -17,6 +17,8 @@ const coal_model: PackedScene = preload("res://Assets/cars/wagon_coal.tscn")
 
 var progress: CarProgress
 
+var path: Path
+
 enum CarType {COAL, LOCOMOTIVE}
 
 

@@ -16,16 +16,67 @@ var stops: Array[StopNode]:
 		return stops_temp
 	set(value):
 		assert(false, "Cannot set stops")
+
+var car_schedules: Array[Array]
 		
-func _init(stops_path_: Array[Path], is_loop_: bool) -> void:
+func _init(stops_path_: Array[Path], is_loop_: bool, train: Train) -> void:
 	self.paths = stops_path_
 	self.is_loop = is_loop_
 	if (is_loop_):
 		assert(VirtualNode.are_nodes_are_at_same_position(stops[0], stops[-1]), "A loop should have the same start and end stops")
 		assert(stops_path_.size() > 1, "A loop should have at least 2 stops")
+	car_schedules = calculate_train_paths(train)
+
 
 func get_path(stop_index: int) -> Path:
 	return paths[stop_index]
+
+
+func calculate_train_paths(train: Train) -> Array[Array]:
+	# var train_paths: Array[Path] = []
+	# var segments_for_path: Array[Path.TrackSegment] = []
+	var car_to_segments: Array[Array] = []
+	for i: int in range(train._cars.size()):
+		car_to_segments.append([])
+
+	for path: Path in paths:
+		for i: int in range(path.nodes.size() - 1):
+			var is_train_backwards: bool = false
+			for seg_index: int in range(path.track_segments.size()):
+				var segment: Path.TrackSegment = path.track_segments[seg_index].clone()
+				var total_train_length: float = 0
+				var cars: Array[TrainCar] = train._cars
+				if (is_train_backwards):
+					cars.reverse()
+
+				for c : int in range(cars.size()):
+					var car: TrainCar = cars[c]
+					if (seg_index == 0):
+						if (segment.is_increasing()):
+							segment.start_track_pos = segment.start_track_pos - total_train_length
+						else:
+							segment.start_track_pos = segment.start_track_pos + total_train_length
+					elif (seg_index == path.track_segments.size() - 1):
+						if (segment.is_increasing()):
+							segment.end_track_pos = segment.end_track_pos - total_train_length
+						else:
+							segment.end_track_pos = segment.end_track_pos + total_train_length
+					
+					car_to_segments[c].append(segment.clone())
+
+					# Put at end of loop ot offset by 1
+					total_train_length += car.get_car_length()
+				if (segment.reverses_at_end):
+					is_train_backwards = !is_train_backwards
+
+	return car_to_segments
+				
+	
+	
+					
+
+
+
 
 # We cross stops when we cross paths.
 # We can see if this stop is reversed if the path segments before and aft	er are in opposite directions

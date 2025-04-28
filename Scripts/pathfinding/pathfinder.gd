@@ -245,7 +245,7 @@ static func calculate_running_best_path(
 		return null
 			
 	assert(best_path.paths.size() == max(1, stops.size() - 1), "We should have as many paths as we have stops -1")
-	return Schedule.new(best_path.paths, train.should_loop)
+	return Schedule.new(best_path.paths, train.should_loop, train)
 
 
 static func check_for_overlap(

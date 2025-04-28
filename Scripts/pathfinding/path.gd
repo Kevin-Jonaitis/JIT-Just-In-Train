@@ -97,13 +97,15 @@ class TrackSegment:
 	var start_track_pos: float
 	var end_track_pos: float
 	var length: float
+	var reverses_at_end: bool
 	# var starting_progress: float #TODO: remove, this is redundant
 	
-	func _init(track_: Track3D, start_track_pos_: float, end_track_pos_: float) -> void:
+	func _init(track_: Track3D, start_track_pos_: float, end_track_pos_: float, reverses_at_end: bool) -> void:
 		self.track = track_
 		self.start_track_pos = start_track_pos_
 		self.end_track_pos = end_track_pos_
 		self.length = calculate_length()
+		self.reverses_at_end = reverses_at_end
 		# self.starting_progress = start_track_pos_
 
 	func get_position_at_progress(progress: float) -> Vector2:
@@ -125,6 +127,10 @@ class TrackSegment:
 	# TODO: make ABSOLUTE
 	func get_length() -> float:
 		return length
+
+	func clone() -> TrackSegment:
+		var new_segment: TrackSegment = TrackSegment.new(track, start_track_pos, end_track_pos, reverses_at_end)
+		return new_segment
 
 
 # Junction to Junction(still on the same track) # care
@@ -148,16 +154,18 @@ func create_track_segments() -> Array[TrackSegment]:
 
 	for i: int in range(1, nodes.size()):
 		var node: VirtualNode = nodes[i]
-		if node.track.uuid != current_track.uuid || (is_reverse_spot(nodes[i - 1], node)):
+		var reverses_at_node: bool = is_reverse_spot(nodes[i - 1], node)
+		if node.track.uuid != current_track.uuid || (reverses_at_node):
 			var end_pos: float = nodes[i - 1].get_track_position()
-			var segment: TrackSegment = TrackSegment.new(current_track, start_pos, end_pos)
+			var segment: TrackSegment = TrackSegment.new(current_track, start_pos, end_pos, reverses_at_node)
 			track_segments.append(segment)
 			current_track = node.track
-			start_pos = node.get_track_position()
 
+			start_pos = node.get_track_position()
 	# Add the last segment
 	var last_end_position: float = nodes[nodes.size() - 1].get_track_position()
-	var last_segment: TrackSegment = TrackSegment.new(current_track, start_pos, last_end_position)
+	#TODO: Figure out if loop, and add reverse here
+	var last_segment: TrackSegment = TrackSegment.new(current_track, start_pos, last_end_position, false)
 	track_segments.append(last_segment)
 	return track_segments
 

@@ -129,7 +129,6 @@ func update_train_position(delta: float) -> void:
 			front_progress = front_progress_and_reverse.progress
 			if (front_progress_and_reverse.reversed):
 				reversed = true
-				cars_to_iterate.reverse()
 			else:
 				reversed = false
 		else:
