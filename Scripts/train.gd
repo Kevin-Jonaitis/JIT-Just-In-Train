@@ -50,6 +50,7 @@ var can_reverse: bool = true
 
 # Used by deferred queue to update the schedule maximum once per frame
 var update_schedule_dirty: bool = false
+var update_loops_dirty: bool = false
 
 # whether the train's "back"(the last-added car) is starting direction of travel or not
 @onready var schedule_follower: ScheduleFollower = $ScheduleFollower

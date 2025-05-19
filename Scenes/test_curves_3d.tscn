@@ -237,11 +237,13 @@ directional_shadow_mode = 1
 [node name="Smiley" type="CSGSphere3D" parent="."]
 transform = Transform3D(-0.243, 0, -0.97, 0, 1, 0, 0.97, 0, -0.243, 0, 0, 0)
 rotation_edit_mode = 2
+visible = false
 material = SubResource("StandardMaterial3D_l4xbo")
 
 [node name="Trail3D" type="MeshInstance3D" parent="."]
 process_priority = 9999
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.9635, 2.82408, 10.2876)
+visible = false
 script = ExtResource("12_ldvnk")
 max_section_length = 0.454
 width = 0.664
@@ -250,6 +252,7 @@ metadata/_custom_type_script = "uid://dat4dm1pytyav"
 
 [node name="Line3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21.3683, 0.30582, 0.100105)
+visible = false
 script = ExtResource("11_l4xbo")
 width = 0.717
 billboard_mode = 0
@@ -262,6 +265,7 @@ environment = SubResource("Environment_03nuc")
 
 [node name="UnknownCube" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.33958, 0, -8.49062)
+visible = false
 mesh = SubResource("BoxMesh_436s2")
 skeleton = NodePath("")
 
@@ -272,8 +276,10 @@ script = ExtResource("14_i7f5g")
 
 [node name="Rails A" parent="." instance=ExtResource("21_oya12")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.21899, 0, 19.0151)
+visible = false
 
 [node name="UI3D" type="Node3D" parent="."]
+visible = false
 
 [node name="TrainSchedule" type="Node3D" parent="UI3D"]
 

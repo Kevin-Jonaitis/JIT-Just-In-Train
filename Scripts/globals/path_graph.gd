@@ -215,6 +215,10 @@ func remove_edge(from_node: VirtualNode, to_node: VirtualNode) -> void:
 # -------------------------------------------------------------------
 # New public function that updates turnaround loops for a given train.
 func update_turnaround_loops_for_train(train: Train) -> void:
+	if not update_turnaround_loops_dirty:
+		return
+	update_turnaround_loops_dirty = false
+	
 	var junction_nodes: Array[JunctionNode] = get_all_exit_nodes()
 	for junction_node: JunctionNode in junction_nodes:
 		var node_name: String = junction_node.name
