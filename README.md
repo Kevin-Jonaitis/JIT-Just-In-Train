@@ -1,3 +1,26 @@
+
+
+# DEMO
+
+## Placing tracks
+
+ ![me](gifs/place-track.gif)
+
+## Placing realllly looong tracks 
+while maintaing 60 fps. Wrote the code in C++ to generate the polygons for the track so it's efficient(as well as other speedups)
+ ![me](gifs/longtrackplacement.gif)
+
+## Trains can "turn around" 
+when navigating between two stops
+ ![me](gifs/navigate-with-reverse.gif)
+
+
+## Trains can navigate between multiple stops 
+in a path that takes the least amount of track between all stops:
+ ![me](gifs/multi-step-navigate.gif)
+
+# How to build and run
+
 #Run this to install GUT and install Line3d(
 	https://github.com/Kevin-Jonaitis/cozy-cube-godot-addons
 )
